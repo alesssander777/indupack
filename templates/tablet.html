@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Operação — Máquina {{ id }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -404,6 +404,7 @@ html, body { height: 100%; margin: 0; }
     height: 100vh;
     height: 100dvh;
     max-height: 100dvh;
+    min-height: -webkit-fill-available;
     display: grid;
     grid-template-rows: auto 1fr auto;
     min-height: 0;
@@ -415,7 +416,7 @@ html, body { height: 100%; margin: 0; }
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 8px 12px;
-    padding: 10px 14px;
+    padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
     background: rgba(0, 0, 0, 0.35);
     border-bottom: 1px solid var(--mes-line-strong);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -1985,84 +1986,255 @@ html, body { height: 100%; margin: 0; }
     }
 }
 
-@media (max-width: 720px) {
+/* ——— Terminal responsivo: tablet/celular/touch (não é dashboard admin) ——— */
+@media (max-width: 520px) {
     .ref-kpi-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 900px) {
-    .ref-order-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .ref-mes-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .ref-kpi-item {
+        min-height: 0;
+        padding: 9px 10px 10px;
+    }
+
+    .ref-kpi-v,
+    .ref-kpi-v.ref-mes__mono {
+        font-size: clamp(1rem, 4.2vmin, 1.28rem);
     }
 }
 
 @media (max-width: 900px) {
+    .hmi-work.ref-work {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        min-height: 0;
+    }
+
+    .hmi-side.ref-side {
+        max-height: min(36vh, 320px);
+        border-right: none;
+        border-bottom: 1px solid var(--mes-line);
+        box-shadow: none;
+        padding: 8px max(8px, env(safe-area-inset-left)) 8px max(8px, env(safe-area-inset-right));
+    }
+
+    .ref-main.hmi-main {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 8px max(8px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+        gap: 8px;
+        min-height: 0;
+    }
+
     .ref-top {
         grid-template-columns: 1fr;
         justify-items: stretch;
         text-align: center;
+        gap: 10px;
     }
+
     .ref-top__trail {
         justify-self: stretch;
         justify-content: center;
         flex-wrap: wrap;
     }
+
     .ref-top__left {
         flex-wrap: wrap;
         justify-content: center;
+        gap: 10px;
     }
+
     .ref-top__clock {
         justify-content: center;
     }
-    .hmi-work.ref-work {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+
+    .ref-top__machine {
+        padding: 8px 18px 10px;
     }
-    .hmi-side.ref-side {
-        max-height: 38vh;
-        border-right: none;
-        border-bottom: 1px solid var(--mes-line);
-        box-shadow: none;
+
+    .ref-top__mach-id {
+        font-size: clamp(1.45rem, 7vmin, 2.15rem);
     }
-    .ref-actions.hmi-actions {
-        grid-template-columns: 1fr;
+
+    .ref-hero__gear {
+        display: none;
     }
+
+    .ref-hero__grid {
+        gap: 10px 12px;
+    }
+
+    .ref-hero__ring {
+        width: clamp(48px, 12vmin, 56px);
+        height: clamp(48px, 12vmin, 56px);
+    }
+
+    .ref-hero__title {
+        font-size: clamp(1.45rem, 6.5vmin, 2.25rem);
+        line-height: 1.08;
+    }
+
+    .ref-hero__sub {
+        font-size: clamp(0.82rem, 3.2vmin, 1.08rem);
+    }
+
+    /* Pedido: 2 colunas + quantidade em destaque (linha completa) */
+    .ref-order-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .ref-mini--qty {
+        grid-column: 1 / -1;
+    }
+
+    .ref-mini__v--qty {
+        font-size: clamp(1.35rem, 5vmin, 1.85rem);
+    }
+
+    .ref-mes-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .ref-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    /* Apontamento: largura total para toque */
     .ref-apont-actions {
         flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
     }
 
     .ref-apont-actions__ctrl {
         width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
     }
 
     .ref-apont__input {
+        width: 100%;
         max-width: none;
-        flex: 1 1 auto;
         min-width: 0;
+        min-height: 56px;
+        flex: 1 1 auto;
     }
 
     .ref-apont__btn {
-        width: 118px;
-        max-width: 118px;
-        flex: 0 0 118px;
+        width: 100%;
+        max-width: none;
+        flex: 0 0 auto;
+        min-height: 56px;
+        align-self: stretch;
+    }
+
+    .ref-apont__btn-text {
+        font-size: clamp(0.78rem, 3.2vmin, 1rem);
     }
 
     .ref-apont-progress {
         flex: 1 1 auto;
         width: 100%;
+        min-width: 0;
     }
 
     .ref-apont-progress__widget {
         grid-template-columns: 1fr;
         justify-items: stretch;
+        gap: 12px;
+    }
+
+    .ref-apont-progress__pct-big {
+        font-size: clamp(1.65rem, 9vmin, 2.45rem);
+        text-align: center;
     }
 
     .ref-apont-progress__pct-wrap {
         justify-self: center;
+    }
+
+    .ref-apont-progress__track {
+        height: clamp(40px, 8vmin, 52px);
+    }
+
+    /* Comandos: 3 colunas em tablet; celular estreito passa a 1 coluna abaixo */
+    .ref-actions.hmi-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: 88px;
+        padding: 10px 8px;
+    }
+
+    .ref-foot {
+        padding: 8px max(12px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ref-foot__tag {
+        font-size: clamp(0.78rem, 2.6vmin, 0.92rem);
+    }
+}
+
+/* Celular estreito: empilhar comandos (área touch máxima) */
+@media (max-width: 480px) {
+    .ref-order-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ref-mini--qty {
+        grid-column: auto;
+        order: -1;
+    }
+
+    .ref-mes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ref-actions.hmi-actions {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: clamp(92px, 22vmin, 128px);
+        width: 100%;
+    }
+
+    .hmi-side.ref-side {
+        max-height: min(34vh, 300px);
+    }
+
+    .op-hero {
+        padding: 12px 12px;
+    }
+}
+
+/* Paisagem baixa (telefone/tablet): menos fila, mais miolo */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
+    .hmi-side.ref-side {
+        max-height: min(26vh, 220px);
+    }
+
+    .ref-main.hmi-main {
+        gap: 6px;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: 72px;
+        padding: 8px 6px;
     }
 }
 
