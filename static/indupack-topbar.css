@@ -229,3 +229,125 @@ body.has-indupack-topbar {
         display: none;
     }
 }
+
+/* ——— Notebook / tablet retrato — menos ruído lateral ——— */
+@media (max-width: 1200px) {
+    .hm-header__inner {
+        gap: 10px 20px;
+        padding: 10px clamp(14px, 2.8vw, 40px);
+    }
+
+    .hm-header__sub {
+        max-width: min(280px, 34vw);
+    }
+}
+
+@media (max-width: 900px) {
+    :root {
+        --header-h: 72px;
+    }
+
+    .hm-header__inner {
+        align-items: flex-start;
+    }
+
+    .hm-header__sub {
+        display: none;
+    }
+
+    .hm-header__titles {
+        max-width: min(52vw, 280px);
+    }
+
+    .hm-header__time {
+        font-size: clamp(0.95rem, 3.5vw, 1.2rem);
+    }
+}
+
+@media (max-width: 640px) {
+    :root {
+        --header-h: 66px;
+    }
+
+    .hm-header__clock .hm-header__date {
+        display: none;
+    }
+
+    .hm-header__clock {
+        gap: 8px;
+        padding-right: 0;
+    }
+
+    .hm-header__user-name {
+        max-width: min(120px, 26vw);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .hm-header__logout {
+        padding: 7px 11px;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --header-h: 60px;
+    }
+
+    .hm-header__inner {
+        padding: 8px max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+        gap: 8px 10px;
+    }
+
+    .hm-header__brand-link .hm-header__brand {
+        font-size: clamp(0.95rem, 4.2vw, 1.15rem);
+        letter-spacing: 0.08em;
+    }
+
+    .hm-header__logo {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 11px;
+    }
+
+    .hm-header__titles .hm-header__sys {
+        font-size: clamp(0.68rem, 3.2vw, 0.82rem);
+        letter-spacing: 0.03em;
+        display: block;
+        max-width: 46vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .hm-header__right {
+        gap: 8px 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .hm-header__user {
+        padding-left: 4px;
+        gap: 6px;
+    }
+
+    .hm-header__user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .hm-header__user-chev {
+        display: none;
+    }
+}
+
+/* Ultrawide: mantém barra ancorada; conteúdo já limitado pelo inner max-width */
+@media (min-width: 1800px) {
+    .hm-header__inner {
+        padding-left: clamp(32px, 4vw, 64px);
+        padding-right: clamp(32px, 4vw, 64px);
+    }
+}

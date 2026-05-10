@@ -30,3 +30,10 @@ app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 app.include_router(pages_router)
 app.include_router(api_router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    _port = int(os.environ.get("PORT", "10000"))
+    uvicorn.run("main:app", host="0.0.0.0", port=_port)

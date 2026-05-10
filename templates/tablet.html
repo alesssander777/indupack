@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-global.css">
 </head>
 <body class="ref-body">
     <div class="ref-shell">
@@ -2062,6 +2063,57 @@ html, body { height: 100%; margin: 0; }
 
     .ref-apont-progress__pct-wrap {
         justify-self: center;
+    }
+}
+
+/**
+ * Terminal de chão — dedos / distância (pointer coarse).
+ * Navegador em tablet — áreas médias (fine + viewport estreito).
+ */
+@media (pointer: coarse) {
+    .hmi-cmd.ref-cmd {
+        min-height: clamp(96px, 18vmin, 148px);
+        padding: 14px 14px;
+    }
+
+    .hmi-cmd__ico svg {
+        width: clamp(38px, 8vmin, 52px);
+        height: clamp(38px, 8vmin, 52px);
+    }
+
+    .hmi-cmd__txt {
+        font-size: clamp(1rem, 2.8vmin, 1.28rem);
+    }
+
+    .ref-apont__btn {
+        min-height: clamp(104px, 20vmin, 168px);
+        font-size: clamp(1rem, 3vmin, 1.35rem);
+    }
+
+    .ref-apont__input {
+        min-height: 52px;
+        font-size: clamp(1.05rem, 3.5vmin, 1.45rem);
+    }
+
+    .hmi-modal-card {
+        min-height: 86px;
+        padding: 18px 20px;
+    }
+
+    .hmi-modal-btn {
+        min-height: 56px;
+    }
+
+    .ref-top__fila-link {
+        min-height: 48px;
+        padding: 12px 20px;
+        font-size: clamp(0.88rem, 2.5vmin, 1.05rem);
+    }
+}
+
+@media (pointer: fine) and (max-width: 1024px) {
+    .hmi-cmd.ref-cmd {
+        min-height: 84px;
     }
 }
 

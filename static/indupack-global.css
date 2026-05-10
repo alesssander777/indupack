@@ -1,0 +1,111 @@
+/**
+ * INDUPACK — camada global de responsividade e tokens compartilhados.
+ * Incluir depois das fontes e antes dos estilos específicos de cada página.
+ *
+ * Breakpoints de referência (mobile-first nos media queries dos templates):
+ *   ≤599px   mobile
+ *   600–899  tablet / telefone largo
+ *   900–1279 notebook / tablet paisagem
+ *   1280+    desktop
+ *   1600+    ultrawide (max-width nos shells já centraliza conteúdo)
+ */
+
+:root {
+    --ip-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --ip-safe-left: env(safe-area-inset-left, 0px);
+    --ip-safe-right: env(safe-area-inset-right, 0px);
+    --ip-touch-min: 44px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    /* Base fluida — complementa clamp nos componentes */
+    font-size: clamp(14px, 0.8rem + 0.35vw, 16px);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+}
+
+/* Evita “vazamento” horizontal acidental; áreas com scroll próprio usam overflow-x: auto */
+body:not(.ref-body):not(.tp-wrap):not(.auth-body) {
+    overflow-x: clip;
+}
+
+/* Scroll horizontal elegante (Firefox + WebKit) */
+.ip-scroll-x {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(26, 74, 98, 0.45) rgba(15, 23, 42, 0.06);
+}
+
+.ip-scroll-x::-webkit-scrollbar {
+    height: 10px;
+}
+
+.ip-scroll-x::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.06);
+    border-radius: 999px;
+}
+
+.ip-scroll-x::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(31, 77, 98, 0.55), rgba(26, 74, 98, 0.75));
+    border-radius: 999px;
+}
+
+/* Páginas “shell” (placeholder / módulos em construção) */
+.shell-main {
+    padding: clamp(14px, 4vw, 28px) clamp(12px, 4vw, 22px) clamp(22px, 6vw, 44px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+
+.shell-panel {
+    background: linear-gradient(180deg, #1f4d62 0%, #0c1a28 100%);
+    color: #f0f7fb;
+    max-width: 520px;
+    width: 100%;
+    padding: clamp(22px, 5vw, 34px);
+    border-radius: clamp(14px, 3vw, 18px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.shell-panel h1 {
+    margin: 0 0 12px;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    font-weight: 800;
+}
+
+.shell-panel p {
+    margin: 0;
+    opacity: 0.92;
+    line-height: 1.55;
+    font-size: clamp(0.9rem, 2.8vw, 1rem);
+}
+
+@media (max-width: 480px) {
+    .shell-main {
+        padding-left: max(12px, var(--ip-safe-left));
+        padding-right: max(12px, var(--ip-safe-right));
+        padding-bottom: max(20px, var(--ip-safe-bottom));
+    }
+}
+
+/* Páginas placeholder com topbar (Relatórios, Configurações, …) */
+body.has-indupack-topbar:not(.hm):not(.pr-page):not(.ped-page):not(.tb-admin):not(.prog-body) {
+    font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #f1f5f9;
+    color: #0f172a;
+    min-height: 100vh;
+}
