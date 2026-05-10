@@ -1,0 +1,111 @@
+import json
+import os
+import threading
+
+ARQUIVO = "dados.json"
+_arquivo_lock = threading.Lock()
+
+
+def _default_maquina_record():
+    return {
+        "produzido": 0,
+        "meta": 1000,
+        "status": "PARADA",
+        "nome": "",
+        "setor": "",
+        "observacao": "",
+        "tablet_vinculado": "",
+        "tablet_ultimo_acesso_epoch": 0,
+        "tablet_ultimo_ip": "",
+    }
+
+
+def _default_dados_maquinas():
+    return {i: {**_default_maquina_record()} for i in range(1, 7)}
+
+
+def _normalize_pedidos_keys(d):
+    if not isinstance(d, dict):
+        return {}
+    out = {}
+    for k, v in d.items():
+        try:
+            ik = int(k)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(v, list):
+            out[ik] = v
+    return out
+
+
+def _merge_dados_maquinas(saved):
+    """Mescla todas as chaves inteiras; arquivo vazio → 6 máquinas legadas (1–6)."""
+    if not isinstance(saved, dict) or not saved:
+        return _default_dados_maquinas()
+    out = {}
+    for k, v in saved.items():
+        try:
+            ik = int(k)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(v, dict):
+            out[ik] = {**_default_maquina_record(), **v}
+    return out
+
+
+def _default_resumo_fabrica():
+    return {
+        "dia_ref": "",
+        "producao_dia_total": 0,
+    }
+
+
+def _merge_resumo_fabrica(saved):
+    base = _default_resumo_fabrica()
+    if not isinstance(saved, dict):
+        return base
+    for k in base:
+        if k in saved:
+            base[k] = saved[k]
+    if "producao_dia_total" in base:
+        try:
+            base["producao_dia_total"] = int(base["producao_dia_total"] or 0)
+        except (TypeError, ValueError):
+            base["producao_dia_total"] = 0
+    return base
+
+
+def carregar_dados():
+    if not os.path.exists(ARQUIVO):
+        return {}, [], _default_dados_maquinas(), _default_resumo_fabrica()
+
+    with open(ARQUIVO, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    if not isinstance(raw, dict):
+        return {}, [], _default_dados_maquinas(), _default_resumo_fabrica()
+
+    if "pedidos" in raw:
+        pedidos = _normalize_pedidos_keys(raw.get("pedidos", {}))
+        produtos = raw.get("produtos_cadastrados", [])
+        if not isinstance(produtos, list):
+            produtos = []
+        maquinas = _merge_dados_maquinas(raw.get("dados_maquinas", {}))
+        rf = _merge_resumo_fabrica(raw.get("resumo_fabrica", {}))
+        return pedidos, produtos, maquinas, rf
+
+    pedidos = _normalize_pedidos_keys(raw)
+    return pedidos, [], _default_dados_maquinas(), _default_resumo_fabrica()
+
+
+def salvar_dados(pedidos, produtos_cadastrados, dados_maquinas, resumo_fabrica=None):
+    rf = resumo_fabrica if isinstance(resumo_fabrica, dict) else _default_resumo_fabrica()
+    payload = {
+        "pedidos": pedidos,
+        "produtos_cadastrados": produtos_cadastrados,
+        "dados_maquinas": dados_maquinas,
+        "resumo_fabrica": rf,
+    }
+    with _arquivo_lock:
+        with open(ARQUIVO, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False)

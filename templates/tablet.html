@@ -1,0 +1,2918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Operação — Máquina {{ id }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="ref-body">
+    <div class="ref-shell">
+        <header class="ref-top" aria-label="Barra superior">
+            <div class="ref-top__left">
+                <a href="/tablet/{{ id }}/pedidos" class="ref-top__fila-link" title="Fila deste tablet (somente leitura)">
+                    <svg class="ref-top__fila-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                    <span>FILA</span>
+                </a>
+            <div class="ref-top__clock">
+                <span class="ref-top__clock-ico" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </span>
+                <div class="ref-top__clock-text">
+                    <span id="clock-time" class="ref-top__time">--:--:--</span>
+                    <span id="clock-weekday" class="ref-top__week">—</span>
+                    <span id="clock-date" class="ref-top__date">--/--/----</span>
+                </div>
+            </div>
+            </div>
+            <div class="ref-top__machine" role="status" aria-label="Máquina {% if id < 10 %}0{% endif %}{{ id }}" title="Máquina {% if id < 10 %}0{% endif %}{{ id }}">
+                <div class="ref-top__mach-text">
+                    <span class="ref-top__mach-lbl">MÁQUINA</span>
+                    <span class="ref-top__mach-id">{% if id < 10 %}0{% endif %}{{ id }}</span>
+                </div>
+            </div>
+            <div class="ref-top__trail">
+                <div class="hmi-bar__state machine-state stop ref-top__state sr-only" id="state-chip">
+                    <span class="dot" id="state-dot"></span>
+                    <div>
+                        <span id="state-label" class="hmi-bar__state-lbl">PARADA</span>
+                        <span id="state-desc" class="hmi-bar__state-sub">—</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="hmi-work ref-work">
+            <aside class="hmi-side ref-side" aria-label="Fila de pedidos (somente leitura)">
+                <div class="hmi-side__head">
+                    <span class="hmi-side__head-title">Fila</span>
+                    <span class="hmi-side__head-hint">Sequência automática — não é possível alterar a ordem aqui</span>
+                </div>
+                <div id="list-pedidos" class="hmi-queue" role="list"></div>
+                <p id="list-empty" class="hmi-side__empty" hidden>Sem pedidos na programação.</p>
+                <p class="hmi-side__note">A ordem liberada para operação é sempre a <strong>primeira pendente</strong> na sequência definida pela programação.</p>
+            </aside>
+
+            <main class="ref-main hmi-main">
+                <!-- 1 Banner status -->
+                <section class="ref-card ref-hero-wrap" aria-label="Status da máquina">
+                    <div id="op-hero" class="hmi-status hmi-panel op-hero op-hero--stop ref-hero" aria-live="polite">
+                        <div class="ref-hero__grid">
+                            <div class="ref-hero__ring-wrap">
+                                <div class="ref-hero__ring">
+                                    <div class="hmi-mega__glyph ref-hero__glyph" id="op-hero-icon" aria-hidden="true"></div>
+                                </div>
+                            </div>
+                            <div class="ref-hero__center">
+                                <h1 id="op-hero-title" class="ref-hero__title">PARADA</h1>
+                                <p id="op-hero-sub" class="ref-hero__sub"></p>
+                                <div class="ref-hero__meta sr-only">
+                                    <span id="op-hero-aside-lbl">—</span>
+                                    <time id="op-hero-aside-time">--:--</time>
+                                    <span id="op-hero-aside-date">--/--/----</span>
+                                </div>
+                            </div>
+                            <div class="ref-hero__gear" aria-hidden="true">
+                                <svg viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="28" stroke="rgba(255,255,255,0.35)" stroke-width="4"/><path d="M60 12v12M60 96v12M12 60h12M96 60h12M28 28l8 8M84 84l8 8M92 28l-8 8M36 84l-8 8" stroke="rgba(255,255,255,0.28)" stroke-width="3" stroke-linecap="round"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <span id="banner-prod-duration" class="sr-only">00:00:00</span>
+                </section>
+
+                <!-- 2 Pedido — linha única referência -->
+                <section class="ref-card ref-order" aria-label="Pedido atual">
+                    <div class="ref-order-grid">
+                        <div class="ref-mini">
+                            <span class="ref-mini__k">Cliente</span>
+                            <span id="f-cliente" class="ref-mini__v">—</span>
+                        </div>
+                        <div class="ref-mini">
+                            <span class="ref-mini__k">Código</span>
+                            <span id="f-codigo" class="ref-mini__v">—</span>
+                        </div>
+                        <div class="ref-mini">
+                            <span class="ref-mini__k">Fardos</span>
+                            <span id="f-fardos" class="ref-mini__v">—</span>
+                        </div>
+                        <div class="ref-mini">
+                            <span class="ref-mini__k">Medida</span>
+                            <span id="f-medida" class="ref-mini__v">—</span>
+                        </div>
+                        <div class="ref-mini ref-mini--qty">
+                            <span class="ref-mini__k">Quantidade</span>
+                            <span id="f-quantidade" class="ref-mini__v ref-mini__v--qty">0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3 Observações -->
+                <section class="ref-card ref-obs" aria-label="Observações">
+                    <span class="ref-obs__k">OBSERVAÇÕES</span>
+                    <p id="f-obs" class="ref-obs__v">—</p>
+                </section>
+
+                <!-- 4 Operação — 4 cartões -->
+                <section class="ref-card ref-mes" aria-label="Informações operacionais">
+                    <div class="ref-mes-grid">
+                        <div class="ref-mes-cell">
+                            <span class="ref-mes__k">Status da máquina</span>
+                            <span id="hmi-mid-status" class="ref-mes__v ref-mes__v--status"><span class="hmi-dot" id="hmi-mid-dot"></span><span id="hmi-mid-status-txt">PARADA</span></span>
+                        </div>
+                        <div class="ref-mes-cell">
+                            <span class="ref-mes__k">Operador / Turno</span>
+                            <span id="hmi-op-combo" class="ref-mes__v">—</span>
+                            <span id="hmi-op-operador" class="sr-only" aria-hidden="true">—</span>
+                            <span id="hmi-op-turno" class="sr-only" aria-hidden="true">—</span>
+                        </div>
+                        <div class="ref-mes-cell">
+                            <span class="ref-mes__k">Tempo parado</span>
+                            <span id="hmi-op-tempo-parado" class="ref-mes__v ref-mes__mono">00:00:00</span>
+                        </div>
+                        <div class="ref-mes-cell">
+                            <span class="ref-mes__k">Motivo parado</span>
+                            <span id="hmi-motivo-parada" class="ref-mes__v ref-mes__motivo">—</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5 Apontamento — lançar + progressão do pedido -->
+                <section class="ref-card ref-keypad ref-apont-terminal" aria-label="Apontamento de produção">
+                    <p id="apont-help" class="hmi-sr-only">Informe o total atual produzido no pallet e use LANÇAR PRODUÇÃO para atualizar o apontamento. Cada lançamento substitui o valor anterior, não soma.</p>
+                    <div class="ref-apont-block">
+                        <div class="ref-apont-actions">
+                            <div class="ref-apont-actions__ctrl">
+                                <label class="hmi-sr-only" for="apont-total">Total produzido atual no pallet</label>
+                                <input type="number" id="apont-total" class="ref-apont__input" inputmode="numeric" min="0" step="1" placeholder="Total produzido (atual)" autocomplete="off" aria-describedby="apont-help apont-hint">
+                                <button type="button" id="btn-aplicar-total" class="ref-apont__btn"><span class="ref-apont__btn-text">LANÇAR<br>PRODUÇÃO</span></button>
+                            </div>
+                            <aside class="ref-apont-progress" aria-label="Progresso da produção no pedido">
+                                <div class="ref-apont-progress__head">
+                                    <span class="ref-apont-progress__htitle">PROGRESSO DA PRODUÇÃO</span>
+                                    <span id="apont-progress-label" class="ref-apont-progress__hratio">— / —</span>
+                                </div>
+                                <div class="ref-apont-progress__widget">
+                                    <div class="ref-apont-progress__pct-wrap">
+                                        <span id="apont-progress-pct-big" class="ref-apont-progress__pct-big">—</span>
+                                    </div>
+                                    <div class="ref-apont-progress__track-wrap">
+                                        <div class="ref-apont-progress__ticks" aria-hidden="true"><span>0%</span><span>50%</span><span>100%</span></div>
+                                        <div class="ref-apont-progress__track">
+                                            <div id="apont-progress-fill" class="ref-apont-progress__fill"></div>
+                                            <span id="apont-progress-pct" class="ref-apont-progress__pct-in">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                        <p id="apont-hint" class="ref-apont__hint" role="status"></p>
+                    </div>
+                </section>
+
+                <!-- 6 Comandos — ordem: PARAR | INICIAR/RETOMAR | FINALIZAR (ação principal ao centro) -->
+                <section class="ref-actions hmi-actions" aria-label="Comandos">
+                    <button type="button" id="btn-stop" class="hmi-cmd hmi-cmd--stop ref-cmd" aria-pressed="false">
+                        <span class="hmi-cmd__ico" id="btn-stop-ico" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></span>
+                        <span class="hmi-cmd__txt" id="btn-stop-txt">PARAR<br>MÁQUINA</span>
+                    </button>
+                    <button type="button" id="btn-start" class="hmi-cmd hmi-cmd--start ref-cmd">
+                        <span class="hmi-cmd__ico" id="btn-start-ico" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                        <span class="hmi-cmd__txt" id="btn-start-txt">INICIAR<br>PRODUÇÃO</span>
+                    </button>
+                    <button type="button" id="btn-finish" class="hmi-cmd hmi-cmd--done ref-cmd">
+                        <span class="hmi-cmd__ico" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+                        <span class="hmi-cmd__txt">FINALIZAR<br>PEDIDO</span>
+                    </button>
+                </section>
+
+                <!-- 7 KPI -->
+                <section class="ref-card ref-kpi" aria-label="Indicadores">
+                    <div class="ref-kpi-grid">
+                        <div class="ref-kpi-item">
+                            <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 8h6v6"/></svg></span>
+                            <span class="ref-kpi-k">Eficiência</span>
+                            <span id="hmi-op-ef" class="ref-kpi-v">0%</span>
+                        </div>
+                        <div class="ref-kpi-item">
+                            <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg></span>
+                            <span class="ref-kpi-k">OEE</span>
+                            <span id="hmi-op-oee" class="ref-kpi-v">0%</span>
+                        </div>
+                        <div class="ref-kpi-item">
+                            <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2"><path d="M4 8h16v10H4z"/><path d="M8 8V6a4 4 0 018 0v2"/></svg></span>
+                            <span class="ref-kpi-k">Produzido</span>
+                            <span id="hmi-op-produzido" class="ref-kpi-v">0</span>
+                        </div>
+                        <div class="ref-kpi-item">
+                            <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ed6c02" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg></span>
+                            <span class="ref-kpi-k">Faltam</span>
+                            <span id="hmi-op-faltam" class="ref-kpi-v ref-kpi-v--warn">0</span>
+                        </div>
+                        <div class="ref-kpi-item">
+                            <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                            <span class="ref-kpi-k">Tempo parado</span>
+                            <span id="hmi-kpi-tempo-parado" class="ref-kpi-v ref-mes__mono">00:00:00</span>
+                        </div>
+                        <div class="ref-kpi-item">
+                            <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></span>
+                            <span class="ref-kpi-k">Motivo atual</span>
+                            <span id="hmi-kpi-motivo" class="ref-kpi-v ref-kpi-v--sm">—</span>
+                        </div>
+                    </div>
+                    <div class="ref-kpi-dia">
+                        <span class="ref-kpi-dia__k">Produção do dia (esta máquina)</span>
+                        <span id="hmi-producao-dia" class="ref-kpi-dia__v">0</span>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer class="ref-foot" aria-label="Rodapé">
+            <span id="ft-prod-time" class="hmi-hidden" hidden>00:00:00</span>
+            <p class="ref-foot__tag">Sistema de Gestão Industrial</p>
+            <p class="ref-foot__conn">
+                <span class="ref-foot__dot" id="ft-conn-dot"></span>
+                <span id="ft-link" class="ref-foot__link hmi-foot__conn-txt--ok">Conectado</span>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modal obrigatório: motivo ao parar -->
+    <div id="modal-parada" class="hmi-modal-overlay" hidden aria-hidden="true">
+        <div class="hmi-modal" role="dialog" aria-modal="true" aria-labelledby="modal-parada-title">
+            <div class="hmi-modal__head">
+                <h2 id="modal-parada-title" class="hmi-modal__title">Parar máquina</h2>
+                <p class="hmi-modal__lead">Selecione o <strong>motivo da parada</strong>. É obrigatório confirmar antes de parar.</p>
+            </div>
+            <div class="hmi-modal-motivos" id="modal-parada-cards">
+                <button type="button" class="hmi-modal-card" data-motivo="Ajuste máquina"><span class="hmi-modal-card__t">Ajuste máquina</span></button>
+                <button type="button" class="hmi-modal-card" data-motivo="Manutenção"><span class="hmi-modal-card__t">Manutenção</span></button>
+                <button type="button" class="hmi-modal-card" data-motivo="Qualidade"><span class="hmi-modal-card__t">Qualidade</span></button>
+                <button type="button" class="hmi-modal-card" data-motivo="Operador ausente"><span class="hmi-modal-card__t">Operador ausente</span></button>
+                <button type="button" class="hmi-modal-card" data-motivo="Limpeza"><span class="hmi-modal-card__t">Limpeza</span></button>
+                <button type="button" class="hmi-modal-card" data-motivo="Troca de bobina"><span class="hmi-modal-card__t">Troca de bobina</span></button>
+                <button type="button" class="hmi-modal-card hmi-modal-card--wide" data-motivo="__outros__"><span class="hmi-modal-card__t">Outros</span><span class="hmi-modal-card__sub">Descreva abaixo</span></button>
+            </div>
+            <div id="modal-parada-outros-wrap" class="hmi-modal-outros" hidden>
+                <label class="hmi-modal-outros__lbl" for="modal-parada-outros-txt">Descrição (obrigatória para “Outros”)</label>
+                <input type="text" id="modal-parada-outros-txt" class="hmi-modal-outros__input" maxlength="120" placeholder="Digite o motivo" autocomplete="off" />
+            </div>
+            <p id="modal-parada-err" class="hmi-modal-err" role="alert" hidden>Selecione um motivo ou preencha a descrição.</p>
+            <div class="hmi-modal-actions">
+                <button type="button" id="modal-parada-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
+                <button type="button" id="modal-parada-confirm" class="hmi-modal-btn hmi-modal-btn--danger" disabled>Confirmar parada</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: nome e turno só no primeiro início do pedido (retomar após parada não pede de novo) -->
+    <div id="modal-inicio-op" class="hmi-modal-overlay" hidden aria-hidden="true">
+        <div class="hmi-modal" role="dialog" aria-modal="true" aria-labelledby="modal-inicio-op-title">
+            <div class="hmi-modal__head">
+                <h2 id="modal-inicio-op-title" class="hmi-modal__title">Identificação do operador</h2>
+                <p class="hmi-modal__lead" id="modal-inicio-op-lead">Informe <strong>nome</strong> e <strong>turno</strong> para iniciar a produção neste pedido.</p>
+            </div>
+            <div class="hmi-modal-form-grid">
+                <label class="hmi-modal-lbl" for="modal-inicio-nome">Nome do operador</label>
+                <input type="text" id="modal-inicio-nome" class="hmi-modal-inp" maxlength="80" autocomplete="name" placeholder="Nome completo" />
+                <label class="hmi-modal-lbl" for="modal-inicio-turno">Turno</label>
+                <select id="modal-inicio-turno" class="hmi-modal-inp hmi-modal-inp--select">
+                    <option value="">Selecione…</option>
+                    <option value="TURNO A">TURNO A</option>
+                    <option value="TURNO B">TURNO B</option>
+                    <option value="COMERCIAL">COMERCIAL</option>
+                </select>
+            </div>
+            <p id="modal-inicio-op-err" class="hmi-modal-err" role="alert" hidden>Preencha nome e turno.</p>
+            <div class="hmi-modal-actions">
+                <button type="button" id="modal-inicio-op-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
+                <button type="button" id="modal-inicio-op-confirm" class="hmi-modal-btn hmi-modal-btn--primary">Confirmar e iniciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: nome e turno ao finalizar pedido -->
+    <div id="modal-fim-op" class="hmi-modal-overlay" hidden aria-hidden="true">
+        <div class="hmi-modal" role="dialog" aria-modal="true" aria-labelledby="modal-fim-op-title">
+            <div class="hmi-modal__head">
+                <h2 id="modal-fim-op-title" class="hmi-modal__title">Finalizar pedido</h2>
+                <p class="hmi-modal__lead">Informe <strong>nome</strong> e <strong>turno</strong> de quem encerra este pedido no tablet. Os dados aparecem na programação administrativa.</p>
+            </div>
+            <div class="hmi-modal-form-grid">
+                <label class="hmi-modal-lbl" for="modal-fim-nome">Nome do operador</label>
+                <input type="text" id="modal-fim-nome" class="hmi-modal-inp" maxlength="80" autocomplete="name" placeholder="Nome completo" />
+                <label class="hmi-modal-lbl" for="modal-fim-turno">Turno</label>
+                <select id="modal-fim-turno" class="hmi-modal-inp hmi-modal-inp--select">
+                    <option value="">Selecione…</option>
+                    <option value="TURNO A">TURNO A</option>
+                    <option value="TURNO B">TURNO B</option>
+                    <option value="COMERCIAL">COMERCIAL</option>
+                </select>
+            </div>
+            <p id="modal-fim-op-err" class="hmi-modal-err" role="alert" hidden>Preencha nome e turno.</p>
+            <div class="hmi-modal-actions">
+                <button type="button" id="modal-fim-op-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
+                <button type="button" id="modal-fim-op-confirm" class="hmi-modal-btn hmi-modal-btn--primary">Confirmar finalização</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IDs ocultos para compatibilidade com rotinas de estado (não exibidos) -->
+    <span id="f-status-chip" class="hmi-hidden" hidden></span>
+
+    <script type="application/json" id="tablet-boot">{{ estado_boot|tojson }}</script>
+
+    <style>
+/* Indupack tablet — terminal industrial / supervisório (alto contraste, leitura à distância) */
+:root {
+    --mes-bg-deep: #070b10;
+    --mes-bg: #0c131c;
+    --mes-bg-mid: #101a26;
+    --mes-panel: #152230;
+    --mes-panel-raised: #1a2d40;
+    --mes-surface: #1a2838;
+    --mes-surface-mid: #223445;
+    --mes-cell: rgba(0, 0, 0, 0.32);
+    --mes-cell-border: rgba(130, 175, 210, 0.16);
+    --mes-ink: #e8f1f7;
+    --mes-ink-dim: #a8c0d4;
+    --mes-muted: #7a94ab;
+    --mes-line: rgba(120, 165, 200, 0.14);
+    --mes-line-strong: rgba(140, 185, 215, 0.24);
+    --mes-blue: #8ecae6;
+    --mes-blue-mid: #5eb0d6;
+    --mes-blue-soft: rgba(94, 176, 214, 0.14);
+    --mes-green: #00c853;
+    --mes-green-dark: #00a844;
+    --mes-red: #ff3d3d;
+    --mes-red-dark: #c62828;
+    --mes-amber: #ffc400;
+    --mes-orange: #ff9100;
+    --shadow-card: none;
+    --shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.45);
+    --r: 11px;
+    --r-sm: 9px;
+    --font: "Inter", "Segoe UI", system-ui, sans-serif;
+    --stack-gap: 6px;
+    --card-pad-y: 10px;
+    --card-pad-x: 12px;
+    --hmi-label: clamp(0.82rem, 1.45vw, 1.02rem);
+    --hmi-aux: clamp(0.88rem, 1.5vw, 1.06rem);
+    --hmi-value: clamp(1.32rem, 2.6vw, 1.85rem);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+
+.hmi-sr-only,
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    white-space: nowrap;
+}
+
+.hmi-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.ref-body {
+    font-family: var(--font);
+    color: var(--mes-ink);
+    background: var(--mes-bg-deep);
+    background-image:
+        linear-gradient(180deg, #121d2c 0%, var(--mes-bg) 38%, var(--mes-bg-deep) 100%),
+        radial-gradient(ellipse 120% 80% at 50% -20%, rgba(50, 120, 160, 0.12), transparent 55%);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+}
+
+.ref-shell {
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 0;
+}
+
+/* —— Topo integrado ao terminal —— */
+.ref-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.35);
+    border-bottom: 1px solid var(--mes-line-strong);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+    z-index: 6;
+}
+
+.ref-top__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+/* Navegação só dentro do ecossistema tablet (sem acesso ao painel administrativo) */
+.ref-top__fila-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    font-size: clamp(0.74rem, 1.2vw, 0.86rem);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--mes-blue);
+    background: var(--mes-blue-soft);
+    border: 1px solid var(--mes-cell-border);
+    border-radius: 999px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.ref-top__fila-link:hover {
+    background: rgba(94, 176, 214, 0.22);
+    border-color: rgba(140, 200, 230, 0.35);
+}
+.ref-top__fila-ico {
+    display: block;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.ref-top__clock {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    color: var(--mes-ink-dim);
+}
+
+.ref-top__clock-ico {
+    display: flex;
+    color: var(--mes-blue-mid);
+    opacity: 0.95;
+}
+
+.ref-top__clock-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    line-height: 1.15;
+}
+
+.ref-top__time {
+    font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--mes-ink);
+}
+
+.ref-top__week {
+    font-size: clamp(0.82rem, 1.2vw, 0.96rem);
+    font-weight: 600;
+    color: var(--mes-muted);
+    text-transform: capitalize;
+}
+
+.ref-top__date {
+    font-size: clamp(0.84rem, 1.2vw, 0.98rem);
+    font-weight: 600;
+    color: var(--mes-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Identificação operacional — supervisório / terminal MES (sem ícone; só hierarquia tipográfica) */
+.ref-top__machine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px 12px;
+    min-width: clamp(92px, 11vw, 124px);
+    border-radius: var(--r);
+    background: rgba(10, 18, 28, 0.82);
+    border: 1px solid rgba(100, 168, 205, 0.22);
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.45) inset,
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 0 36px rgba(30, 95, 130, 0.14);
+    user-select: none;
+    pointer-events: none;
+}
+
+.ref-top__mach-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.ref-top__mach-lbl {
+    font-size: clamp(0.58rem, 0.78vw, 0.68rem);
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+    line-height: 1;
+}
+
+.ref-top__mach-id {
+    font-size: clamp(1.72rem, 3.5vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: var(--mes-ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.ref-top__trail {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    justify-self: end;
+    min-width: 0;
+}
+
+.hmi-bar__state-lbl {
+    font-size: clamp(0.84rem, 1.2vw, 0.95rem);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--mes-ink);
+    display: block;
+}
+
+.hmi-bar__state-sub {
+    font-size: 0.68rem;
+    color: var(--mes-muted);
+    display: block;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Área principal + sidebar (fila estreita — foco no miolo) */
+.hmi-work.ref-work {
+    display: grid;
+    grid-template-columns: minmax(148px, 188px) minmax(0, 1fr);
+    gap: 0;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.hmi-work.ref-work > .ref-main.hmi-main,
+.hmi-work.ref-work > .hmi-side.ref-side {
+    min-height: 0;
+    height: 100%;
+}
+
+.hmi-side.ref-side {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 7px 6px 8px 8px;
+    background: rgba(0, 0, 0, 0.28);
+    border-right: 1px solid var(--mes-line-strong);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.hmi-side__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-bottom: 5px;
+    margin-bottom: 1px;
+    border-bottom: 1px solid var(--mes-line);
+}
+
+.hmi-side__head-title {
+    font-size: clamp(0.72rem, 1vw, 0.84rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--mes-muted);
+}
+
+.hmi-side__head-hint {
+    font-size: clamp(0.66rem, 0.92vw, 0.78rem);
+    font-weight: 600;
+    color: var(--mes-muted);
+    opacity: 0.88;
+}
+
+/* Fila industrial — lista compacta (só ordem · resumo · status · qtd) */
+.hmi-queue {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 1px 2px 2px 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 160, 200, 0.35) transparent;
+}
+
+.hmi-queue::-webkit-scrollbar {
+    width: 5px;
+}
+
+.hmi-queue::-webkit-scrollbar-thumb {
+    background: rgba(100, 160, 200, 0.28);
+    border-radius: 999px;
+}
+
+.hmi-queue__item {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: default;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    border-radius: 8px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Pedidos futuros na fila — só consulta, sem interação */
+.hmi-queue__item--locked {
+    pointer-events: none;
+    cursor: default;
+    user-select: none;
+}
+
+.hmi-queue__card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 8px 7px;
+    border-radius: 8px;
+    border: 1px solid var(--mes-cell-border);
+    background: var(--mes-surface-mid);
+    box-shadow: none;
+    transition: border-color 0.12s ease, background 0.12s ease;
+    min-width: 0;
+    min-height: 44px;
+}
+
+.hmi-queue__item:not(.hmi-queue__item--locked):not(.is-done):hover .hmi-queue__card {
+    border-color: rgba(140, 200, 230, 0.28);
+    background: var(--mes-panel-raised);
+}
+
+.hmi-queue__top {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    min-width: 0;
+}
+
+.hmi-queue__num {
+    font-size: clamp(0.88rem, 1.15vw, 1rem);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink-dim);
+    line-height: 1.1;
+    flex-shrink: 0;
+}
+
+.hmi-queue__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+}
+
+.hmi-queue__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.52rem, 0.72vw, 0.62rem);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Finalizado — discreto */
+.hmi-queue__badge--done {
+    color: var(--mes-muted);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--mes-cell-border);
+    font-weight: 700;
+}
+
+/* Aguardando — manutenção / fila */
+.hmi-queue__badge--wait {
+    color: #1a1400;
+    background: var(--mes-amber);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Em produção — único destaque forte na fila */
+.hmi-queue__badge--run {
+    color: #fff;
+    background: var(--mes-green);
+    border: 1px solid var(--mes-green-dark);
+    padding: 3px 6px;
+    font-size: clamp(0.56rem, 0.78vw, 0.66rem);
+    font-weight: 900;
+}
+
+.hmi-queue__badge--stop {
+    color: #fff;
+    background: var(--mes-red-dark);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    font-weight: 800;
+}
+
+.hmi-queue__badge--warn {
+    color: #1a0f00;
+    background: var(--mes-orange);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-weight: 800;
+}
+
+.hmi-queue__summary {
+    margin: 0;
+    font-size: clamp(0.72rem, 0.95vw, 0.84rem);
+    font-weight: 600;
+    color: var(--mes-ink-dim);
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.hmi-queue__foot {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-top: 1px;
+}
+
+.hmi-queue__qty-k {
+    font-size: clamp(0.56rem, 0.78vw, 0.64rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+}
+
+.hmi-queue__qty-v {
+    font-size: clamp(0.76rem, 1vw, 0.88rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink);
+}
+
+/* Único cartão “hero”: rodando */
+.hmi-queue__item.is-producing .hmi-queue__card {
+    border: 2px solid var(--mes-green);
+    background: rgba(0, 200, 83, 0.14);
+    box-shadow: 0 0 12px rgba(0, 200, 83, 0.2);
+}
+
+.hmi-queue__item.is-producing .hmi-queue__num {
+    color: var(--mes-green-dark);
+}
+
+/* Selecionado mas parado / manutenção — só acento, sem competir com o miolo */
+.hmi-queue__item.is-stopped .hmi-queue__card {
+    border: 1px solid var(--mes-cell-border);
+    background: var(--mes-surface-mid);
+    box-shadow: inset 4px 0 0 var(--mes-red);
+}
+
+.hmi-queue__item.is-maint-row .hmi-queue__card {
+    border: 1px solid var(--mes-cell-border);
+    background: var(--mes-surface-mid);
+    box-shadow: inset 4px 0 0 var(--mes-amber);
+}
+
+/* Finalizado — neutro, baixo contraste */
+.hmi-queue__item.is-done .hmi-queue__card {
+    border-color: var(--mes-line);
+    background: rgba(0, 0, 0, 0.22);
+    opacity: 0.88;
+}
+
+.hmi-queue__item.is-done .hmi-queue__summary {
+    color: var(--mes-muted);
+}
+
+.hmi-queue__item.is-done .hmi-queue__qty-v {
+    color: var(--mes-muted);
+}
+
+/* Pedidos ainda não liberados (fila futura) */
+.hmi-queue__item--locked .hmi-queue__card {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 196, 0, 0.22);
+    opacity: 0.85;
+}
+
+.hmi-side__note {
+    margin: 8px 0 0;
+    padding: 8px 2px 0;
+    font-size: clamp(0.62rem, 0.82vw, 0.72rem);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--mes-muted);
+    border-top: 1px solid var(--mes-line);
+}
+
+.hmi-side__note strong {
+    font-weight: 800;
+    color: var(--mes-ink-dim);
+}
+
+.hmi-side__empty {
+    color: var(--mes-muted);
+    text-align: center;
+    font-size: var(--hmi-aux);
+    padding: 16px 8px;
+}
+
+/* Conteúdo principal */
+.ref-main.hmi-main {
+    min-height: 0;
+    overflow: hidden;
+    padding: var(--card-pad-y) var(--card-pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-gap);
+    flex: 1;
+}
+
+.ref-main.hmi-main > .ref-hero-wrap {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+.ref-main.hmi-main > .ref-card.ref-order,
+.ref-main.hmi-main > .ref-card.ref-obs {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+.ref-main.hmi-main > .ref-card.ref-mes {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+.ref-main.hmi-main > .ref-card.ref-keypad {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+.ref-main.hmi-main > section.ref-actions.hmi-actions {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+.ref-main.hmi-main > .ref-card.ref-kpi {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+@media (min-height: 700px) {
+    .ref-main.hmi-main {
+        gap: 10px;
+    }
+}
+
+.ref-card {
+    background: var(--mes-panel);
+    border-radius: var(--r);
+    border: 1px solid var(--mes-line);
+    box-shadow: none;
+}
+
+/* Banner herói — cores sólidas MES */
+.ref-hero-wrap {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.hmi-panel {
+    border-radius: var(--r);
+    overflow: hidden;
+}
+
+.hmi-status {
+    position: relative;
+    padding: 11px 14px;
+    min-height: 0;
+}
+
+.op-hero {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-soft);
+}
+
+.op-hero--run {
+    background: var(--mes-green);
+    color: #fff;
+}
+
+.op-hero--stop {
+    background: var(--mes-red);
+    color: #fff;
+}
+
+.op-hero--maint {
+    background: linear-gradient(180deg, #e6ac00 0%, #c49100 100%);
+    color: #141008;
+}
+
+.op-hero--maint .ref-hero__title,
+.op-hero--maint .ref-hero__sub {
+    color: #141008;
+}
+
+.op-hero--maint .hmi-mega__glyph,
+.op-hero--maint .ref-hero__gear svg {
+    color: #141008;
+    opacity: 0.55;
+}
+
+.op-hero--maint .ref-hero__ring {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.22);
+}
+
+.op-hero--standby {
+    background: linear-gradient(180deg, #2a3544 0%, #1e2836 100%);
+    color: var(--mes-ink);
+    border: 1px solid var(--mes-line-strong);
+}
+
+.ref-hero__grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 7px 14px;
+}
+
+.ref-hero__ring-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ref-hero__ring {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.18);
+    border: 3px solid rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.op-hero--run .ref-hero__ring {
+    animation: mes-pulse-soft 2.8s ease-in-out infinite;
+}
+
+@keyframes mes-pulse-soft {
+    0%, 100% { box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12), 0 0 0 0 rgba(255, 255, 255, 0.25); }
+    50% { box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12), 0 0 0 8px rgba(255, 255, 255, 0.12); }
+}
+
+.hmi-mega__glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+}
+
+.hmi-mega__glyph svg {
+    width: 58%;
+    height: 58%;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.ref-hero__center {
+    text-align: center;
+    min-width: 0;
+}
+
+.ref-hero__title {
+    margin: 0;
+    font-size: clamp(1.65rem, 4vw, 2.35rem);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1.05;
+}
+
+.ref-hero__sub {
+    margin: 3px 0 0;
+    font-size: clamp(0.92rem, 1.65vw, 1.12rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.96;
+}
+
+.ref-hero__gear {
+    opacity: 0.35;
+    width: min(44px, 10vw);
+}
+
+.ref-hero__gear svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Pedido */
+.ref-order {
+    padding: var(--card-pad-y) var(--card-pad-x);
+}
+
+.ref-order-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px 9px;
+}
+
+.ref-mini {
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    background: var(--mes-cell);
+    border: 1px solid var(--mes-cell-border);
+}
+
+.ref-mini__k {
+    display: block;
+    font-size: var(--hmi-label);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+    margin-bottom: 3px;
+}
+
+.ref-mini__v {
+    font-size: clamp(1.05rem, 1.65vw, 1.35rem);
+    font-weight: 800;
+    color: var(--mes-blue);
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.ref-mini__v--qty {
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+/* Observações */
+.ref-obs {
+    padding: var(--card-pad-y) var(--card-pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ref-obs__k {
+    font-size: clamp(0.88rem, 1.25vw, 1.02rem);
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: var(--mes-blue-mid);
+}
+
+.ref-obs__v {
+    margin: 0;
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    font-weight: 600;
+    color: var(--mes-ink-dim);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* MES / operação */
+.ref-mes {
+    padding: var(--card-pad-y) var(--card-pad-x);
+}
+
+.ref-mes-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.ref-mes-cell {
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    background: var(--mes-cell);
+    border: 1px solid var(--mes-cell-border);
+}
+
+.ref-mes__k {
+    display: block;
+    font-size: var(--hmi-label);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+    margin-bottom: 3px;
+}
+
+.ref-mes__v {
+    font-size: clamp(1.02rem, 1.5vw, 1.22rem);
+    font-weight: 800;
+    color: var(--mes-ink);
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.ref-mes__v--status {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: clamp(0.88rem, 1.2vw, 1.02rem) !important;
+}
+
+.ref-mes__mono,
+.ref-kpi-v.ref-mes__mono {
+    font-variant-numeric: tabular-nums;
+}
+
+.ref-mes__motivo {
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hmi-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.hmi-dot.is-run {
+    background: var(--mes-green);
+    box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.45);
+}
+
+.hmi-dot.is-stop {
+    background: var(--mes-red);
+    box-shadow: 0 0 0 2px rgba(255, 61, 61, 0.45);
+}
+
+.hmi-dot.is-warn {
+    background: var(--mes-amber);
+    box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.45);
+}
+
+/* Apontamento — entrada + progressão do pedido */
+.ref-apont-terminal.ref-keypad {
+    padding: var(--card-pad-y) var(--card-pad-x);
+    background: var(--mes-panel);
+    border: 1px solid var(--mes-line);
+    box-shadow: none;
+}
+
+.ref-apont-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+.ref-apont-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 12px 16px;
+}
+
+.ref-apont-actions__ctrl {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 10px;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.ref-apont__input {
+    flex: 1 1 140px;
+    min-width: min(140px, 100%);
+    max-width: 220px;
+    min-height: 56px;
+    padding: 12px 14px;
+    font-size: clamp(1.22rem, 2.4vw, 1.55rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    border-radius: var(--r-sm);
+    border: 2px solid var(--mes-line-strong);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--mes-ink);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+    text-align: center;
+}
+
+.ref-apont__input::placeholder {
+    color: var(--mes-muted);
+    font-weight: 600;
+    font-size: clamp(0.88rem, 1.25vw, 1rem);
+}
+
+.ref-apont__input:focus {
+    outline: none;
+    border-color: var(--mes-green);
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow:
+        0 0 0 3px rgba(0, 200, 83, 0.22),
+        inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ref-apont__btn {
+    flex: 0 0 auto;
+    width: 118px;
+    max-width: 118px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    color: #fff;
+    background: var(--mes-green);
+    border-bottom: 4px solid var(--mes-green-dark);
+    box-shadow: 0 4px 18px rgba(0, 200, 83, 0.35);
+    transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ref-apont__btn-text {
+    font-size: clamp(0.74rem, 1.05vw, 0.88rem);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+}
+
+/* Mesmo “PROGRESSO DA PRODUÇÃO” da área principal, compacto ao lado do apontamento */
+.ref-apont-progress {
+    flex: 1 1 300px;
+    min-width: min(240px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--mes-cell-border);
+    background: var(--mes-cell);
+    align-self: stretch;
+}
+
+.ref-apont-progress__head {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ref-apont-progress__htitle {
+    font-size: clamp(0.68rem, 0.95vw, 0.82rem);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mes-blue);
+}
+
+.ref-apont-progress__hratio {
+    font-size: clamp(0.88rem, 1.35vw, 1.08rem);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-blue);
+}
+
+.ref-apont-progress__widget {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 14px;
+    align-items: center;
+    min-width: 0;
+}
+
+.ref-apont-progress__pct-big {
+    font-size: clamp(1.45rem, 3vw, 2.1rem);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink);
+    line-height: 1;
+}
+
+.ref-apont-progress__track-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.ref-apont-progress__ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: clamp(0.68rem, 0.92vw, 0.8rem);
+    font-weight: 700;
+    color: var(--mes-muted);
+}
+
+.ref-apont-progress__track {
+    position: relative;
+    height: clamp(36px, 5vh, 48px);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+    border: 1px solid var(--mes-line);
+}
+
+.ref-apont-progress__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    border-radius: 9px;
+    background: linear-gradient(90deg, var(--mes-green-dark), var(--mes-green));
+    transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ref-apont-progress__pct-in {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    text-align: center;
+    font-size: clamp(0.95rem, 1.65vw, 1.22rem);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink);
+    pointer-events: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.ref-apont-progress--hold .ref-apont-progress__fill {
+    background: linear-gradient(90deg, #546e7a, #78909c);
+}
+
+.ref-apont-progress--hold .ref-apont-progress__pct-big {
+    color: var(--mes-muted);
+}
+
+.ref-apont-progress--hold .ref-apont-progress__pct-in {
+    color: var(--mes-ink);
+}
+
+.ref-apont__btn:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: 0 6px 22px rgba(0, 200, 83, 0.4);
+}
+
+.ref-apont__btn:active:not(:disabled) {
+    transform: translateY(2px);
+    border-bottom-width: 2px;
+}
+
+.ref-apont__btn:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    filter: grayscale(0.2);
+}
+
+.ref-apont__hint {
+    margin: 0;
+    padding-top: 2px;
+    font-size: clamp(0.72rem, 1vw, 0.84rem);
+    font-weight: 700;
+    color: var(--mes-blue-mid);
+    line-height: 1.35;
+}
+
+.ref-apont__hint:empty {
+    display: none;
+}
+
+/* Comandos */
+.ref-actions.hmi-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    flex-shrink: 0;
+}
+
+.ref-actions.hmi-actions.ref-actions--focus-retomar .hmi-cmd.ref-cmd:disabled {
+    opacity: 0.26;
+    filter: grayscale(1);
+    box-shadow: none;
+}
+
+.ref-actions.hmi-actions.ref-actions--focus-retomar #btn-start:not(:disabled) {
+    box-shadow: 0 6px 26px rgba(0, 200, 83, 0.45);
+}
+
+.hmi-cmd.ref-cmd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 80px;
+    padding: 12px 10px;
+    border: none;
+    border-radius: var(--r);
+    font-family: inherit;
+    cursor: pointer;
+    color: #fff;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.hmi-cmd__txt {
+    font-size: clamp(0.92rem, 1.55vw, 1.15rem);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1.25;
+}
+
+.hmi-cmd__ico svg {
+    display: block;
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.hmi-cmd:hover:not(:disabled) {
+    filter: brightness(1.03);
+}
+
+.hmi-cmd:active:not(:disabled) {
+    transform: translateY(2px);
+}
+
+.hmi-cmd:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    filter: grayscale(0.1);
+}
+
+.hmi-cmd--start {
+    background: var(--mes-green);
+    border-bottom: 3px solid var(--mes-green-dark);
+}
+
+.hmi-cmd--stop {
+    background: var(--mes-red);
+    border-bottom: 3px solid var(--mes-red-dark);
+}
+
+.hmi-cmd--done {
+    background: var(--mes-blue-mid);
+    border-bottom: 3px solid #24586c;
+}
+
+.hmi-cmd--resume {
+    background: var(--mes-green);
+    border-bottom: 3px solid var(--mes-green-dark);
+}
+
+.hmi-cmd--resume .hmi-cmd__ico svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+/* Modal parada */
+.hmi-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(4, 8, 14, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.hmi-modal-overlay[hidden] {
+    display: none !important;
+}
+
+.hmi-modal {
+    width: min(980px, 100%);
+    max-height: min(92dvh, 900px);
+    overflow: auto;
+    background: var(--mes-panel-raised);
+    border: 1px solid var(--mes-line-strong);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-soft);
+    padding: 22px 22px 18px;
+    color: var(--mes-ink);
+}
+
+.hmi-modal__head {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--mes-line);
+}
+
+.hmi-modal__title {
+    margin: 0 0 8px;
+    font-size: clamp(1.28rem, 3vw, 1.72rem);
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    color: var(--mes-blue);
+}
+
+.hmi-modal__lead {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--mes-muted);
+    line-height: 1.45;
+}
+
+.hmi-modal-motivos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 900px) {
+    .hmi-modal-motivos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.hmi-modal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 76px;
+    padding: 16px 18px;
+    border-radius: var(--r-sm);
+    border: 2px solid var(--mes-cell-border);
+    background: var(--mes-cell);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: var(--mes-blue);
+    box-shadow: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.hmi-modal-card:hover {
+    border-color: rgba(140, 200, 230, 0.35);
+    background: var(--mes-surface-mid);
+}
+
+.hmi-modal-card:active {
+    transform: scale(0.995);
+}
+
+.hmi-modal-card.is-selected {
+    border-color: var(--mes-red);
+    background: rgba(255, 61, 61, 0.12);
+    box-shadow: 0 0 0 2px rgba(255, 61, 61, 0.25);
+}
+
+.hmi-modal-card--wide {
+    grid-column: 1 / -1;
+    min-height: 68px;
+}
+
+.hmi-modal-card__t {
+    font-size: 1.08rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+}
+
+.hmi-modal-card__sub {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--mes-muted);
+}
+
+.hmi-modal-outros {
+    margin-top: 14px;
+}
+
+.hmi-modal-outros__lbl {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mes-blue);
+    margin-bottom: 8px;
+}
+
+.hmi-modal-outros__input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1.12rem;
+    font-weight: 700;
+    border-radius: var(--r-sm);
+    border: 2px solid var(--mes-line-strong);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--mes-ink);
+}
+
+.hmi-modal-outros__input:focus {
+    outline: none;
+    border-color: rgba(220, 38, 38, 0.45);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.hmi-modal-err {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: var(--mes-red-dark);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.hmi-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--mes-line);
+}
+
+.hmi-modal-btn {
+    min-height: 52px;
+    padding: 14px 22px;
+    border-radius: var(--r-sm);
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+}
+
+.hmi-modal-btn--ghost {
+    background: var(--mes-cell);
+    border: 2px solid var(--mes-line-strong);
+    color: var(--mes-ink);
+}
+
+.hmi-modal-btn--danger {
+    background: var(--mes-red);
+    color: #fff;
+    box-shadow: var(--shadow-card);
+}
+
+.hmi-modal-btn--danger:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.hmi-modal-btn--primary {
+    background: var(--mes-green);
+    color: #fff;
+    border-bottom: 3px solid var(--mes-green-dark);
+    box-shadow: var(--shadow-card);
+}
+
+.hmi-modal-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px 12px;
+    margin-bottom: 6px;
+}
+
+.hmi-modal-lbl {
+    font-size: clamp(0.72rem, 1vw, 0.82rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+}
+
+.hmi-modal-inp {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--mes-line-strong);
+    font-family: inherit;
+    font-size: clamp(0.92rem, 1.3vw, 1.05rem);
+    font-weight: 600;
+    color: var(--mes-ink);
+    background: rgba(0, 0, 0, 0.35);
+    box-sizing: border-box;
+}
+
+.hmi-modal-inp:focus {
+    outline: none;
+    border-color: var(--mes-blue-mid);
+    box-shadow: 0 0 0 3px rgba(94, 176, 214, 0.2);
+}
+
+.hmi-modal-inp--select {
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+/* KPI */
+.ref-kpi {
+    padding: var(--card-pad-y) var(--card-pad-x);
+}
+
+.ref-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 7px;
+    align-items: stretch;
+    flex: 0 0 auto;
+}
+
+.ref-kpi-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    row-gap: 4px;
+    align-items: center;
+    padding: 8px 10px 10px;
+    min-height: 76px;
+    border-radius: var(--r-sm);
+    background: var(--mes-cell);
+    border: 1px solid var(--mes-cell-border);
+}
+
+.ref-kpi-ico {
+    display: flex;
+    opacity: 0.92;
+    grid-row: 1 / span 2;
+    align-self: center;
+}
+
+.ref-kpi-ico svg {
+    width: 22px;
+    height: 22px;
+}
+
+.ref-kpi-k {
+    font-size: var(--hmi-label);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+    grid-column: 2;
+}
+
+.ref-kpi-v {
+    font-size: var(--hmi-value);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-blue);
+    grid-column: 2;
+    line-height: 1.15;
+}
+
+.ref-kpi-v--warn {
+    color: var(--mes-orange);
+}
+
+.ref-kpi-v--sm {
+    font-size: clamp(0.9rem, 1.3vw, 1.08rem);
+    font-weight: 700;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.ref-kpi-dia {
+    margin-top: 7px;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border-radius: var(--r-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px dashed var(--mes-cell-border);
+}
+
+.ref-kpi-dia__k {
+    font-size: clamp(0.82rem, 1.15vw, 0.98rem);
+    font-weight: 800;
+    color: var(--mes-blue);
+}
+
+.ref-kpi-dia__v {
+    font-size: clamp(1.12rem, 2vw, 1.42rem);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-blue-mid);
+}
+
+/* Rodapé */
+.ref-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 14px 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid var(--mes-line-strong);
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ref-foot__tag {
+    margin: 0;
+    font-size: clamp(0.84rem, 1.2vw, 1rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--mes-muted);
+}
+
+.ref-foot__conn {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(0.84rem, 1.2vw, 1rem);
+    font-weight: 700;
+    color: var(--mes-muted);
+}
+
+.ref-foot__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--mes-green);
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.4);
+}
+
+.ref-foot__dot.is-off {
+    background: var(--mes-red);
+    box-shadow: 0 0 0 2px rgba(255, 61, 61, 0.4);
+}
+
+.hmi-foot__conn-txt--ok,
+.ref-foot__link.hmi-foot__conn-txt--ok {
+    color: var(--mes-green) !important;
+    font-weight: 800;
+}
+
+/* Altura limitada (ex.: 1366×768): compactação extra sem rolagem no documento */
+@media (max-height: 840px) {
+    :root {
+        --stack-gap: 6px;
+        --card-pad-y: 8px;
+        --card-pad-x: 12px;
+    }
+
+    .ref-main.hmi-main {
+        padding: 7px 12px;
+    }
+
+    .hmi-status {
+        padding: 9px 12px;
+    }
+
+    .ref-hero__ring {
+        width: 42px;
+        height: 42px;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: 66px;
+        padding: 8px 8px;
+    }
+
+    .ref-kpi-item {
+        min-height: 66px;
+        padding: 6px 8px 8px;
+    }
+}
+
+@media (max-width: 720px) {
+    .ref-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .ref-order-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ref-mes-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .ref-top {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+        text-align: center;
+    }
+    .ref-top__trail {
+        justify-self: stretch;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .ref-top__left {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .ref-top__clock {
+        justify-content: center;
+    }
+    .hmi-work.ref-work {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+    .hmi-side.ref-side {
+        max-height: 38vh;
+        border-right: none;
+        border-bottom: 1px solid var(--mes-line);
+        box-shadow: none;
+    }
+    .ref-actions.hmi-actions {
+        grid-template-columns: 1fr;
+    }
+    .ref-apont-actions {
+        flex-direction: column;
+    }
+
+    .ref-apont-actions__ctrl {
+        width: 100%;
+    }
+
+    .ref-apont__input {
+        max-width: none;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .ref-apont__btn {
+        width: 118px;
+        max-width: 118px;
+        flex: 0 0 118px;
+    }
+
+    .ref-apont-progress {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .ref-apont-progress__widget {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+    }
+
+    .ref-apont-progress__pct-wrap {
+        justify-self: center;
+    }
+}
+
+    </style>
+
+    <script>
+        (function() {
+            var MAQ = {{ id }};
+            var bootEl = document.getElementById("tablet-boot");
+            var estado = bootEl ? JSON.parse(bootEl.textContent) : { pedidos: [], maquina: {}, producao_dia_maquina: 0 };
+            var stoppedAt = null;
+            var stopReason = "Aguardando material";
+            (function bootSync() {
+                var m0 = (estado.maquina || {});
+                var mp0 = String(m0.motivo_parada || "").trim();
+                if (mp0) stopReason = mp0;
+                if (String(m0.status || "").toUpperCase() === "PARADA") {
+                    var e0 = parseInt(m0.parada_inicio_epoch, 10) || 0;
+                    if (e0 > 0) stoppedAt = e0;
+                }
+            })();
+
+            function disp(v) {
+                if (v === null || v === undefined || String(v).trim() === "") return "—";
+                return String(v);
+            }
+            function parseProduto(produto) {
+                var txt = String(produto || "").trim();
+                if (!txt) return { codigo: "—", medida: "—" };
+                var parts = txt.split(/\s+/);
+                return { codigo: parts[0] || "—", medida: parts.length > 1 ? parts.slice(1).join(" ") : "—" };
+            }
+            function toInt(v, fb) {
+                var n = parseInt(v, 10);
+                return isNaN(n) ? (fb || 0) : n;
+            }
+            function fmtInt(n) {
+                var x = typeof n === "number" ? n : parseInt(n, 10);
+                if (isNaN(x)) x = 0;
+                return x.toLocaleString("pt-BR");
+            }
+            function escHtml(s) {
+                return String(s == null ? "" : s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+            function statusClass(st) {
+                var s = (st || "PARADA").toUpperCase();
+                if (s === "RODANDO") return "run";
+                if (s === "MANUTENÇÃO" || s === "MANUTENCAO") return "warn";
+                return "stop";
+            }
+            function stateDesc(st) {
+                var s = (st || "PARADA").toUpperCase();
+                if (s === "RODANDO") return "Produção em andamento";
+                if (s === "MANUTENÇÃO" || s === "MANUTENCAO") return "Manutenção";
+                return "Parada";
+            }
+            function isStandbyParada(stu, reason) {
+                if (stu !== "PARADA") return false;
+                return String(reason || "").toLowerCase().indexOf("material") >= 0;
+            }
+            function bannerModeFrom(stu, reason) {
+                if (stu === "RODANDO") return "run";
+                if (stu === "MANUTENÇÃO" || stu === "MANUTENCAO") return "maint";
+                if (isStandbyParada(stu, reason)) return "standby";
+                return "stop";
+            }
+            var SVG_PLAY = "<svg viewBox='0 0 24 24' fill='currentColor'><path d='M8 5v14l11-7z'/></svg>";
+            var SVG_STOP_ICO = "<svg width=\"40\" height=\"40\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"6\" y=\"6\" width=\"12\" height=\"12\" rx=\"1\"/></svg>";
+            var SVG_ALERT = "<svg viewBox='0 0 24 24' fill='currentColor'><path d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/></svg>";
+            var SVG_WRENCH = "<svg viewBox='0 0 24 24' fill='currentColor'><path d='M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z'/></svg>";
+            var SVG_PAUSE = "<svg viewBox='0 0 24 24' fill='currentColor'><path d='M6 19h4V5H6v14zm8-14v14h4V5h-4z'/></svg>";
+
+            function updateHeroBanner(st, mode) {
+                var hero = document.getElementById("op-hero");
+                var icon = document.getElementById("op-hero-icon");
+                var title = document.getElementById("op-hero-title");
+                var sub = document.getElementById("op-hero-sub");
+                var albl = document.getElementById("op-hero-aside-lbl");
+                var atime = document.getElementById("op-hero-aside-time");
+                var adate = document.getElementById("op-hero-aside-date");
+                var maq = estado.maquina || {};
+                var p = getAtual();
+                hero.className = "hmi-status hmi-panel op-hero op-hero--" + mode;
+                var now = new Date();
+                adate.textContent = now.toLocaleDateString("pt-BR");
+
+                if (mode === "run") {
+                    icon.innerHTML = SVG_PLAY;
+                    title.textContent = "RODANDO";
+                    sub.textContent = "PRODUÇÃO ATIVA";
+                    albl.textContent = "Desde";
+                    var ep = parseInt(maq.producao_sessao_epoch, 10) || 0;
+                    if (ep > 0) {
+                        atime.textContent = new Date(ep).toLocaleTimeString("pt-BR", { hour12: false });
+                    } else {
+                        atime.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                    }
+                } else if (mode === "maint") {
+                    icon.innerHTML = SVG_WRENCH;
+                    title.textContent = "MANUTENÇÃO";
+                    sub.textContent = "Não produzir";
+                    albl.textContent = "Relógio";
+                    atime.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                } else if (mode === "standby") {
+                    icon.innerHTML = SVG_PAUSE;
+                    title.textContent = "AGUARDANDO";
+                    sub.textContent = "Aguardando material";
+                    albl.textContent = "Desde";
+                    if (stoppedAt) {
+                        atime.textContent = new Date(stoppedAt).toLocaleTimeString("pt-BR", { hour12: false });
+                    } else {
+                        atime.textContent = "--:--";
+                    }
+                } else {
+                    icon.innerHTML = SVG_ALERT;
+                    title.textContent = "PARADA";
+                    sub.textContent = disp(stopReason);
+                    albl.textContent = "Parou às";
+                    if (stoppedAt) {
+                        atime.textContent = new Date(stoppedAt).toLocaleTimeString("pt-BR", { hour12: false });
+                    } else {
+                        atime.textContent = "--:--";
+                    }
+                }
+            }
+
+            function tempoProducaoDisplay() {
+                var maq = estado.maquina || {};
+                var base = toInt(maq.tempo_producao_s, 0);
+                var stu = String(maq.status || "PARADA").toUpperCase();
+                var ep = parseInt(maq.producao_sessao_epoch, 10) || 0;
+                var extra = 0;
+                if (stu === "RODANDO" && ep > 0) extra = Math.floor((Date.now() - ep) / 1000);
+                return hhmmss((base + extra) * 1000);
+            }
+            function hhmmss(ms) {
+                var sec = Math.max(0, Math.floor(ms / 1000));
+                var h = String(Math.floor(sec / 3600)).padStart(2, "0");
+                var m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+                var s = String(sec % 60).padStart(2, "0");
+                return h + ":" + m + ":" + s;
+            }
+
+            /** PARAR | INICIAR/RETOMAR | FINALIZAR — centro = iniciar/retomar; estado real da máquina */
+            function syncCommandButtons() {
+                var maq = estado.maquina || {};
+                var stRaw = String(maq.status || "PARADA").toUpperCase();
+                var run = stRaw === "RODANDO";
+                var maint = stRaw === "MANUTENÇÃO" || stRaw === "MANUTENCAO";
+                var p = getAtual();
+                var fin = p && p.finalizado;
+                var noPedido = !p;
+                var pe = parseInt(maq.parada_inicio_epoch, 10) || 0;
+                /** Máquina parada com parada registrada: RETOMAR no centro; laterais apagadas */
+                var focoRetomar =
+                    !run && !maint && !noPedido && !fin && pe > 0;
+
+                var btnStart = document.getElementById("btn-start");
+                var btnStartTxt = document.getElementById("btn-start-txt");
+                var btnStop = document.getElementById("btn-stop");
+                var btnStopTxt = document.getElementById("btn-stop-txt");
+                var btnStopIco = document.getElementById("btn-stop-ico");
+                var btnFin = document.getElementById("btn-finish");
+
+                if (btnStart && btnStartTxt) {
+                    btnStart.classList.remove("hmi-cmd--resume", "hmi-cmd--start");
+                    if (run) {
+                        btnStart.disabled = true;
+                        btnStartTxt.innerHTML = "INICIAR<br>PRODUÇÃO";
+                        btnStart.classList.add("hmi-cmd--start");
+                    } else if (maint || noPedido || fin) {
+                        btnStart.disabled = true;
+                        btnStartTxt.innerHTML = pe > 0 ? "RETOMAR<br>PRODUÇÃO" : "INICIAR<br>PRODUÇÃO";
+                        btnStart.classList.add(pe > 0 ? "hmi-cmd--resume" : "hmi-cmd--start");
+                    } else {
+                        btnStart.disabled = false;
+                        if (pe > 0) {
+                            btnStartTxt.innerHTML = "RETOMAR<br>PRODUÇÃO";
+                            btnStart.classList.add("hmi-cmd--resume");
+                        } else {
+                            btnStartTxt.innerHTML = "INICIAR<br>PRODUÇÃO";
+                            btnStart.classList.add("hmi-cmd--start");
+                        }
+                    }
+                }
+
+                if (btnStop && btnStopTxt && btnStopIco) {
+                    btnStop.disabled = !run || maint;
+                    btnStop.classList.remove("hmi-cmd--resume");
+                    btnStop.classList.add("hmi-cmd--stop");
+                    btnStopTxt.innerHTML = "PARAR<br>MÁQUINA";
+                    btnStopIco.innerHTML = SVG_STOP_ICO;
+                    btnStop.setAttribute("aria-pressed", run ? "true" : "false");
+                }
+
+                if (btnFin) {
+                    btnFin.disabled = noPedido || fin || focoRetomar;
+                }
+
+                var wrapCmd = document.querySelector("section.ref-actions.hmi-actions");
+                if (wrapCmd) {
+                    wrapCmd.classList.toggle(
+                        "ref-actions--focus-retomar",
+                        !!focoRetomar && btnStart && !btnStart.disabled
+                    );
+                }
+            }
+
+            var modalParadaPick = null;
+
+            function updateModalConfirmState() {
+                var cfm = document.getElementById("modal-parada-confirm");
+                if (!cfm) return;
+                var ok = false;
+                if (modalParadaPick && modalParadaPick !== "__outros__") ok = true;
+                if (modalParadaPick === "__outros__") {
+                    var t = String((document.getElementById("modal-parada-outros-txt") || {}).value || "").trim();
+                    ok = t.length > 0;
+                }
+                cfm.disabled = !ok;
+            }
+
+            function resetStopModal() {
+                modalParadaPick = null;
+                document.querySelectorAll("#modal-parada-cards .hmi-modal-card").forEach(function(c) {
+                    c.classList.remove("is-selected");
+                });
+                var ow = document.getElementById("modal-parada-outros-wrap");
+                var ot = document.getElementById("modal-parada-outros-txt");
+                if (ow) ow.hidden = true;
+                if (ot) ot.value = "";
+                var err = document.getElementById("modal-parada-err");
+                if (err) err.hidden = true;
+                updateModalConfirmState();
+            }
+
+            function openStopModal() {
+                resetStopModal();
+                var el = document.getElementById("modal-parada");
+                if (!el) return;
+                el.hidden = false;
+                el.setAttribute("aria-hidden", "false");
+            }
+
+            function closeStopModal() {
+                var el = document.getElementById("modal-parada");
+                if (!el) return;
+                el.hidden = true;
+                el.setAttribute("aria-hidden", "true");
+                resetStopModal();
+            }
+
+            function resolveMotivoModal() {
+                if (!modalParadaPick) return "";
+                if (modalParadaPick === "__outros__") {
+                    var t = String((document.getElementById("modal-parada-outros-txt") || {}).value || "").trim();
+                    return t ? ("Outros — " + t) : "";
+                }
+                return modalParadaPick;
+            }
+
+            function confirmParadaFromModal() {
+                var motivo = resolveMotivoModal();
+                var err = document.getElementById("modal-parada-err");
+                if (!motivo) {
+                    if (err) err.hidden = false;
+                    return;
+                }
+                if (err) err.hidden = true;
+                var cbtn = document.getElementById("modal-parada-confirm");
+                if (cbtn) cbtn.disabled = true;
+                var t = Date.now();
+                stopReason = motivo;
+                postContexto({ motivo_parada: motivo, parada_inicio_epoch: t })
+                    .then(function() { return fetch("/status/" + MAQ + "/PARADA").then(function(r) { return r.json(); }); })
+                    .then(function(data) {
+                        closeStopModal();
+                        if (cbtn) cbtn.disabled = false;
+                        if (data && data.ok) {
+                            stoppedAt = t;
+                            refresh();
+                        }
+                    })
+                    .catch(function() {
+                        if (cbtn) cbtn.disabled = false;
+                    });
+            }
+
+            function openModalInicioOp() {
+                var m = document.getElementById("modal-inicio-op");
+                if (!m) return;
+                var maq = estado.maquina || {};
+                var nomeEl = document.getElementById("modal-inicio-nome");
+                var turnoEl = document.getElementById("modal-inicio-turno");
+                var err = document.getElementById("modal-inicio-op-err");
+                var lead = document.getElementById("modal-inicio-op-lead");
+                if (nomeEl) nomeEl.value = String(maq.operador_atual || "").trim();
+                if (turnoEl) turnoEl.value = String(maq.turno_atual || "").trim();
+                if (err) {
+                    err.textContent = "Preencha nome e turno.";
+                    err.hidden = true;
+                }
+                if (lead) {
+                    lead.innerHTML =
+                        "Informe <strong>nome</strong> e <strong>turno</strong> para <strong>iniciar</strong> a produção neste pedido.";
+                }
+                m.hidden = false;
+                m.setAttribute("aria-hidden", "false");
+                if (nomeEl) setTimeout(function() { nomeEl.focus(); }, 80);
+            }
+
+            function closeModalInicioOp() {
+                var m = document.getElementById("modal-inicio-op");
+                if (!m) return;
+                m.hidden = true;
+                m.setAttribute("aria-hidden", "true");
+            }
+
+            function confirmModalInicioOp() {
+                var nome = String((document.getElementById("modal-inicio-nome") || {}).value || "").trim();
+                var turno = String((document.getElementById("modal-inicio-turno") || {}).value || "").trim();
+                var err = document.getElementById("modal-inicio-op-err");
+                if (!nome || !turno) {
+                    if (err) err.hidden = false;
+                    return;
+                }
+                if (err) err.hidden = true;
+                var cbtn = document.getElementById("modal-inicio-op-confirm");
+                if (cbtn) cbtn.disabled = true;
+                fetch("/tablet/iniciar/" + MAQ, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ operador: nome, turno: turno })
+                })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (cbtn) cbtn.disabled = false;
+                        if (!d || !d.ok) {
+                            if (err) {
+                                err.textContent = "Não foi possível iniciar. Verifique os dados ou tente novamente.";
+                                err.hidden = false;
+                            }
+                            return;
+                        }
+                        closeModalInicioOp();
+                        refresh();
+                    })
+                    .catch(function() {
+                        if (cbtn) cbtn.disabled = false;
+                        if (err) {
+                            err.textContent = "Erro de rede. Tente novamente.";
+                            err.hidden = false;
+                        }
+                    });
+            }
+
+            function openModalFimOp() {
+                var p = getAtual();
+                if (!p || p.finalizado) return;
+                var m = document.getElementById("modal-fim-op");
+                if (!m) return;
+                var maq = estado.maquina || {};
+                var nomeEl = document.getElementById("modal-fim-nome");
+                var turnoEl = document.getElementById("modal-fim-turno");
+                var err = document.getElementById("modal-fim-op-err");
+                if (nomeEl) nomeEl.value = String(maq.operador_atual || "").trim();
+                if (turnoEl) turnoEl.value = String(maq.turno_atual || "").trim();
+                if (err) {
+                    err.textContent = "Preencha nome e turno.";
+                    err.hidden = true;
+                }
+                m.hidden = false;
+                m.setAttribute("aria-hidden", "false");
+                if (nomeEl) setTimeout(function() { nomeEl.focus(); }, 80);
+            }
+
+            function closeModalFimOp() {
+                var m = document.getElementById("modal-fim-op");
+                if (!m) return;
+                m.hidden = true;
+                m.setAttribute("aria-hidden", "true");
+            }
+
+            function confirmModalFimOp() {
+                var p = getAtual();
+                if (!p || p.finalizado) return;
+                var ix = getCurrentOrderIndex();
+                if (ix < 0) return;
+                var nome = String((document.getElementById("modal-fim-nome") || {}).value || "").trim();
+                var turno = String((document.getElementById("modal-fim-turno") || {}).value || "").trim();
+                var err = document.getElementById("modal-fim-op-err");
+                if (!nome || !turno) {
+                    if (err) err.hidden = false;
+                    return;
+                }
+                if (err) err.hidden = true;
+                var maq = estado.maquina || {};
+                var prodFim = toInt(maq.produzido, 0);
+                var cbtn = document.getElementById("modal-fim-op-confirm");
+                if (cbtn) cbtn.disabled = true;
+                fetch("/tablet/finalizar/" + MAQ + "/" + ix, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        operador_final: nome,
+                        turno_final: turno,
+                        producao_final: prodFim
+                    })
+                })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (cbtn) cbtn.disabled = false;
+                        if (!d || !d.ok) {
+                            if (err) {
+                                err.textContent = "Não foi possível finalizar. Confira nome e turno.";
+                                err.hidden = false;
+                            }
+                            return;
+                        }
+                        closeModalFimOp();
+                        refresh().then(function() {
+                            render();
+                        });
+                    })
+                    .catch(function() {
+                        if (cbtn) cbtn.disabled = false;
+                        if (err) {
+                            err.textContent = "Erro de rede. Tente novamente.";
+                            err.hidden = false;
+                        }
+                    });
+            }
+
+            function getPedidos() { return estado.pedidos || []; }
+
+            /** Índice do único pedido operacional: primeiro não finalizado na fila (sequência PCP). */
+            function getCurrentOrderIndex() {
+                var list = getPedidos();
+                for (var i = 0; i < list.length; i++) {
+                    if (!list[i].finalizado) return i;
+                }
+                return -1;
+            }
+
+            function getAtual() {
+                var list = getPedidos();
+                var ix = getCurrentOrderIndex();
+                if (ix < 0 || ix >= list.length) return null;
+                return list[ix];
+            }
+
+            function renderLista() {
+                var wrap = document.getElementById("list-pedidos");
+                var empty = document.getElementById("list-empty");
+                var list = getPedidos();
+                var maq = estado.maquina || {};
+                var stu = String(maq.status || "PARADA").toUpperCase();
+                var isRun = stu === "RODANDO";
+                var isMaint = stu === "MANUTENÇÃO" || stu === "MANUTENCAO";
+
+                wrap.innerHTML = "";
+                if (!list.length) {
+                    empty.hidden = false;
+                    return;
+                }
+                empty.hidden = true;
+
+                var curIdx = getCurrentOrderIndex();
+
+                list.forEach(function(p, idx) {
+                    var prod = parseProduto(p.produto);
+                    var isCurrent = curIdx >= 0 && idx === curIdx;
+                    var isLocked = !p.finalizado && !isCurrent;
+
+                    var classes = ["hmi-queue__item"];
+                    if (isLocked) classes.push("hmi-queue__item--locked");
+                    if (isCurrent) classes.push("is-active");
+                    if (p.finalizado) classes.push("is-done");
+
+                    var badgeHtml = "";
+                    if (p.finalizado) {
+                        badgeHtml = '<span class="hmi-queue__badge hmi-queue__badge--done">Finalizado</span>';
+                    } else if (isCurrent && isRun) {
+                        classes.push("is-producing");
+                        badgeHtml = '<span class="hmi-queue__badge hmi-queue__badge--run">EM PRODUÇÃO</span>';
+                    } else if (isCurrent && isMaint) {
+                        classes.push("is-maint-row");
+                        badgeHtml = '<span class="hmi-queue__badge hmi-queue__badge--warn">MANUTENÇÃO</span>';
+                    } else if (isCurrent && !isRun) {
+                        classes.push("is-stopped");
+                        badgeHtml = '<span class="hmi-queue__badge hmi-queue__badge--stop">PARADO</span>';
+                    } else {
+                        badgeHtml = '<span class="hmi-queue__badge hmi-queue__badge--wait">AGUARDANDO</span>';
+                    }
+
+                    var prodRaw = String(p.produto || "").trim();
+                    var prodLine;
+                    if (!prodRaw) {
+                        prodLine = disp(prod.codigo);
+                        if (prod.medida && prod.medida !== "—") prodLine += " · " + disp(prod.medida);
+                    } else {
+                        prodLine = disp(prodRaw);
+                    }
+
+                    var qVal = fmtInt(toInt(p.quantidade, 0));
+
+                    var cli = String(disp(p.cliente) || "").trim();
+                    var summaryRaw = cli && prodLine ? cli + " · " + prodLine : (cli || prodLine || "—");
+                    if (summaryRaw.length > 54) summaryRaw = summaryRaw.slice(0, 53) + "…";
+
+                    var row = document.createElement("div");
+                    row.className = classes.join(" ");
+                    row.setAttribute("role", "listitem");
+                    if (isCurrent) row.setAttribute("aria-current", "true");
+                    row.innerHTML =
+                        '<span class="hmi-queue__card">' +
+                        '<span class="hmi-queue__top">' +
+                        '<span class="hmi-queue__num">#' +
+                        String(idx + 1) +
+                        '</span><span class="hmi-queue__badges">' +
+                        badgeHtml +
+                        "</span></span>" +
+                        '<p class="hmi-queue__summary">' +
+                        escHtml(summaryRaw) +
+                        "</p>" +
+                        '<span class="hmi-queue__foot">' +
+                        '<span class="hmi-queue__qty-k">Qtd</span>' +
+                        '<span class="hmi-queue__qty-v">' +
+                        escHtml(qVal) +
+                        "</span></span></span>";
+
+                    wrap.appendChild(row);
+                });
+            }
+
+            function updateHeaderStatus() {
+                var st = String((estado.maquina || {}).status || "PARADA");
+                var cls = statusClass(st);
+                var stu = st.toUpperCase();
+                var wrap = document.getElementById("state-chip");
+                wrap.className = "hmi-bar__state machine-state ref-top__state sr-only " + cls;
+                document.getElementById("state-label").textContent = stu;
+                document.getElementById("state-desc").textContent = stateDesc(st);
+
+                var bmode = bannerModeFrom(stu, stopReason);
+                updateHeroBanner(st, bmode);
+
+                var chip = document.getElementById("f-status-chip");
+                if (chip) {
+                    if (bannerModeFrom(stu, stopReason) === "standby") {
+                        chip.className = "status-chip standby";
+                        chip.textContent = "AGUARDANDO MATERIAL";
+                    } else {
+                        chip.className = "status-chip " + cls;
+                        chip.textContent = stu;
+                    }
+                }
+
+                var run = stu === "RODANDO";
+                var paradaEpoch = parseInt((estado.maquina || {}).parada_inicio_epoch, 10) || 0;
+                var hint = document.getElementById("apont-hint");
+                if (hint) {
+                    if (run) {
+                        hint.textContent = "Informe o total atual do pallet — cada lançamento substitui o valor (não soma).";
+                    } else if (stu === "MANUTENÇÃO" || stu === "MANUTENCAO") {
+                        hint.textContent = "Apontamento bloqueado durante manutenção.";
+                    } else if (stu === "PARADA" && paradaEpoch > 0) {
+                        hint.textContent = "Retome a produção para lançar.";
+                    } else {
+                        hint.textContent = "Inicie a produção para lançar.";
+                    }
+                }
+                var inpApont = document.getElementById("apont-total");
+                var btnApont = document.getElementById("btn-aplicar-total");
+                var curPed = getAtual();
+                var pedidoFim = curPed && curPed.finalizado;
+                var maint = stu === "MANUTENÇÃO" || stu === "MANUTENCAO";
+                if (inpApont) inpApont.disabled = !run || !!pedidoFim || maint;
+                if (btnApont) btnApont.disabled = !run || !!pedidoFim || maint;
+
+                var apProgAside = document.querySelector(".ref-apont-progress");
+                if (apProgAside) apProgAside.classList.toggle("ref-apont-progress--hold", !run || !!pedidoFim || maint);
+            }
+
+            function updateFields() {
+                var p = getAtual();
+                var maq = estado.maquina || {};
+                var produzido = toInt(maq.produzido, 0);
+                var metaMaq = toInt(maq.meta, 1000);
+                var qtdPedido = p ? toInt(p.quantidade, metaMaq) : metaMaq;
+                var pct = qtdPedido > 0 ? Math.min(100, Math.round((produzido / qtdPedido) * 100)) : 0;
+                var faltam = Math.max(0, qtdPedido - produzido);
+                var oee = Math.max(0, Math.min(100, Math.round((produzido / (metaMaq || 1)) * 100)));
+                var eficiencia = Math.max(0, Math.min(100, Math.round((pct * 0.65) + (oee * 0.35))));
+
+                var prodParts = p ? parseProduto(p.produto) : { codigo: "—", medida: "—" };
+                var codPed = p && String(p.cod || "").trim() ? String(p.cod).trim() : prodParts.codigo;
+
+                document.getElementById("f-cliente").textContent = p ? disp(p.cliente) : "—";
+                document.getElementById("f-codigo").textContent = p ? disp(codPed) : "—";
+                document.getElementById("f-fardos").textContent = p ? fmtInt(toInt(p.fardos, 0)) : "—";
+                document.getElementById("f-medida").textContent = p ? disp(prodParts.medida) : "—";
+                document.getElementById("f-obs").textContent = p ? disp(p.descricao) : "—";
+
+                document.getElementById("f-quantidade").textContent = p ? fmtInt(toInt(p.quantidade, 0)) : "0";
+
+                var opEl = document.getElementById("hmi-op-operador");
+                var tuEl = document.getElementById("hmi-op-turno");
+                if (opEl) opEl.textContent = disp(maq.operador_atual);
+                if (tuEl) tuEl.textContent = disp(maq.turno_atual);
+                var comboEl = document.getElementById("hmi-op-combo");
+                if (comboEl) {
+                    comboEl.textContent = disp(maq.operador_atual) + " / " + disp(maq.turno_atual) + " / " + tempoProducaoDisplay();
+                }
+                document.getElementById("hmi-op-produzido").textContent = fmtInt(produzido);
+                document.getElementById("hmi-op-faltam").textContent = fmtInt(faltam);
+                document.getElementById("hmi-op-ef").textContent = eficiencia + "%";
+                document.getElementById("hmi-op-oee").textContent = oee + "%";
+
+                var stu = String(maq.status || "PARADA").toUpperCase();
+                var durParada = (stu === "PARADA" && stoppedAt) ? hhmmss(Date.now() - stoppedAt) : "00:00:00";
+                var tpEl = document.getElementById("hmi-op-tempo-parado");
+                if (tpEl) tpEl.textContent = durParada;
+                var ktp = document.getElementById("hmi-kpi-tempo-parado");
+                if (ktp) ktp.textContent = durParada;
+                var mv = document.getElementById("hmi-motivo-parada");
+                var motTxt = stu === "RODANDO" ? "—" : disp(stopReason);
+                if (mv) mv.textContent = motTxt;
+                var km = document.getElementById("hmi-kpi-motivo");
+                if (km) km.textContent = motTxt;
+
+                var mst = document.getElementById("hmi-mid-status-txt");
+                var mdot = document.getElementById("hmi-mid-dot");
+                if (mst) mst.textContent = stu;
+                if (mdot) {
+                    mdot.className = "hmi-dot " + (stu === "RODANDO" ? "is-run" : (stu === "MANUTENÇÃO" || stu === "MANUTENCAO") ? "is-warn" : "is-stop");
+                }
+
+                document.getElementById("ft-prod-time").textContent = tempoProducaoDisplay();
+                var bDur = document.getElementById("banner-prod-duration");
+                if (bDur) bDur.textContent = tempoProducaoDisplay();
+
+                var pdEl = document.getElementById("hmi-producao-dia");
+                if (pdEl) pdEl.textContent = fmtInt(estado.producao_dia_maquina || 0);
+
+                var apl = document.getElementById("apont-progress-label");
+                var apBig = document.getElementById("apont-progress-pct-big");
+                var apMid = document.getElementById("apont-progress-pct");
+                var apFill = document.getElementById("apont-progress-fill");
+                var ratioTxt = p ? fmtInt(produzido) + " / " + fmtInt(qtdPedido) : "— / —";
+                var pctTxt = p ? pct + "%" : "—";
+                if (apl) apl.textContent = ratioTxt;
+                if (apBig) apBig.textContent = pctTxt;
+                if (apMid) apMid.textContent = pctTxt;
+                if (apFill) apFill.style.width = p ? pct + "%" : "0%";
+
+                syncCommandButtons();
+            }
+
+            function renderClock() {
+                var now = new Date();
+                var tEl = document.getElementById("clock-time");
+                if (tEl) tEl.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                var wk = document.getElementById("clock-weekday");
+                if (wk) {
+                    wk.textContent = now.toLocaleDateString("pt-BR", { weekday: "long" });
+                }
+                var dEl = document.getElementById("clock-date");
+                if (dEl) dEl.textContent = now.toLocaleDateString("pt-BR");
+            }
+
+            function render() {
+                renderLista();
+                updateHeaderStatus();
+                updateFields();
+            }
+
+            function refresh() {
+                return fetch("/tablet/estado/" + MAQ)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || !data.ok) {
+                            var lk = document.getElementById("ft-link");
+                            if (lk) { lk.textContent = "Desconectado"; lk.classList.remove("hmi-foot__conn-txt--ok"); }
+                            var dotOff = document.getElementById("ft-conn-dot");
+                            if (dotOff) dotOff.classList.add("is-off");
+                            return;
+                        }
+                        var lk2 = document.getElementById("ft-link");
+                        if (lk2) { lk2.textContent = "Conectado"; lk2.classList.add("hmi-foot__conn-txt--ok"); }
+                        var dotOn = document.getElementById("ft-conn-dot");
+                        if (dotOn) dotOn.classList.remove("is-off");
+                        estado = data;
+                        var maq = estado.maquina || {};
+                        var mp = String(maq.motivo_parada || "").trim();
+                        if (mp) stopReason = mp;
+                        var next = String(maq.status || "PARADA").toUpperCase();
+                        if (next === "PARADA") {
+                            var pe = parseInt(maq.parada_inicio_epoch, 10) || 0;
+                            if (pe > 0) stoppedAt = pe;
+                        } else {
+                            stoppedAt = null;
+                        }
+                        render();
+                    });
+            }
+
+            function postContexto(payload) {
+                return fetch("/maquina/contexto/" + MAQ, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload || {})
+                }).then(function(r) { return r.json(); });
+            }
+
+            function setStatus(novo) {
+                return fetch("/status/" + MAQ + "/" + encodeURIComponent(novo))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || !data.ok) return;
+                        return refresh();
+                    });
+            }
+
+            function aplicarTotalProducao() {
+                var inp = document.getElementById("apont-total");
+                if (!inp || inp.disabled) return;
+                var raw = String(inp.value || "").trim();
+                var v = parseInt(raw, 10);
+                if (isNaN(v) || v < 0) return;
+                fetch("/tablet/produzido_delta/" + MAQ, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ total: v })
+                }).then(function(r) { return r.json(); }).then(function(resp) {
+                    if (resp && resp.ok) {
+                        inp.value = "";
+                        refresh();
+                    }
+                });
+            }
+
+            document.getElementById("btn-start").addEventListener("click", function() {
+                var b = document.getElementById("btn-start");
+                if (b && b.disabled) return;
+                var maq = estado.maquina || {};
+                var pe = parseInt(maq.parada_inicio_epoch, 10) || 0;
+                var p = getAtual();
+                var jaRegistrouInicio = p && String(p.operador_inicio || "").trim();
+                if (pe > 0 && jaRegistrouInicio) {
+                    fetch("/tablet/iniciar/" + MAQ, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ retomar: true })
+                    })
+                        .then(function(r) { return r.json(); })
+                        .then(function(d) {
+                            if (d && d.ok) refresh();
+                        });
+                    return;
+                }
+                openModalInicioOp();
+            });
+            document.getElementById("btn-stop").addEventListener("click", function() {
+                var st = String((estado.maquina || {}).status || "PARADA").toUpperCase();
+                if (st === "RODANDO") openStopModal();
+            });
+
+            document.querySelectorAll("#modal-parada-cards .hmi-modal-card").forEach(function(card) {
+                card.addEventListener("click", function() {
+                    document.querySelectorAll("#modal-parada-cards .hmi-modal-card").forEach(function(c) {
+                        c.classList.remove("is-selected");
+                    });
+                    card.classList.add("is-selected");
+                    modalParadaPick = card.getAttribute("data-motivo") || "";
+                    var ow = document.getElementById("modal-parada-outros-wrap");
+                    if (ow) ow.hidden = modalParadaPick !== "__outros__";
+                    updateModalConfirmState();
+                });
+            });
+            var outrosInp = document.getElementById("modal-parada-outros-txt");
+            if (outrosInp) outrosInp.addEventListener("input", updateModalConfirmState);
+
+            document.getElementById("modal-parada-cancel").addEventListener("click", closeStopModal);
+            document.getElementById("modal-parada-confirm").addEventListener("click", confirmParadaFromModal);
+            document.getElementById("modal-parada").addEventListener("click", function(ev) {
+                if (ev.target && ev.target.id === "modal-parada") closeStopModal();
+            });
+            document.getElementById("modal-inicio-op").addEventListener("click", function(ev) {
+                if (ev.target && ev.target.id === "modal-inicio-op") closeModalInicioOp();
+            });
+            document.getElementById("modal-fim-op").addEventListener("click", function(ev) {
+                if (ev.target && ev.target.id === "modal-fim-op") closeModalFimOp();
+            });
+            document.getElementById("modal-inicio-op-cancel").addEventListener("click", closeModalInicioOp);
+            document.getElementById("modal-inicio-op-confirm").addEventListener("click", confirmModalInicioOp);
+            document.getElementById("modal-fim-op-cancel").addEventListener("click", closeModalFimOp);
+            document.getElementById("modal-fim-op-confirm").addEventListener("click", confirmModalFimOp);
+            document.addEventListener("keydown", function(ev) {
+                if (ev.key !== "Escape") return;
+                var mp = document.getElementById("modal-parada");
+                if (mp && !mp.hidden) closeStopModal();
+                var mi = document.getElementById("modal-inicio-op");
+                if (mi && !mi.hidden) closeModalInicioOp();
+                var mf = document.getElementById("modal-fim-op");
+                if (mf && !mf.hidden) closeModalFimOp();
+            });
+            document.getElementById("btn-finish").addEventListener("click", function() {
+                var b = document.getElementById("btn-finish");
+                if (b && b.disabled) return;
+                openModalFimOp();
+            });
+
+            document.getElementById("btn-aplicar-total").addEventListener("click", aplicarTotalProducao);
+            document.getElementById("apont-total").addEventListener("keydown", function(ev) {
+                if (ev.key === "Enter") {
+                    ev.preventDefault();
+                    aplicarTotalProducao();
+                }
+            });
+
+            renderClock();
+            render();
+            setInterval(renderClock, 1000);
+            setInterval(function() {
+                var ftp = document.getElementById("ft-prod-time");
+                if (ftp) ftp.textContent = tempoProducaoDisplay();
+                var bd = document.getElementById("banner-prod-duration");
+                if (bd) bd.textContent = tempoProducaoDisplay();
+                var maq = estado.maquina || {};
+                var comboEl = document.getElementById("hmi-op-combo");
+                if (comboEl) {
+                    comboEl.textContent = disp(maq.operador_atual) + " / " + disp(maq.turno_atual) + " / " + tempoProducaoDisplay();
+                }
+                var st = String((estado.maquina || {}).status || "PARADA");
+                var stu = st.toUpperCase();
+                if (stu === "PARADA" && stoppedAt) {
+                    var d = hhmmss(Date.now() - stoppedAt);
+                    var tpEl = document.getElementById("hmi-op-tempo-parado");
+                    if (tpEl) tpEl.textContent = d;
+                    var ktp = document.getElementById("hmi-kpi-tempo-parado");
+                    if (ktp) ktp.textContent = d;
+                }
+                updateHeroBanner(st, bannerModeFrom(stu, stopReason));
+            }, 1000);
+            setInterval(refresh, 2500);
+        })();
+    </script>
+</body>
+</html>

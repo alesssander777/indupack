@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Serigrafia — Indupack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-nav-back.css">
+    <link rel="stylesheet" href="/static/indupack-topbar.css">
+</head>
+<body class="has-indupack-topbar">
+{% from "macros.html" import indupack_topbar %}
+{{ indupack_topbar(usuario_nome, nav_back_href='/') }}
+<main class="shell-main">
+    <div class="shell-panel">
+        <h1>Serigrafia</h1>
+        <p>Módulo interno em preparação.</p>
+    </div>
+</main>
+<style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, Arial, sans-serif; background: #f1f5f9; color: #0f172a; min-height: 100vh; }
+    .shell-main { padding: 28px 20px 40px; display: flex; justify-content: center; }
+    .shell-panel {
+        background: linear-gradient(180deg, #1f4d62 0%, #0c1a28 100%); color: #f0f7fb;
+        max-width: 520px; width: 100%; padding: 32px; border-radius: 18px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.2); text-align: center;
+    }
+    h1 { margin: 0 0 12px; font-size: 1.5rem; font-weight: 800; }
+    p { margin: 0; opacity: 0.92; line-height: 1.5; }
+</style>
+<script src="/static/indupack-topbar.js"></script>
+</body>
+</html>

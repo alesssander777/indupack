@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password_hash": "d7c89bc76f11cb7ec04333072131f21a:98e24c8f45f40030128e9e9dfdad77334a924dd7139206e007b32877f5792727",
+      "cargo": "Administrador",
+      "role": "admin"
+    },
+    {
+      "username": "supervisor",
+      "password_hash": "08fd11b9bff40d9ea40aced79ce8ae38:9d7d4ee45792d4b4f5c975cb984482d112afcb40488287d5c8872661b2fa62f3",
+      "cargo": "Supervisor",
+      "role": "supervisor"
+    },
+    {
+      "username": "operador",
+      "password_hash": "d867f463389966ebaaa1a11afafa92af:880be3b54034d8916c7cfd457bd538b8ef8fdb35811aa41ef1233100506179bf",
+      "cargo": "Operador",
+      "role": "operador"
+    },
+    {
+      "username": "manutencao",
+      "password_hash": "1f75b9d96e34891cdd97203baacf339c:ed57725da6d42226d5f285ed9e7d26d92a43d28e19a028a944a7225d8393b74f",
+      "cargo": "Manutenção",
+      "role": "manutencao"
+    }
+  ]
+}

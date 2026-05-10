@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="hm-html">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Produção — Indupack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-nav-back.css">
+    <link rel="stylesheet" href="/static/indupack-topbar.css">
+</head>
+<body class="hm pr-page has-indupack-topbar {% if (maquinas_count|default(6)) <= 6 %}pr-page--panel{% else %}pr-page--scroll{% endif %}" data-maquinas="{{ maquinas_count|default(6) }}">
+{% from "macros.html" import indupack_topbar %}
+
+    <!-- Fundo: foto industrial desfocada + overlay azul (sem granulado; foco nos cards) -->
+    <div class="pr-scene" aria-hidden="true">
+        <div class="pr-scene__photo">
+            <img
+                class="pr-scene__img"
+                src="/static/images/home-industrial-bg.png"
+                alt=""
+                decoding="async"
+                fetchpriority="low"
+            >
+        </div>
+        <div class="pr-scene__overlay"></div>
+        <div class="pr-scene__vignette"></div>
+    </div>
+
+    {{ indupack_topbar(usuario_nome, nav_back_href='/', logo_size=48) }}
+
+    <main class="hm-main pr-main">
+        <section class="pr-hero" aria-labelledby="pr-hero-title">
+            <div class="pr-hero__icon-wrap" aria-hidden="true">
+                <div class="pr-hero__icon">
+                    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 7V3H2v18h20V7h-10zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2V7zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2V7zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                </div>
+            </div>
+            <div class="pr-hero__center">
+                <h1 id="pr-hero-title" class="pr-hero__title">Produção</h1>
+                <p class="pr-hero__tag">Visão consolidada das máquinas e ordens em tempo real.</p>
+                <button type="button" class="pr-btn-nova-maquina" id="pr-open-nova-maquina">+ NOVA MÁQUINA</button>
+            </div>
+        </section>
+
+        <div class="pr-grid" role="list">
+            {{ maquinas|safe }}
+        </div>
+    </main>
+
+    <footer class="hm-footer">
+        <span>INDUPACK • Sistema de Gestão Industrial</span>
+        <span class="hm-footer__ver">Versão 1.0.0</span>
+        <span class="hm-footer__status"><span class="hm-footer__dot" aria-hidden="true"></span> Sistema Online</span>
+    </footer>
+
+    <div id="pr-modal-nova-maquina" class="pr-modal" hidden aria-hidden="true">
+        <div class="pr-modal__backdrop" data-pr-modal-close tabindex="-1" aria-hidden="true"></div>
+        <div class="pr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="pr-modal-nova-title">
+            <button type="button" class="pr-modal__close" id="pr-modal-nova-x" aria-label="Fechar">×</button>
+            <div class="pr-modal__head">
+                <h2 id="pr-modal-nova-title" class="pr-modal__title">Nova máquina</h2>
+                <p class="pr-modal__sub">Cadastro no MES: a máquina aparece no painel. Gestão dos terminais: <strong>/tablets</strong>. Operação no chão (operador): <strong>/tablet/{id}</strong> no equipamento.</p>
+            </div>
+            <div class="pr-modal__body">
+                <div id="pr-modal-nova-err" class="pr-modal__err" role="alert"></div>
+                <form id="pr-form-nova-maquina" class="pr-form-grid">
+                    <div class="pr-field pr-field--full">
+                        <label for="pr-nm-nome">Nome da máquina</label>
+                        <input id="pr-nm-nome" name="nome" type="text" autocomplete="off" placeholder="Ex.: Extrusora 3" required>
+                    </div>
+                    <div class="pr-field">
+                        <label for="pr-nm-id">Número / ID</label>
+                        <input id="pr-nm-id" name="id" type="number" min="1" step="1" placeholder="Automático">
+                        <p class="pr-field-hint">Deixe em branco para usar o próximo ID livre.</p>
+                    </div>
+                    <div class="pr-field">
+                        <label for="pr-nm-setor">Setor</label>
+                        <input id="pr-nm-setor" name="setor" type="text" autocomplete="organization" placeholder="Ex.: Extrusão">
+                    </div>
+                    <div class="pr-field">
+                        <label for="pr-nm-meta">Quantidade máxima padrão</label>
+                        <input id="pr-nm-meta" name="quantidade_maxima_padrao" type="number" min="1" step="1" value="1000" required>
+                    </div>
+                    <div class="pr-field">
+                        <label for="pr-nm-status">Status inicial</label>
+                        <select id="pr-nm-status" name="status_inicial">
+                            <option value="PARADA" selected>Parada</option>
+                            <option value="RODANDO">Rodando</option>
+                            <option value="MANUTENÇÃO">Manutenção</option>
+                        </select>
+                    </div>
+                    <div class="pr-field pr-field--full">
+                        <label for="pr-nm-tablet">Tablet vinculado</label>
+                        <input id="pr-nm-tablet" name="tablet_vinculado" type="text" autocomplete="off" placeholder="Identificador do terminal (opcional)">
+                    </div>
+                    <div class="pr-field pr-field--full">
+                        <label for="pr-nm-obs">Observação</label>
+                        <textarea id="pr-nm-obs" name="observacao" placeholder="Notas internas sobre o ativo"></textarea>
+                    </div>
+                    <div class="pr-modal__actions pr-field--full">
+                        <button type="button" class="pr-modal__btn pr-modal__btn--ghost" id="pr-modal-nova-cancel">Cancelar</button>
+                        <button type="submit" class="pr-modal__btn pr-modal__btn--primary" id="pr-modal-nova-submit">Salvar máquina</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        :root {
+            --pr-navy: #1a4a62;
+            --pr-navy-deep: #0c1a28;
+            --pr-ink: #0f172a;
+            --pr-muted: #64748b;
+            --pr-surface: #f5f7fa;
+            --pr-surface-mid: #eef1f5;
+            --pr-line: rgba(203, 213, 225, 0.65);
+            --pr-radius: 20px;
+            --pr-radius-sm: 14px;
+            --header-h: 82px;
+            --pr-canvas: #0b1220;
+            --pr-canvas-mid: #111827;
+            --pr-canvas-accent: rgba(31, 77, 98, 0.16);
+            --pr-card-edge: rgba(45, 90, 108, 0.35);
+            --hm-shadow-card:
+                0 1px 3px rgba(15, 23, 42, 0.04),
+                0 10px 28px rgba(15, 23, 42, 0.06),
+                0 22px 48px rgba(15, 23, 42, 0.04);
+            --hm-shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.88);
+            --pr-card-elevated:
+                0 2px 4px rgba(0, 0, 0, 0.2),
+                0 12px 28px rgba(0, 0, 0, 0.38),
+                0 28px 56px rgba(0, 0, 0, 0.22);
+        }
+
+        * { box-sizing: border-box; }
+
+        html.hm-html body.hm.pr-page--scroll {
+            min-height: 100dvh;
+            height: auto;
+            max-height: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .hm.pr-page {
+            margin: 0;
+            min-height: 100dvh;
+            font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+            color: #e2e8f0;
+            /* Fallback se a imagem não carregar (Opção 2 — gradiente industrial) */
+            background: linear-gradient(165deg, #0f172a 0%, #1e293b 45%, #111827 100%);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .pr-scene {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .pr-scene__photo {
+            position: absolute;
+            inset: -10%;
+        }
+        .pr-scene__img {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 110%;
+            height: 110%;
+            min-width: 100%;
+            min-height: 100%;
+            object-fit: cover;
+            object-position: 52% 44%;
+            transform: translate(-50%, -50%) scale(1.03);
+            filter: blur(18px) saturate(0.82) brightness(0.42) contrast(1.04);
+        }
+        /* Overlay azul escuro translúcido — legível, premium, não compete com os cards */
+        .pr-scene__overlay {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(165deg, rgba(15, 23, 42, 0.88) 0%, rgba(30, 41, 59, 0.82) 48%, rgba(17, 24, 39, 0.9) 100%),
+                linear-gradient(90deg, rgba(26, 74, 98, 0.22) 0%, transparent 38%, transparent 62%, rgba(26, 74, 98, 0.14) 100%);
+        }
+        /* Vinheta suave nas bordas — profundidade sem textura granulada */
+        .pr-scene__vignette {
+            position: absolute;
+            inset: 0;
+            box-shadow:
+                inset 0 0 100px rgba(0, 0, 0, 0.28),
+                inset 0 -40px 80px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Main */
+        .pr-main.hm-main {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            width: 100%;
+            max-width: min(1920px, 100%);
+            margin: 0 auto;
+            padding: 28px clamp(18px, 3.5vw, 56px) clamp(24px, 3vh, 40px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(20px, 2.5vh, 28px);
+        }
+
+        .pr-hero {
+            text-align: center;
+            padding: clamp(8px, 1.5vh, 16px) 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .pr-hero__icon-wrap {
+            width: min(88px, 18vw);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            background: linear-gradient(145deg, rgba(26, 74, 98, 0.55) 0%, rgba(15, 23, 42, 0.75) 100%);
+            border: 2px solid rgba(130, 168, 188, 0.45);
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.35) inset,
+                0 8px 32px rgba(0, 0, 0, 0.45),
+                0 0 28px rgba(74, 122, 146, 0.25);
+            font-size: 2.25rem;
+            color: #e0e7ff;
+        }
+        .pr-hero__icon svg {
+            display: block;
+            width: 0.85em;
+            height: 0.85em;
+        }
+        .pr-hero__title {
+            margin: 0 0 10px;
+            font-size: clamp(1.85rem, 4.2vw, 2.65rem);
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #f8fafc;
+            text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+        }
+        .pr-hero__tag {
+            margin: 0;
+            max-width: 36rem;
+            font-size: clamp(0.95rem, 1.35vw, 1.1rem);
+            font-weight: 600;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .pr-hero__center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .pr-btn-nova-maquina {
+            font-family: inherit;
+            font-size: clamp(0.82rem, 1.2vw, 0.92rem);
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #f8fafc;
+            background: linear-gradient(180deg, #2d6a82 0%, var(--pr-navy) 100%);
+            border: 1px solid rgba(26, 74, 98, 0.5);
+            border-radius: 999px;
+            padding: 12px 22px;
+            cursor: pointer;
+            box-shadow:
+                0 2px 8px rgba(26, 74, 98, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .pr-btn-nova-maquina:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow:
+                0 6px 20px rgba(26, 74, 98, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        }
+        .pr-btn-nova-maquina:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 122, 146, 0.45), 0 6px 20px rgba(26, 74, 98, 0.28);
+        }
+        .pr-btn-nova-maquina:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Grid — leve recesso para os cards “flutuarem”; sem competir com o fundo */
+        .pr-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+            gap: clamp(18px, 2.2vw, 28px);
+            width: 100%;
+            align-content: stretch;
+            flex: 1 1 auto;
+            min-height: 0;
+            padding: 4px;
+            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        .pr-page--scroll .pr-grid {
+            grid-template-rows: none;
+            grid-auto-rows: minmax(200px, auto);
+            align-content: start;
+        }
+
+        @media (max-width: 1100px) {
+            .pr-page--scroll .pr-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-rows: none;
+            }
+        }
+        @media (max-width: 700px) {
+            .pr-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card máquina — painel MES compacto (topo / centro / rodapé) */
+        .pr-card {
+            margin: 0;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            padding: 0;
+            border-radius: var(--pr-radius);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+            min-height: 0;
+            height: 100%;
+            display: flex;
+        }
+        .pr-card:focus {
+            outline: none;
+        }
+        .pr-card:focus-visible .pr-card__inner {
+            box-shadow: var(--pr-card-elevated), var(--hm-shadow-inset-top), 0 0 0 3px rgba(130, 168, 188, 0.55);
+        }
+        .pr-card:hover {
+            transform: translateY(-4px);
+        }
+        .pr-card:hover .pr-card__inner {
+            border-color: rgba(130, 168, 188, 0.65);
+            box-shadow:
+                var(--pr-card-elevated),
+                0 0 32px rgba(74, 122, 146, 0.2),
+                var(--hm-shadow-inset-top);
+        }
+        .pr-card__inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            padding: clamp(12px, 1.4vw, 16px) clamp(12px, 1.5vw, 18px) clamp(11px, 1.3vw, 14px);
+            border-radius: var(--pr-radius);
+            background: linear-gradient(165deg, #f8fafc 0%, #eef2f7 38%, #e2e8f0 100%);
+            border: 2px solid var(--pr-card-edge);
+            box-shadow: var(--pr-card-elevated), var(--hm-shadow-inset-top);
+            position: relative;
+            overflow: hidden;
+            gap: 0;
+        }
+        .pr-card__inner::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0c1a28 0%, var(--pr-navy) 35%, #3d6f84 70%, #6a9bab 100%);
+            border-radius: 0 0 var(--pr-radius) var(--pr-radius);
+            pointer-events: none;
+            box-shadow: 0 -1px 8px rgba(74, 122, 146, 0.35);
+        }
+
+        .pr-card__head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 14px;
+            margin: calc(-4px) calc(-4px) 12px calc(-4px);
+            padding: 12px 14px 12px;
+            border-radius: 14px 14px 12px 12px;
+            background: linear-gradient(180deg, rgba(26, 74, 98, 0.14) 0%, rgba(248, 250, 252, 0.92) 55%, rgba(241, 245, 249, 0.98) 100%);
+            border: 1px solid rgba(26, 74, 98, 0.18);
+            border-bottom: 2px solid rgba(26, 74, 98, 0.22);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        }
+        .pr-card__identity {
+            flex: 1 1 140px;
+            min-width: 0;
+        }
+        .pr-card__title {
+            margin: 0;
+            font-size: clamp(0.88rem, 0.95vw + 0.55rem, 1.12rem);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #0f172a;
+            line-height: 1.2;
+            word-break: break-word;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+        }
+        .pr-card__setor {
+            display: block;
+            margin-top: 4px;
+            font-size: clamp(0.68rem, 0.8vw + 0.45rem, 0.82rem);
+            font-weight: 700;
+            color: #475569;
+            letter-spacing: 0.06em;
+            line-height: 1.25;
+        }
+        .pr-card__head .pr-status {
+            flex: 0 1 auto;
+            margin: 0;
+            padding: 9px 16px;
+            min-height: 0;
+        }
+        .pr-card__progress-block {
+            flex: 1 1 200px;
+            min-width: min(100%, 220px);
+            display: flex;
+            align-items: center;
+            gap: 10px 12px;
+        }
+        .pr-card__progress-block .pr-progress {
+            flex: 1;
+            min-width: 72px;
+            margin: 0;
+        }
+        .pr-card__progress-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .pr-card__pct {
+            font-size: clamp(0.98rem, 1.15vw + 0.5rem, 1.22rem);
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: var(--pr-navy);
+            letter-spacing: 0.02em;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        .pr-card__qty-line {
+            font-size: clamp(0.82rem, 0.95vw + 0.45rem, 0.98rem);
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: #1e293b;
+        }
+        .pr-card__qty-sep {
+            margin: 0 0.2em;
+            opacity: 0.45;
+            font-weight: 700;
+        }
+
+        .pr-status {
+            text-align: center;
+            padding: 9px 18px;
+            border-radius: 999px;
+            font-size: clamp(0.76rem, 0.88vw + 0.5rem, 0.95rem);
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border: 2px solid transparent;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+        .pr-status--run {
+            background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+            color: #f0fdf4;
+            border-color: #4ade80;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.2) inset,
+                0 4px 14px rgba(34, 197, 94, 0.5),
+                0 0 28px rgba(34, 197, 94, 0.35);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .pr-status--stop {
+            background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+            color: #fef2f2;
+            border-color: #f87171;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.18) inset,
+                0 4px 14px rgba(239, 68, 68, 0.55),
+                0 0 28px rgba(239, 68, 68, 0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        .pr-status--maint {
+            background: linear-gradient(180deg, #f59e0b 0%, #c2410c 100%);
+            color: #fffbeb;
+            border-color: #fbbf24;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.15) inset,
+                0 4px 14px rgba(245, 158, 11, 0.5),
+                0 0 28px rgba(234, 88, 12, 0.28);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        .pr-progress__track {
+            height: 9px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #94a3b8 0%, #cbd5e1 100%);
+            overflow: hidden;
+            border: 1px solid rgba(51, 65, 85, 0.35);
+            box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.18);
+        }
+        .pr-progress__fill {
+            height: 100%;
+            border-radius: inherit;
+            min-width: 0;
+            transition: width 0.45s ease;
+            box-shadow:
+                0 0 14px rgba(255, 255, 255, 0.45) inset,
+                0 0 18px rgba(74, 122, 146, 0.35),
+                0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .pr-card__body {
+            flex: 1 1 auto;
+            min-height: 0;
+            margin-bottom: 10px;
+        }
+        /* Centro: coluna esquerda (dados em leitura vertical) + direita reservada p/ render/imagem */
+        .pr-card__body-split {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            min-height: 0;
+            height: 100%;
+        }
+        .pr-card__info-stack {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pr-card__media-slot {
+            flex: 0 0 clamp(100px, 30%, 168px);
+            min-width: 88px;
+            align-self: stretch;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            padding: clamp(4px, 0.75vw, 10px);
+            border-radius: var(--pr-radius-sm);
+            border: 1px solid rgba(26, 74, 98, 0.14);
+            background: linear-gradient(
+                165deg,
+                rgba(255, 255, 255, 0.55) 0%,
+                rgba(248, 250, 252, 0.88) 45%,
+                rgba(241, 245, 249, 0.72) 100%
+            );
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+            overflow: hidden;
+        }
+        /* Saco ampliado só no desenho (scale); coluna e flex do slot inalterados */
+        .pr-card__media-icon {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            min-width: 0;
+            min-height: 0;
+            object-fit: contain;
+            object-position: center;
+            opacity: 0.9;
+            pointer-events: none;
+            flex-shrink: 1;
+            transform: scale(1.46);
+            transform-origin: center center;
+            filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.05));
+        }
+        .pr-kpi {
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+            border: 1px solid rgba(26, 74, 98, 0.12);
+            border-radius: var(--pr-radius-sm);
+            padding: 9px 11px;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+        .pr-kpi__val--note {
+            line-height: 1.4;
+        }
+        .pr-kpi__lab {
+            font-size: clamp(0.62rem, 0.55vw + 0.55rem, 0.72rem);
+            font-weight: 800;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        .pr-kpi__val {
+            font-size: clamp(0.9rem, 0.88vw + 0.55rem, 1.08rem);
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .pr-card__foot {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 6px 8px;
+            padding-top: 10px;
+            margin-top: auto;
+            border-top: 2px solid rgba(26, 74, 98, 0.12);
+        }
+        .pr-foot {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(26, 74, 98, 0.14);
+            border-radius: 10px;
+            padding: 7px 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
+        }
+        .pr-foot__k {
+            font-size: clamp(0.58rem, 0.5vw + 0.5rem, 0.68rem);
+            font-weight: 800;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        .pr-foot__v {
+            font-size: clamp(0.8rem, 0.68vw + 0.55rem, 0.95rem);
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: #0f172a;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        @media (max-width: 1200px) {
+            .pr-card__foot {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 700px) {
+            .pr-card__foot {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .pr-card__head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .pr-card__progress-block {
+                flex-direction: column;
+                align-items: stretch;
+                min-width: 0;
+            }
+            .pr-card__progress-meta {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: baseline;
+                width: 100%;
+            }
+            .pr-card__body-split {
+                flex-direction: column;
+            }
+            .pr-card__media-slot {
+                flex: 0 0 auto;
+                min-height: 72px;
+                max-height: 120px;
+                min-width: 0;
+                width: 100%;
+            }
+            .pr-card__media-icon {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                max-height: 100%;
+                opacity: 0.88;
+            }
+        }
+
+        /* Rodapé HOME */
+        .hm-footer {
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+            padding: 11px clamp(22px, 3.8vw, 52px);
+            background: var(--pr-navy);
+            color: #e2e8f0;
+            font-size: clamp(0.85rem, 1vw, 0.95rem);
+            font-weight: 600;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px 28px;
+            box-shadow:
+                0 -1px 0 rgba(255, 255, 255, 0.05) inset,
+                0 -6px 28px rgba(15, 23, 42, 0.14);
+            border-top: 1px solid var(--pr-navy-deep);
+        }
+        .hm-footer__ver { opacity: 0.88; }
+        .hm-footer__status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .hm-footer__dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.45);
+        }
+
+        /* ——— Painel MES: ≤6 máquinas, desktop/TV — sem scroll vertical ——— */
+        @media (min-width: 901px) {
+            html.hm-html:has(body.pr-page--panel) {
+                height: 100%;
+                max-height: 100dvh;
+                overflow: hidden;
+            }
+            html.hm-html body.hm.pr-page--panel {
+                height: 100dvh;
+                max-height: 100dvh;
+                overflow: hidden;
+            }
+            .hm.pr-page--panel {
+                height: 100dvh;
+                max-height: 100dvh;
+                min-height: 0;
+                overflow: hidden;
+            }
+            .pr-page--panel {
+                --header-h: 66px;
+                --pr-radius: 16px;
+                --pr-radius-sm: 11px;
+            }
+            .pr-page--panel .hm-header {
+                min-height: calc(var(--header-h) + var(--header-safe-top));
+            }
+            .pr-page--panel .hm-header__inner {
+                padding: 7px clamp(14px, 2.2vw, 36px);
+                gap: 8px 14px;
+            }
+            .pr-page--panel .hm-header__logo {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+            }
+            .pr-page--panel .hm-header__brand {
+                font-size: clamp(1rem, 1.8vw, 1.28rem);
+            }
+            .pr-page--panel .hm-header__sep {
+                height: 34px;
+            }
+            .pr-page--panel .hm-header__sys {
+                font-size: clamp(0.8rem, 1.15vw, 0.92rem);
+            }
+            .pr-page--panel .hm-header__sub {
+                font-size: clamp(0.68rem, 0.95vw, 0.78rem);
+                max-width: 300px;
+                line-height: 1.28;
+            }
+            .pr-page--panel .hm-header__time {
+                font-size: clamp(0.92rem, 1.45vw, 1.12rem);
+            }
+            .pr-page--panel .hm-header__date {
+                font-size: 0.7rem;
+            }
+            .pr-page--panel .hm-header__user-avatar {
+                width: 32px;
+                height: 32px;
+            }
+            .pr-page--panel .hm-header__user-name {
+                font-size: 0.88rem;
+            }
+
+            .pr-page--panel .pr-main.hm-main {
+                flex: 1 1 0;
+                min-height: 0;
+                overflow: hidden;
+                padding: 10px clamp(14px, 1.8vw, 36px) 8px;
+                gap: 8px;
+            }
+
+            .pr-page--panel .pr-hero {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: center;
+                padding: 2px 6px;
+                gap: 10px 14px;
+                flex-shrink: 0;
+            }
+            .pr-page--panel .pr-hero__icon-wrap {
+                width: 44px;
+                margin-bottom: 0;
+                font-size: 1.2rem;
+            }
+            .pr-page--panel .pr-hero__title {
+                margin: 0;
+                font-size: clamp(1.2rem, 2.1dvw, 1.55rem);
+                letter-spacing: 0.11em;
+            }
+            .pr-page--panel .pr-hero__tag {
+                display: none;
+            }
+            .pr-page--panel .pr-hero__center {
+                gap: 6px;
+                align-items: center;
+            }
+            .pr-page--panel .pr-btn-nova-maquina {
+                padding: 7px 16px;
+                font-size: clamp(0.68rem, 0.85dvw, 0.76rem);
+                margin-top: 2px;
+            }
+
+            .pr-page--panel .pr-grid {
+                flex: 1 1 0;
+                min-height: 0;
+                overflow: hidden;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-rows: repeat(2, minmax(0, 1fr));
+                gap: 8px 10px;
+                padding: 3px;
+                border-radius: 18px;
+                align-content: stretch;
+            }
+
+            .pr-page--panel .pr-card {
+                min-height: 0;
+                overflow: hidden;
+            }
+            .pr-page--panel .pr-card:hover {
+                transform: translateY(-2px);
+            }
+            .pr-page--panel .pr-card__inner {
+                padding: 8px 10px 8px;
+                min-height: 0;
+                overflow: hidden;
+            }
+            .pr-page--panel .pr-card__inner::after {
+                height: 2px;
+            }
+            .pr-page--panel .pr-card__head {
+                margin: -2px -2px 8px -2px;
+                padding: 8px 10px;
+                gap: 6px 8px;
+                border-radius: 12px 12px 10px 10px;
+            }
+            .pr-page--panel .pr-card__title {
+                font-size: clamp(0.72rem, 0.85dvw, 0.88rem);
+            }
+            .pr-page--panel .pr-card__setor {
+                font-size: clamp(0.62rem, 0.72dvw, 0.72rem);
+                margin-top: 2px;
+            }
+            .pr-page--panel .pr-card__head .pr-status {
+                padding: 6px 12px;
+                font-size: clamp(0.62rem, 0.75dvw, 0.76rem);
+            }
+            .pr-page--panel .pr-card__progress-block {
+                gap: 6px 8px;
+                min-width: min(100%, 180px);
+            }
+            .pr-page--panel .pr-card__pct {
+                font-size: clamp(0.78rem, 0.95dvw, 0.92rem);
+            }
+            .pr-page--panel .pr-card__qty-line {
+                font-size: clamp(0.68rem, 0.82dvw, 0.82rem);
+            }
+            .pr-page--panel .pr-progress__track {
+                height: 5px;
+            }
+            .pr-page--panel .pr-card__body {
+                margin-bottom: 7px;
+            }
+            .pr-page--panel .pr-card__body-split {
+                gap: 6px 8px;
+            }
+            .pr-page--panel .pr-card__info-stack {
+                gap: 5px;
+            }
+            .pr-page--panel .pr-card__media-slot {
+                flex: 0 0 clamp(72px, 26%, 128px);
+                min-width: 64px;
+                padding: 5px 6px;
+            }
+            .pr-page--panel .pr-card__media-icon {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                max-height: 100%;
+                opacity: 0.86;
+            }
+            .pr-page--panel .pr-kpi {
+                padding: 6px 8px;
+                gap: 3px;
+            }
+            .pr-page--panel .pr-kpi__lab {
+                font-size: clamp(0.58rem, 0.68dvw, 0.66rem);
+            }
+            .pr-page--panel .pr-kpi__val {
+                font-size: clamp(0.78rem, 0.88dvw, 0.88rem);
+                line-height: 1.28;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+            }
+            .pr-page--panel .pr-kpi__val--note {
+                -webkit-line-clamp: 3;
+            }
+            .pr-page--panel .pr-card__foot {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 4px 5px;
+                padding-top: 7px;
+            }
+            .pr-page--panel .pr-foot {
+                padding: 5px 6px;
+                border-radius: 8px;
+            }
+            .pr-page--panel .pr-foot__k {
+                font-size: clamp(0.52rem, 0.62dvw, 0.6rem);
+            }
+            .pr-page--panel .pr-foot__v {
+                font-size: clamp(0.68rem, 0.78dvw, 0.78rem);
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 1;
+            }
+
+            .pr-page--panel .hm-footer {
+                flex-shrink: 0;
+                padding: 7px clamp(18px, 2.8vw, 40px);
+                font-size: clamp(0.8rem, 0.95vw, 0.9rem);
+                gap: 10px 20px;
+            }
+        }
+
+        /* Tablet/phone: sempre rolagem, mesmo com ≤6 */
+        @media (max-width: 900px) {
+            html.hm-html body.hm.pr-page--panel {
+                height: auto;
+                max-height: none;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            .hm.pr-page--panel {
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+            .pr-page--panel .pr-main.hm-main {
+                overflow: visible;
+            }
+            .pr-page--panel .pr-grid {
+                overflow: visible;
+                grid-template-rows: none;
+                flex: none;
+            }
+            .pr-page--panel .pr-hero__tag {
+                display: block;
+            }
+            .pr-page--panel .pr-card__foot {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        /* Modal nova máquina */
+        .pr-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 240;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(16px, 4vw, 28px);
+        }
+        .pr-modal[hidden] {
+            display: none !important;
+        }
+        .pr-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.48);
+            backdrop-filter: blur(6px);
+        }
+        .pr-modal__dialog {
+            position: relative;
+            z-index: 1;
+            width: min(540px, 100%);
+            max-height: min(92dvh, 900px);
+            overflow: auto;
+            border-radius: var(--pr-radius);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid var(--pr-line);
+            box-shadow:
+                var(--hm-shadow-card),
+                0 28px 64px rgba(15, 23, 42, 0.18);
+        }
+        .pr-modal__head {
+            padding: clamp(18px, 2.5vw, 24px) clamp(20px, 3vw, 28px) 14px;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.65);
+            background: linear-gradient(180deg, rgba(26, 74, 98, 0.06) 0%, transparent 100%);
+        }
+        .pr-modal__title {
+            margin: 0;
+            font-size: clamp(1.05rem, 2vw, 1.25rem);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--pr-navy-deep);
+        }
+        .pr-modal__sub {
+            margin: 8px 0 0;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--pr-muted);
+            line-height: 1.45;
+        }
+        .pr-modal__close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(241, 245, 249, 0.95);
+            color: var(--pr-navy);
+            font-size: 1.35rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .pr-modal__close:hover {
+            background: #e2e8f0;
+            color: var(--pr-navy-deep);
+        }
+        .pr-modal__body {
+            padding: clamp(16px, 2.5vw, 22px) clamp(20px, 3vw, 28px) clamp(20px, 3vw, 28px);
+        }
+        .pr-modal__err {
+            display: none;
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: var(--pr-radius-sm);
+            background: #fef2f2;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #991b1b;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+        .pr-modal__err.is-visible {
+            display: block;
+        }
+        .pr-form-grid {
+            display: grid;
+            gap: 14px 16px;
+        }
+        @media (min-width: 520px) {
+            .pr-form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .pr-form-grid .pr-field--full {
+                grid-column: 1 / -1;
+            }
+        }
+        .pr-field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--pr-navy);
+            margin-bottom: 6px;
+        }
+        .pr-field input,
+        .pr-field select,
+        .pr-field textarea {
+            width: 100%;
+            font: inherit;
+            font-size: 0.94rem;
+            font-weight: 600;
+            color: var(--pr-ink);
+            padding: 11px 14px;
+            border-radius: var(--pr-radius-sm);
+            border: 1px solid rgba(203, 213, 225, 0.85);
+            background: #fff;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .pr-field textarea {
+            min-height: 88px;
+            resize: vertical;
+        }
+        .pr-field input:focus,
+        .pr-field select:focus,
+        .pr-field textarea:focus {
+            outline: none;
+            border-color: rgba(31, 77, 98, 0.55);
+            box-shadow: 0 0 0 3px rgba(74, 122, 146, 0.2);
+        }
+        .pr-field-hint {
+            margin: 5px 0 0;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--pr-muted);
+        }
+        .pr-modal__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(203, 213, 225, 0.55);
+        }
+        .pr-modal__btn {
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 11px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+        }
+        .pr-modal__btn--ghost {
+            background: #f1f5f9;
+            color: var(--pr-navy);
+            border-color: rgba(203, 213, 225, 0.9);
+        }
+        .pr-modal__btn--ghost:hover {
+            background: #e2e8f0;
+        }
+        .pr-modal__btn--primary {
+            color: #f8fafc;
+            background: linear-gradient(180deg, #2d6a82 0%, var(--pr-navy) 100%);
+            border-color: rgba(26, 74, 98, 0.45);
+            box-shadow: 0 2px 10px rgba(26, 74, 98, 0.22);
+        }
+        .pr-modal__btn--primary:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.04);
+        }
+        .pr-modal__btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+
+    <script src="/static/indupack-topbar.js"></script>
+    <script>
+    (function(){
+        function aplicarSnapshot(data){
+            if (!data || typeof data !== "object") return;
+            Object.keys(data).forEach(function(key){
+                var row = data[key];
+                if (!row) return;
+                var i = key;
+                var c = document.getElementById("p" + i + "-cliente");
+                var pr = document.getElementById("p" + i + "-produto");
+                var q = document.getElementById("p" + i + "-quantidade");
+                var qm = document.getElementById("p" + i + "-qmeta");
+                var o = document.getElementById("p" + i + "-descricao");
+                var st = document.getElementById("p" + i + "-status");
+                var stWrap = document.getElementById("p" + i + "-status-wrap");
+                var prog = document.getElementById("p" + i + "-progress");
+                var prodEl = document.getElementById("p" + i + "-produzido");
+                var pctl = document.getElementById("p" + i + "-pctlbl");
+                var footP = document.getElementById("p" + i + "-foot-prod");
+                var falt = document.getElementById("p" + i + "-faltam");
+                var op = document.getElementById("p" + i + "-operador");
+                var ef = document.getElementById("p" + i + "-efic");
+                var tp = document.getElementById("p" + i + "-tparado");
+                if (c) c.textContent = row.cliente != null ? row.cliente : "---";
+                if (pr) pr.textContent = row.produto != null ? row.produto : "---";
+                var qt = row.quantidade_txt != null ? row.quantidade_txt : "---";
+                if (q) q.textContent = qt;
+                if (qm) qm.textContent = qt;
+                if (o) o.textContent = row.descricao != null ? row.descricao : "---";
+                if (st) {
+                    var line = row.status_line != null ? row.status_line : row.status;
+                    st.textContent = line != null ? line : "PARADA";
+                }
+                if (stWrap) {
+                    var kind = row.status_kind || "stop";
+                    stWrap.className = "pr-status pr-status--" + kind;
+                }
+                var pct = typeof row.progress_pct === "number" ? row.progress_pct : 0;
+                if (prog) {
+                    prog.style.background = row.status_cor || "#22c55e";
+                    prog.style.width = pct + "%";
+                }
+                if (pctl) pctl.textContent = pct + "%";
+                var prodTxt = row.produzido != null ? String(row.produzido) : "0";
+                if (prodEl) prodEl.textContent = prodTxt;
+                if (footP) footP.textContent = prodTxt;
+                if (falt != null) {
+                    var fa = row.faltam;
+                    falt.textContent = typeof fa === "number" ? String(fa) : (fa != null ? String(fa) : "0");
+                }
+                if (op) {
+                    var ox = row.operador_atual != null ? row.operador_atual : "---";
+                    op.textContent = ox === "" ? "---" : ox;
+                }
+                if (ef) {
+                    var ex = typeof row.eficiencia_pct === "number" ? row.eficiencia_pct : pct;
+                    ef.textContent = ex + "%";
+                }
+                if (tp) {
+                    var tx = row.tempo_parado_txt != null ? row.tempo_parado_txt : "—";
+                    tp.textContent = tx;
+                }
+            });
+        }
+
+        var modalNova = document.getElementById("pr-modal-nova-maquina");
+        var btnOpenNova = document.getElementById("pr-open-nova-maquina");
+        var btnCloseX = document.getElementById("pr-modal-nova-x");
+        var btnCancel = document.getElementById("pr-modal-nova-cancel");
+        var formNova = document.getElementById("pr-form-nova-maquina");
+        var errBox = document.getElementById("pr-modal-nova-err");
+        var inputId = document.getElementById("pr-nm-id");
+
+        function showModalErr(msg){
+            if (!errBox) return;
+            errBox.textContent = msg || "";
+            if (msg) errBox.classList.add("is-visible");
+            else errBox.classList.remove("is-visible");
+        }
+
+        function openModalNova(){
+            if (!modalNova) return;
+            modalNova.hidden = false;
+            modalNova.setAttribute("aria-hidden", "false");
+            showModalErr("");
+            if (formNova) formNova.reset();
+            if (document.getElementById("pr-nm-meta")) document.getElementById("pr-nm-meta").value = "1000";
+            if (inputId) inputId.value = "";
+            var ne = document.getElementById("pr-nm-nome");
+            if (ne) setTimeout(function(){ ne.focus(); }, 50);
+        }
+
+        function closeModalNova(){
+            if (!modalNova) return;
+            modalNova.hidden = true;
+            modalNova.setAttribute("aria-hidden", "true");
+            showModalErr("");
+        }
+
+        if (btnOpenNova) btnOpenNova.addEventListener("click", openModalNova);
+        if (btnCloseX) btnCloseX.addEventListener("click", closeModalNova);
+        if (btnCancel) btnCancel.addEventListener("click", closeModalNova);
+        if (modalNova) {
+            modalNova.addEventListener("click", function(ev){
+                if (ev.target && ev.target.getAttribute("data-pr-modal-close") != null) closeModalNova();
+            });
+        }
+        document.addEventListener("keydown", function(ev){
+            if (ev.key === "Escape" && modalNova && !modalNova.hidden) closeModalNova();
+        });
+
+        if (formNova) {
+            formNova.addEventListener("submit", function(ev){
+                ev.preventDefault();
+                showModalErr("");
+                var fd = new FormData(formNova);
+                var payload = {
+                    nome: (fd.get("nome") || "").toString().trim(),
+                    setor: (fd.get("setor") || "").toString().trim(),
+                    quantidade_maxima_padrao: fd.get("quantidade_maxima_padrao"),
+                    status_inicial: (fd.get("status_inicial") || "PARADA").toString(),
+                    observacao: (fd.get("observacao") || "").toString(),
+                    tablet_vinculado: (fd.get("tablet_vinculado") || "").toString().trim(),
+                };
+                var rawId = (fd.get("id") || "").toString().trim();
+                if (rawId !== "") {
+                    var parsedId = parseInt(rawId, 10);
+                    if (!isNaN(parsedId)) payload.id = parsedId;
+                }
+
+                var sub = document.getElementById("pr-modal-nova-submit");
+                if (sub) sub.disabled = true;
+
+                fetch("/maquinas", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                    body: JSON.stringify(payload),
+                })
+                    .then(function(r){ return r.json().then(function(j){ return { okHttp: r.ok, body: j }; }); })
+                    .then(function(res){
+                        if (sub) sub.disabled = false;
+                        if (res.body && res.body.ok) {
+                            closeModalNova();
+                            window.location.reload();
+                            return;
+                        }
+                        var er = (res.body && res.body.erro) ? res.body.erro : "erro_desconhecido";
+                        var map = {
+                            id_invalido: "Informe um ID numérico válido ou deixe em branco.",
+                            id_duplicado: "Já existe uma máquina com este ID.",
+                            payload_invalido: "Dados inválidos. Tente novamente.",
+                        };
+                        showModalErr(map[er] || "Não foi possível salvar. Código: " + er);
+                    })
+                    .catch(function(){
+                        if (sub) sub.disabled = false;
+                        showModalErr("Falha de rede ao salvar.");
+                    });
+            });
+        }
+
+        function atualizar(){
+            fetch("/producao/atual")
+                .then(function(r){ return r.json(); })
+                .then(aplicarSnapshot)
+                .catch(function(){});
+        }
+        atualizar();
+        setInterval(atualizar, 1500);
+    })();
+    </script>
+</body>
+</html>

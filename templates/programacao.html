@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Programação máquina {{ id }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-nav-back.css">
+    <link rel="stylesheet" href="/static/indupack-topbar.css">
+</head>
+{% from "macros.html" import indupack_topbar %}
+<body class="prog-body has-indupack-topbar">
+
+    {{ indupack_topbar(usuario_nome, nav_back_href='/producao', logo_size=48) }}
+
+    <div class="page-container">
+        <header class="prog-page-head">
+            <h1 class="titulo">📋 PROGRAMAÇÃO MÁQUINA {{ id }}</h1>
+            <p class="prog-page-tag">Painel operacional — programação e fila da máquina</p>
+        </header>
+
+        <!-- Painel no estilo dos cards de produção -->
+        <div class="panel-card">
+            <div class="toolbar">
+                <button type="button" class="btn_acao" onclick="abrirPedido()">+ Pedido</button>
+            </div>
+
+            <div class="table-scroll">
+                <div class="tabela">
+
+                    <div class="linha cabecalho">
+                        <div>ORDEM</div>
+                        <div>DATA</div>
+                        <div>CÓD</div>
+                        <div>MEDIDA</div>
+                        <div>QUANTIDADE</div>
+                        <div>EMBALAGEM</div>
+                        <div>ETIQUETA</div>
+                        <div>OBSERVAÇÃO</div>
+                        <div>FINALIZADO</div>
+                        <div>OP. INÍCIO</div>
+                        <div>OP. FIM</div>
+                        <div>AÇÃO</div>
+                    </div>
+
+                    {{ linhas|safe }}
+
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card prog-hist-card">
+            <h2 class="prog-hist-title">Histórico de paradas</h2>
+            <p class="prog-hist-hint">Início, retorno, duração e motivo (últimos 15 registros)</p>
+            {% if historico_paradas_rows %}
+            <div class="prog-hist-scroll">
+                <table class="prog-hist-table">
+                    <thead>
+                        <tr>
+                            <th>Início</th>
+                            <th>Retorno</th>
+                            <th>Duração</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in historico_paradas_rows %}
+                        <tr>
+                            <td>{{ row.inicio }}</td>
+                            <td>{{ row.retorno }}</td>
+                            <td>{{ row.duracao }}</td>
+                            <td>{{ row.motivo }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="prog-hist-empty">Nenhum registro de parada ainda.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+        <div class="box">
+
+            <h3 class="modal_titulo">📦 Novo Pedido</h3>
+
+            <input id="cliente" class="inp" placeholder="Cliente">
+            <input id="data" class="inp" placeholder="25/04">
+
+            <div class="linha_produto">
+                <select id="produto" class="inp inp_flex" onchange="aoMudarProdutoSelect()">
+                    <option value="">Selecione produto</option>
+                    {{ opcoes_produtos|safe }}
+                </select>
+
+                <button type="button" class="btn_icone" onclick="limparProduto()" title="Limpar">🗑</button>
+            </div>
+
+            <div class="modal_campos_prod">
+                <input type="text" id="prod_codigo" class="inp" placeholder="Código" autocomplete="off">
+                <input type="text" id="prod_medida" class="inp" placeholder="Medida" autocomplete="off">
+                <input type="text" id="prod_peso" class="inp" placeholder="Peso" autocomplete="off">
+            </div>
+
+            <button type="button" class="btn_secundario" onclick="novoProduto()">+ Novo Produto</button>
+
+            <input id="quantidade" class="inp" value="1000">
+
+            <select id="fardos" class="inp">
+                <option>50</option>
+                <option selected>100</option>
+                <option>200</option>
+                <option>250</option>
+            </select>
+
+            <input id="descricao" class="inp" placeholder="Descrição">
+
+            <div class="modal_acoes">
+                <button type="button" class="btn_salvar" onclick="salvarPedido()">Salvar Pedido</button>
+                <button type="button" class="btn_fechar" onclick="fechar()">Fechar</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Confirmação excluir — mesmo DNA visual do modal do tablet (HMI) -->
+    <div id="modal-excluir" class="hmi-modal-overlay" hidden aria-hidden="true">
+        <div class="hmi-modal hmi-modal--confirm" role="dialog" aria-modal="true" aria-labelledby="modal-excluir-title">
+            <div class="hmi-modal__head">
+                <h2 id="modal-excluir-title" class="hmi-modal__title">Excluir pedido</h2>
+                <p class="hmi-modal__lead">Esta ação <strong>não pode ser desfeita</strong>. Remover o pedido <strong id="modal-excluir-ordem">—</strong> da programação?</p>
+            </div>
+            <div class="hmi-modal-actions hmi-modal-actions--solo">
+                <button type="button" id="modal-excluir-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
+                <button type="button" id="modal-excluir-confirm" class="hmi-modal-btn hmi-modal-btn--danger">Excluir pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmação finalizar pedido — mesmo padrão do modal de excluir -->
+    <div id="modal-finalizar" class="hmi-modal-overlay" hidden aria-hidden="true">
+        <div class="hmi-modal hmi-modal--confirm" role="dialog" aria-modal="true" aria-labelledby="modal-finalizar-title">
+            <div class="hmi-modal__head">
+                <h2 id="modal-finalizar-title" class="hmi-modal__title">Finalizar pedido</h2>
+                <p class="hmi-modal__lead">Confirma marcar o pedido <strong id="modal-finalizar-ordem">—</strong> como <strong>finalizado</strong>? Os dados de encerramento serão registrados.</p>
+            </div>
+            <div class="hmi-modal-actions hmi-modal-actions--solo">
+                <button type="button" id="modal-finalizar-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
+                <button type="button" id="modal-finalizar-confirm" class="hmi-modal-btn hmi-modal-btn--success">Confirmar finalização</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmação marcar etiqueta OK — mesmo padrão dos outros modais HMI -->
+    <div id="modal-etiqueta-ok" class="hmi-modal-overlay" hidden aria-hidden="true">
+        <div class="hmi-modal hmi-modal--confirm" role="dialog" aria-modal="true" aria-labelledby="modal-etiqueta-title">
+            <div class="hmi-modal__head">
+                <h2 id="modal-etiqueta-title" class="hmi-modal__title">Etiqueta conferida</h2>
+                <p class="hmi-modal__lead">Confirma marcar a etiqueta como <strong>impressa / conferida</strong> no pedido <strong id="modal-etiqueta-ordem">—</strong>?</p>
+            </div>
+            <div class="hmi-modal-actions hmi-modal-actions--solo">
+                <button type="button" id="modal-etiqueta-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
+                <button type="button" id="modal-etiqueta-confirm" class="hmi-modal-btn hmi-modal-btn--success">Confirmar etiqueta OK</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+
+    :root {
+        --ref-navy: #132338;
+        --ref-ink: #1e293b;
+        --ref-ink-dim: #64748b;
+        --ref-red: #d32f2f;
+        --ref-line: rgba(15, 23, 42, 0.08);
+    }
+
+    html {
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
+    .prog-body {
+        margin: 0;
+        min-height: 100vh;
+        color: #1e293b;
+        font-family: "Segoe UI", system-ui, Arial, sans-serif;
+        background:
+            radial-gradient(120% 80% at 100% 0%, rgba(26, 74, 98, 0.07) 0%, transparent 55%),
+            radial-gradient(90% 60% at 0% 100%, rgba(45, 90, 108, 0.06) 0%, transparent 50%),
+            linear-gradient(180deg, #e8edf4 0%, #f1f5f9 35%, #eef2f7 100%);
+        overflow-x: clip;
+    }
+
+    /* Modal confirmação — alinhado ao tablet (.hmi-modal) */
+    .hmi-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(10, 18, 32, 0.72);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
+    .hmi-modal-overlay[hidden] {
+        display: none !important;
+    }
+
+    .hmi-modal {
+        width: min(980px, 100%);
+        max-height: min(92dvh, 900px);
+        overflow: auto;
+        background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+        border: 2px solid rgba(15, 23, 42, 0.12);
+        border-radius: 18px;
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        padding: 22px 22px 18px;
+    }
+
+    .hmi-modal--confirm {
+        width: min(460px, 100%);
+        max-height: none;
+    }
+
+    .hmi-modal__head {
+        margin-bottom: 16px;
+    }
+
+    .hmi-modal__title {
+        margin: 0 0 8px;
+        font-size: clamp(1.25rem, 3vw, 1.5rem);
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        color: var(--ref-navy);
+    }
+
+    .hmi-modal__lead {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--ref-ink-dim);
+        line-height: 1.45;
+    }
+
+    .hmi-modal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid var(--ref-line);
+    }
+
+    .hmi-modal-actions--solo {
+        margin-top: 8px;
+    }
+
+    .hmi-modal-btn {
+        min-height: 52px;
+        padding: 14px 22px;
+        border-radius: 12px;
+        font-size: 0.88rem;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        border: none;
+        font-family: inherit;
+    }
+
+    .hmi-modal-btn--ghost {
+        background: #fff;
+        border: 2px solid var(--ref-line);
+        color: var(--ref-ink);
+    }
+
+    .hmi-modal-btn--danger {
+        background: linear-gradient(180deg, #ef5350 0%, var(--ref-red) 100%);
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(211, 47, 47, 0.35);
+    }
+
+    .hmi-modal-btn--success {
+        background: linear-gradient(180deg, #00c853 0%, #00a859 100%);
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(0, 168, 89, 0.35);
+    }
+
+    .page-container {
+        margin-top:0;
+        padding:clamp(10px, 1.2vw, 18px) clamp(10px, 1.5vw, 24px) clamp(28px, 3vh, 48px);
+        width:100%;
+        max-width:none;
+        margin-left:0;
+        margin-right:0;
+        box-sizing:border-box;
+    }
+
+    .prog-page-head {
+        margin-bottom:clamp(16px, 2vw, 22px);
+        padding-bottom:clamp(14px, 1.8vw, 18px);
+        border-bottom:1px solid rgba(26, 74, 98, 0.14);
+    }
+
+    .titulo {
+        text-align:left;
+        margin:0 0 6px;
+        letter-spacing:0.12em;
+        font-size:clamp(1.05rem, 1.35vw + 0.6rem, 1.65rem);
+        font-weight:800;
+        color:#0f172a;
+        text-transform:uppercase;
+    }
+
+    .prog-page-tag {
+        margin:0;
+        font-size:clamp(0.88rem, 1vw + 0.35rem, 1.02rem);
+        font-weight:600;
+        color:#64748b;
+        line-height:1.45;
+        max-width:72ch;
+    }
+
+    /* Painel MES full-width — cartão premium */
+    .panel-card {
+        background:linear-gradient(165deg, #1f4d62 0%, #0c1a28 48%, #153545 100%);
+        color:white;
+        padding:clamp(16px, 1.8vw, 26px) clamp(14px, 1.6vw, 24px) clamp(18px, 2vw, 28px);
+        border-radius:20px;
+        box-shadow:
+            0 14px 40px rgba(15, 23, 42, 0.18),
+            0 1px 0 rgba(255,255,255,0.1) inset;
+        border:1px solid rgba(255,255,255,0.12);
+        max-width:100%;
+        width:100%;
+        box-sizing:border-box;
+    }
+
+    .prog-hist-card {
+        margin-top:clamp(16px, 2vw, 22px);
+    }
+
+    .prog-hist-title {
+        margin:0 0 10px;
+        font-size:clamp(1.05rem, 1.85vw, 1.35rem);
+        font-weight:800;
+        letter-spacing:0.06em;
+        text-transform:uppercase;
+    }
+
+    .prog-hist-hint {
+        margin:0 0 18px;
+        font-size:clamp(0.88rem, 1.35vw, 1.05rem);
+        font-weight:600;
+        color:rgba(255,255,255,0.82);
+        line-height:1.45;
+    }
+
+    .prog-hist-scroll {
+        max-height:min(420px, 55vh);
+        overflow:auto;
+        border-radius:14px;
+        background:#f8fafc;
+        border:1px solid rgba(255,255,255,0.2);
+    }
+
+    .prog-hist-table {
+        width:100%;
+        border-collapse:separate;
+        border-spacing:0;
+        font-size:clamp(0.88rem, 1.25vw, 1.05rem);
+        color:#1e293b;
+    }
+
+    .prog-hist-table thead th {
+        position:sticky;
+        top:0;
+        z-index:1;
+        background:#0f172a;
+        color:#fff;
+        text-align:left;
+        padding:14px 14px;
+        font-size:clamp(0.78rem, 1.1vw, 0.92rem);
+        font-weight:800;
+        letter-spacing:0.08em;
+        text-transform:uppercase;
+        white-space:nowrap;
+        border-bottom:2px solid #1e293b;
+    }
+
+    .prog-hist-table tbody td {
+        padding:12px 14px;
+        border-bottom:1px solid #cbd5e1;
+        vertical-align:middle;
+        word-break:break-word;
+        line-height:1.45;
+    }
+
+    .prog-hist-table tbody tr:nth-child(even) td {
+        background:#f1f5f9;
+    }
+
+    .prog-hist-empty {
+        margin:0;
+        padding:18px 16px;
+        border-radius:12px;
+        background:rgba(255,255,255,0.12);
+        font-size:clamp(0.92rem, 1.3vw, 1.08rem);
+        font-weight:600;
+        color:rgba(255,255,255,0.88);
+        line-height:1.45;
+    }
+
+    .toolbar {
+        display:flex;
+        justify-content:flex-start;
+        align-items:center;
+        flex-wrap:wrap;
+        gap:12px;
+        margin-bottom:18px;
+    }
+
+    .btn_acao {
+        padding:12px 22px;
+        border-radius:12px;
+        border:none;
+        background:white;
+        color:#1a4a62;
+        font-weight:bold;
+        font-family:inherit;
+        font-size:15px;
+        cursor:pointer;
+        box-shadow:0 4px 14px rgba(0,0,0,0.15);
+        transition:transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .btn_acao:hover {
+        background:#e2ecf0;
+        transform:translateY(-2px);
+        box-shadow:0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .btn_acao:active {
+        transform:scale(0.98);
+    }
+
+    .table-scroll {
+        width:100%;
+        max-width:100%;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        border-radius:16px;
+        background:#f8fafc;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.75),
+            inset 0 -1px 0 rgba(15,23,42,0.04);
+        border:1px solid rgba(15,23,42,0.06);
+    }
+
+    .tabela {
+        width:100%;
+        min-width:0;
+        padding:clamp(10px, 1.2vw, 16px);
+        box-sizing:border-box;
+    }
+
+    /**
+     * Grelha fluida: minmax(0, …) permite encolher dentro da viewport sem largura mínima fixa.
+     * Evita barra horizontal em ecrãs normais; scroll só em zoom extremo ou viewport muito estreito.
+     */
+    .linha {
+        display:grid;
+        grid-template-columns:
+            minmax(48px, 0.45fr)
+            minmax(0, 0.65fr)
+            minmax(0, 0.62fr)
+            minmax(0, 1.15fr)
+            minmax(0, 0.55fr)
+            minmax(0, 0.55fr)
+            minmax(0, 0.45fr)
+            minmax(0, 1.05fr)
+            minmax(0, 0.45fr)
+            minmax(0, 0.95fr)
+            minmax(0, 0.95fr)
+            minmax(48px, 0.4fr);
+        gap:clamp(6px, 0.65vw, 10px);
+        margin-bottom:9px;
+        align-items:stretch;
+        transition:transform 0.2s ease, box-shadow 0.2s ease, opacity 0.18s ease;
+    }
+
+    .linha > * {
+        min-width:0;
+    }
+
+    .linha-draggable {
+        cursor:grab;
+        user-select:none;
+    }
+
+    .linha-draggable:active {
+        cursor:grabbing;
+    }
+
+    .linha-draggable .ordem {
+        cursor:grab;
+    }
+
+    .linha-draggable input,
+    .linha-draggable select,
+    .linha-draggable button {
+        cursor:auto;
+        user-select:text;
+    }
+
+    .linha-draggable.dragging {
+        opacity:0.72;
+        transform:scale(0.99);
+        box-shadow:0 12px 28px rgba(26,74,98,0.28);
+        z-index:10;
+        position:relative;
+    }
+
+    .linha-draggable.drag-over {
+        outline:2px dashed #1a4a62;
+        outline-offset:3px;
+        background:rgba(26,74,98,0.08);
+        border-radius:12px;
+    }
+
+    .linha:not(.cabecalho):hover {
+        transform:scale(1.005);
+    }
+
+    .linha-draggable.dragging:hover {
+        transform:scale(0.99);
+    }
+
+    .linha:not(.cabecalho) {
+        padding:4px 0;
+    }
+
+    .finalizado {
+        background:linear-gradient(90deg, rgba(34,197,94,0.2), rgba(22,163,74,0.35));
+        color:#14532d;
+        border-radius:12px;
+        padding:6px 4px;
+        box-shadow:0 2px 8px rgba(34,197,94,0.2);
+    }
+
+    .finalizado .ordem {
+        background:#15803d;
+        color:white;
+    }
+
+    .prog-op-cell {
+        padding:clamp(6px, 1.2vw, 8px) clamp(4px, 1vw, 6px);
+        min-height:42px;
+        border-radius:10px;
+        border:1px solid #e2e8f0;
+        background:#f8fafc;
+        font-size:clamp(10px, 1.35vw, 12px);
+        font-weight:600;
+        color:#334155;
+        line-height:1.35;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        word-break:break-word;
+        overflow-wrap:anywhere;
+    }
+
+    .prog-op-main {
+        font-weight:800;
+        color:#1e293b;
+        font-size:clamp(10px, 1.35vw, 12px);
+    }
+
+    .prog-op-sub {
+        font-size:clamp(9px, 1.2vw, 11px);
+        font-weight:600;
+        color:#64748b;
+        margin-top:2px;
+    }
+
+    .finalizado input {
+        background:white !important;
+        color:#1e293b !important;
+        border:1px solid #86efac !important;
+    }
+
+    .linha input {
+        padding:clamp(8px, 1.5vw, 10px) clamp(4px, 1.2vw, 8px);
+        min-height:42px;
+        min-width:0;
+        box-sizing:border-box;
+        border-radius:10px;
+        border:1px solid #cbd5e1;
+        text-align:center;
+        background:white;
+        color:#1e293b;
+        font-family:inherit;
+        font-size:clamp(11px, 1.65vw, 13px);
+        width:100%;
+        overflow-wrap:anywhere;
+    }
+
+    .linha input:focus {
+        outline:none;
+        border-color:#1a4a62;
+        box-shadow:0 0 0 3px rgba(26,74,98,0.2);
+    }
+
+    /* FINALIZADO — pill igual ao tablet (✓ / —) */
+    .prog-pill-wrap {
+        position:relative;
+        width:100%;
+        min-height:42px;
+        align-self:stretch;
+    }
+
+    .prog-pill-input {
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        margin:0;
+        opacity:0;
+        cursor:pointer;
+        z-index:2;
+        accent-color:#15803d;
+    }
+
+    .prog-pill-input:focus {
+        outline:none;
+    }
+
+    .prog-pill-input:focus-visible + .prog-pill-face {
+        box-shadow:0 0 0 3px rgba(21, 128, 61, 0.35);
+    }
+
+    .prog-pill-face {
+        position:absolute;
+        inset:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:12px;
+        border:1px solid #cbd5e1;
+        background:#fff;
+        pointer-events:none;
+        z-index:1;
+        box-sizing:border-box;
+        transition:background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .prog-pill-face::before {
+        content:"—";
+        color:#94a3b8;
+        font-size:18px;
+        font-weight:700;
+        line-height:1;
+    }
+
+    .prog-pill-input:checked + .prog-pill-face {
+        border-color:#15803d;
+        background:#f0fdf4;
+    }
+
+    .prog-pill-input:checked + .prog-pill-face::before {
+        content:"✓";
+        color:#15803d;
+        font-size:22px;
+        font-weight:900;
+    }
+
+    .finalizado .prog-pill-input:not(:checked) + .prog-pill-face {
+        border-color:#86efac;
+        background:#fff;
+    }
+
+    .finalizado .prog-pill-input:checked + .prog-pill-face {
+        border-color:#15803d;
+        background:#f0fdf4;
+    }
+
+    .ordem {
+        background:#0f172a;
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:10px;
+        font-weight:bold;
+        font-size:clamp(11px, 1.5vw, 13px);
+        min-height:42px;
+        padding:6px clamp(2px, 1vw, 4px);
+    }
+
+    .cabecalho div {
+        background:#0f172a;
+        color:white;
+        padding:clamp(8px, 1.5vw, 12px) clamp(4px, 1.2vw, 8px);
+        text-align:center;
+        font-weight:bold;
+        font-size:clamp(9px, 1.45vw, 11px);
+        letter-spacing:0.03em;
+        text-transform:uppercase;
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        line-height:1.2;
+        overflow-wrap:anywhere;
+        hyphens:auto;
+    }
+
+    .delete {
+        width:100%;
+        box-sizing:border-box;
+        background:#ef4444;
+        border:none;
+        border-radius:10px;
+        color:white;
+        cursor:pointer;
+        min-height:42px;
+        font-size:clamp(14px, 2.5vw, 16px);
+        transition:background 0.2s, transform 0.15s;
+        box-shadow:0 2px 8px rgba(239,68,68,0.35);
+    }
+
+    .delete:hover {
+        background:#dc2626;
+        transform:scale(1.03);
+    }
+
+    .modal {
+        display:none;
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:rgba(15,23,42,0.65);
+        justify-content:center;
+        align-items:center;
+        z-index:200;
+        padding:20px;
+        box-sizing:border-box;
+    }
+
+    .box {
+        background:linear-gradient(180deg, #1f4d62 0%, #0c1a28 100%);
+        padding:28px;
+        border-radius:18px;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        width:100%;
+        max-width:360px;
+        box-shadow:0 12px 40px rgba(0,0,0,0.35);
+        border:1px solid rgba(168,196,210,0.22);
+        box-sizing:border-box;
+        max-height:calc(100vh - 40px);
+        overflow-y:auto;
+    }
+
+    .modal_titulo {
+        margin:0 0 4px;
+        color:white;
+        font-size:1.15rem;
+        text-align:center;
+    }
+
+    .inp {
+        padding:12px 14px;
+        border-radius:12px;
+        border:1px solid #cbd5e1;
+        font-family:inherit;
+        font-size:14px;
+        background:white;
+        color:#1e293b;
+        width:100%;
+        box-sizing:border-box;
+        min-height:44px;
+    }
+
+    .inp:focus {
+        outline:none;
+        border-color:#1a4a62;
+        box-shadow:0 0 0 3px rgba(26,74,98,0.2);
+    }
+
+    .linha_produto {
+        display:flex;
+        gap:10px;
+        align-items:stretch;
+    }
+
+    .modal_campos_prod {
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+        margin-top:2px;
+    }
+
+    @media (min-width:420px) {
+        .modal_campos_prod {
+            grid-template-columns:1fr 1fr 1fr;
+            gap:8px;
+        }
+        .modal_campos_prod .inp {
+            font-size:13px;
+            padding:10px 10px;
+            min-height:40px;
+        }
+    }
+
+    .inp_flex {
+        flex:1;
+        min-width:0;
+    }
+
+    .btn_icone {
+        background:#ef4444;
+        color:white;
+        border:none;
+        border-radius:12px;
+        padding:0 14px;
+        cursor:pointer;
+        font-size:16px;
+        flex-shrink:0;
+        transition:background 0.2s;
+    }
+
+    .btn_icone:hover {
+        background:#dc2626;
+    }
+
+    .btn_secundario {
+        background:#2d6a82;
+        color:white;
+        border:none;
+        border-radius:12px;
+        padding:12px;
+        font-weight:600;
+        font-family:inherit;
+        cursor:pointer;
+        transition:background 0.2s, transform 0.15s;
+    }
+
+    .btn_secundario:hover {
+        background:#24586c;
+        transform:translateY(-1px);
+    }
+
+    .modal_acoes {
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        margin-top:6px;
+    }
+
+    .btn_salvar {
+        background:#22c55e;
+        color:white;
+        border:none;
+        border-radius:12px;
+        padding:14px;
+        font-weight:bold;
+        font-family:inherit;
+        font-size:15px;
+        cursor:pointer;
+        box-shadow:0 4px 14px rgba(34,197,94,0.35);
+        transition:background 0.2s, transform 0.15s;
+    }
+
+    .btn_salvar:hover {
+        background:#16a34a;
+        transform:translateY(-1px);
+    }
+
+    .btn_fechar {
+        background:white;
+        color:#1a4a62;
+        border:none;
+        border-radius:12px;
+        padding:12px;
+        font-weight:bold;
+        font-family:inherit;
+        cursor:pointer;
+        transition:background 0.2s;
+    }
+
+    .btn_fechar:hover {
+        background:#e2ecf0;
+    }
+
+    @media (max-width:900px) {
+        .page-container {
+            margin-top:88px;
+            padding:12px 12px 32px;
+        }
+        .panel-card {
+            padding:16px 14px 18px;
+            border-radius:18px;
+        }
+        .prog-page-head {
+            margin-bottom:14px;
+            padding-bottom:12px;
+        }
+        .titulo {
+            font-size:clamp(0.98rem, 4vw, 1.25rem);
+        }
+        .tabela {
+            min-width:0;
+        }
+    }
+
+    </style>
+
+    <script src="/static/indupack-topbar.js"></script>
+    <script>
+
+    function editar(id,index,campo,valor){
+        fetch(`/editar/${id}/${index}`, {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({% raw %}{campo,valor}{% endraw %})
+        });
+    }
+
+    function abrirPedido(){
+        modal.style.display = "flex";
+    }
+
+    function fechar(){
+        modal.style.display = "none";
+    }
+
+    function aoMudarProdutoSelect(){
+        var v = document.getElementById("produto").value;
+        var c = document.getElementById("prod_codigo");
+        var m = document.getElementById("prod_medida");
+        var p = document.getElementById("prod_peso");
+        if (!v) {
+            c.value = "";
+            m.value = "";
+            p.value = "";
+            return;
+        }
+        var partes = v.trim().split(/\s+/);
+        if (partes.length >= 3) {
+            c.value = partes[0];
+            p.value = partes[partes.length - 1];
+            m.value = partes.slice(1, -1).join(" ");
+        } else if (partes.length === 2) {
+            c.value = partes[0];
+            m.value = partes[1];
+            p.value = "";
+        } else {
+            c.value = partes[0] || "";
+            m.value = "";
+            p.value = "";
+        }
+    }
+
+    function montarProdutoParam(){
+        var sel = document.getElementById("produto").value;
+        if (sel) return sel;
+        var c = document.getElementById("prod_codigo").value.trim();
+        var med = document.getElementById("prod_medida").value.trim();
+        var pe = document.getElementById("prod_peso").value.trim();
+        var partes = [c, med, pe].filter(function(x){ return x.length; });
+        return partes.join(" ");
+    }
+
+    function limparProduto(){
+        document.getElementById("produto").value = "";
+        document.getElementById("prod_codigo").value = "";
+        document.getElementById("prod_medida").value = "";
+        document.getElementById("prod_peso").value = "";
+    }
+
+    function novoProduto(){
+        let nome = prompt("Nome do produto:");
+        if(nome){
+            fetch(`/add_produto?nome=${nome}`)
+            .then(()=>location.reload())
+        }
+    }
+
+    function salvarPedido(){
+        let cliente = document.getElementById("cliente").value;
+        let produto = montarProdutoParam();
+        let quantidade = document.getElementById("quantidade").value;
+        let fardos = document.getElementById("fardos").value;
+        let descricao = document.getElementById("descricao").value;
+
+        if(!produto){
+            alert("Selecione um produto!");
+            return;
+        }
+
+        fetch(`/salvar_pedido/{{ id }}?cliente=${encodeURIComponent(cliente)}&produto=${encodeURIComponent(produto)}&quantidade=${encodeURIComponent(quantidade)}&fardos=${encodeURIComponent(fardos)}&descricao=${encodeURIComponent(descricao)}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.ok){
+                location.reload();
+            } else {
+                alert("Erro ao salvar");
+            }
+        });
+    }
+
+    var _excluirPedidoIndex = null;
+
+    function pedirExcluirPedido(i){
+        _excluirPedidoIndex = i;
+        var modal = document.getElementById("modal-excluir");
+        var ordemEl = document.getElementById("modal-excluir-ordem");
+        if (ordemEl) ordemEl.textContent = (i + 1) + "º";
+        if (modal) {
+            modal.hidden = false;
+            modal.setAttribute("aria-hidden", "false");
+        }
+    }
+
+    function fecharModalExcluir(){
+        _excluirPedidoIndex = null;
+        var modal = document.getElementById("modal-excluir");
+        if (modal) {
+            modal.hidden = true;
+            modal.setAttribute("aria-hidden", "true");
+        }
+    }
+
+    function deletar(i){
+        fetch(`/deletar/{{ id }}?index=${i}`)
+        .then(()=>location.reload())
+    }
+
+    function confirmarExcluirPedido(){
+        if (_excluirPedidoIndex === null) return;
+        var idx = _excluirPedidoIndex;
+        fecharModalExcluir();
+        deletar(idx);
+    }
+
+    var _finalizarIdx = null;
+
+    function finalizadoCheckboxChange(maquinaId, idx, el){
+        if (el.checked) {
+            el.checked = false;
+            _finalizarIdx = idx;
+            var modal = document.getElementById("modal-finalizar");
+            var ordemEl = document.getElementById("modal-finalizar-ordem");
+            if (ordemEl) ordemEl.textContent = (idx + 1) + "º";
+            if (modal) {
+                modal.hidden = false;
+                modal.setAttribute("aria-hidden", "false");
+            }
+            return;
+        }
+        fetch("/editar/" + maquinaId + "/" + idx, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ campo: "finalizado", valor: false })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.ok) location.reload();
+        });
+    }
+
+    function fecharModalFinalizar(){
+        _finalizarIdx = null;
+        var modal = document.getElementById("modal-finalizar");
+        if (modal) {
+            modal.hidden = true;
+            modal.setAttribute("aria-hidden", "true");
+        }
+    }
+
+    function confirmarFinalizarPedido(){
+        if (_finalizarIdx === null) return;
+        var idx = _finalizarIdx;
+        fecharModalFinalizar();
+        fetch("/editar/{{ id }}/" + idx, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ campo: "finalizado", valor: true })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.ok) location.reload();
+            else location.reload();
+        });
+    }
+
+    var _etiquetaFeitaIdx = null;
+
+    function etiquetaFeitaCheckboxChange(maquinaId, idx, el){
+        if (el.checked) {
+            el.checked = false;
+            _etiquetaFeitaIdx = idx;
+            var modal = document.getElementById("modal-etiqueta-ok");
+            var ordemEl = document.getElementById("modal-etiqueta-ordem");
+            if (ordemEl) ordemEl.textContent = (idx + 1) + "º";
+            if (modal) {
+                modal.hidden = false;
+                modal.setAttribute("aria-hidden", "false");
+            }
+            return;
+        }
+        fetch("/editar/" + maquinaId + "/" + idx, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ campo: "etiqueta_feita", valor: false })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.ok) location.reload();
+        });
+    }
+
+    function fecharModalEtiquetaOk(){
+        _etiquetaFeitaIdx = null;
+        var modal = document.getElementById("modal-etiqueta-ok");
+        if (modal) {
+            modal.hidden = true;
+            modal.setAttribute("aria-hidden", "true");
+        }
+    }
+
+    function confirmarEtiquetaFeita(){
+        if (_etiquetaFeitaIdx === null) return;
+        var idx = _etiquetaFeitaIdx;
+        fecharModalEtiquetaOk();
+        fetch("/editar/{{ id }}/" + idx, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ campo: "etiqueta_feita", valor: true })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.ok) location.reload();
+            else location.reload();
+        });
+    }
+
+    (function initModaisConfirmacao(){
+        var modalX = document.getElementById("modal-excluir");
+        var btnXC = document.getElementById("modal-excluir-cancel");
+        var btnXO = document.getElementById("modal-excluir-confirm");
+        if (modalX) modalX.addEventListener("click", function(e){ if (e.target === modalX) fecharModalExcluir(); });
+        if (btnXC) btnXC.addEventListener("click", fecharModalExcluir);
+        if (btnXO) btnXO.addEventListener("click", confirmarExcluirPedido);
+
+        var modalF = document.getElementById("modal-finalizar");
+        var btnFC = document.getElementById("modal-finalizar-cancel");
+        var btnFO = document.getElementById("modal-finalizar-confirm");
+        if (modalF) modalF.addEventListener("click", function(e){ if (e.target === modalF) fecharModalFinalizar(); });
+        if (btnFC) btnFC.addEventListener("click", fecharModalFinalizar);
+        if (btnFO) btnFO.addEventListener("click", confirmarFinalizarPedido);
+
+        var modalE = document.getElementById("modal-etiqueta-ok");
+        var btnEC = document.getElementById("modal-etiqueta-cancel");
+        var btnEO = document.getElementById("modal-etiqueta-confirm");
+        if (modalE) modalE.addEventListener("click", function(e){ if (e.target === modalE) fecharModalEtiquetaOk(); });
+        if (btnEC) btnEC.addEventListener("click", fecharModalEtiquetaOk);
+        if (btnEO) btnEO.addEventListener("click", confirmarEtiquetaFeita);
+
+        document.addEventListener("keydown", function(e){
+            if (e.key !== "Escape") return;
+            if (modalX && !modalX.hidden) fecharModalExcluir();
+            else if (modalF && !modalF.hidden) fecharModalFinalizar();
+            else if (modalE && !modalE.hidden) fecharModalEtiquetaOk();
+        });
+    })();
+
+    function reatribuirIndicesDom(maquinaId){
+        const campos = ['data','cod','produto','quantidade','fardos','descricao'];
+        const rows = [...document.querySelectorAll('.linha-draggable')];
+        rows.forEach(function(row, newIdx){
+            row.dataset.pedidoIndex = String(newIdx);
+            const ordemEl = row.querySelector('.ordem');
+            if (ordemEl) ordemEl.textContent = (newIdx + 1) + 'º';
+            const texts = row.querySelectorAll('input:not([type="checkbox"])');
+            texts.forEach(function(inp, i){
+                if (campos[i]) {
+                    inp.setAttribute('onchange', 'editar(' + maquinaId + ',' + newIdx + ',\'' + campos[i] + '\',this.value)');
+                }
+            });
+            const cbEtq = row.querySelector('.cb-etiqueta-feita');
+            if (cbEtq) cbEtq.setAttribute('onchange', 'etiquetaFeitaCheckboxChange(' + maquinaId + ',' + newIdx + ',this)');
+            const cbFin = row.querySelector('.cb-finalizado');
+            if (cbFin) cbFin.setAttribute('onchange', 'finalizadoCheckboxChange(' + maquinaId + ',' + newIdx + ',this)');
+            const del = row.querySelector('.delete');
+            if (del) del.setAttribute('onclick', 'pedirExcluirPedido(' + newIdx + ')');
+        });
+    }
+
+    (function initPedidoDnD(){
+        const MAQUINA_ID = {{ id }};
+        const tabela = document.querySelector('.tabela');
+        if (!tabela) return;
+
+        let dragSrcEl = null;
+
+        function getDraggableRows(){
+            return [...tabela.querySelectorAll('.linha-draggable')];
+        }
+
+        function onDragStart(e){
+            if (e.target.closest('input, button, select, .prog-pill-wrap')) {
+                e.preventDefault();
+                return;
+            }
+            dragSrcEl = e.currentTarget;
+            dragSrcEl.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', dragSrcEl.dataset.pedidoIndex);
+        }
+
+        function onDragEnd(e){
+            e.currentTarget.classList.remove('dragging');
+            getDraggableRows().forEach(function(r){ r.classList.remove('drag-over'); });
+            dragSrcEl = null;
+        }
+
+        function onDragOverRow(e){
+            if (!dragSrcEl) return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'move';
+            const rowTarget = e.currentTarget;
+            if (rowTarget === dragSrcEl) return;
+            getDraggableRows().forEach(function(r){
+                if (r !== rowTarget) r.classList.remove('drag-over');
+            });
+            rowTarget.classList.add('drag-over');
+        }
+
+        function onDragLeaveRow(e){
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function applyReorderAndSave(){
+            const perm = getDraggableRows().map(function(r){
+                return parseInt(r.dataset.pedidoIndex, 10);
+            });
+            reatribuirIndicesDom(MAQUINA_ID);
+            fetch('/reordenar/' + MAQUINA_ID, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ indices: perm })
+            }).then(function(r){ return r.json(); }).then(function(data){
+                if (!data.ok) {
+                    alert('Erro ao salvar ordem');
+                    location.reload();
+                }
+            }).catch(function(){ location.reload(); });
+        }
+
+        function onDropRow(e){
+            e.preventDefault();
+            e.stopPropagation();
+            if (!dragSrcEl) return;
+            const rowTarget = e.currentTarget;
+            if (rowTarget === dragSrcEl) return;
+            rowTarget.classList.remove('drag-over');
+            const rect = rowTarget.getBoundingClientRect();
+            const before = e.clientY < rect.top + rect.height / 2;
+            if (before) {
+                tabela.insertBefore(dragSrcEl, rowTarget);
+            } else {
+                const next = rowTarget.nextElementSibling;
+                if (next) {
+                    tabela.insertBefore(dragSrcEl, next);
+                } else {
+                    tabela.appendChild(dragSrcEl);
+                }
+            }
+            applyReorderAndSave();
+        }
+
+        function onTabelaDragOver(e){
+            if (!dragSrcEl) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (!e.target.closest('.linha-draggable')) {
+                getDraggableRows().forEach(function(r){ r.classList.remove('drag-over'); });
+            }
+        }
+
+        function onTabelaDrop(e){
+            if (e.target.closest('input, button, select, .prog-pill-wrap')) return;
+            if (e.target.closest('.linha-draggable')) return;
+            if (!dragSrcEl) return;
+            e.preventDefault();
+            getDraggableRows().forEach(function(r){ r.classList.remove('drag-over'); });
+            const cab = e.target.closest('.cabecalho');
+            if (cab) {
+                const rows = getDraggableRows();
+                const first = rows.find(function(r){ return r !== dragSrcEl; });
+                if (first) tabela.insertBefore(dragSrcEl, first);
+                applyReorderAndSave();
+                return;
+            }
+            if (tabela.contains(e.target)) {
+                tabela.appendChild(dragSrcEl);
+                applyReorderAndSave();
+            }
+        }
+
+        getDraggableRows().forEach(function(row){
+            row.addEventListener('dragstart', onDragStart);
+            row.addEventListener('dragend', onDragEnd);
+            row.addEventListener('dragover', onDragOverRow);
+            row.addEventListener('dragleave', onDragLeaveRow);
+            row.addEventListener('drop', onDropRow);
+        });
+
+        tabela.addEventListener('dragover', onTabelaDragOver);
+        tabela.addEventListener('drop', onTabelaDrop);
+    })();
+
+    </script>
+</body>
+</html>

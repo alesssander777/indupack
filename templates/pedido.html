@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pedido — Máquina {{ id }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-nav-back.css">
+    <link rel="stylesheet" href="/static/indupack-topbar.css">
+</head>
+<body class="ped-page has-indupack-topbar">
+{% from "macros.html" import indupack_topbar %}
+
+{{ indupack_topbar(usuario_nome, nav_back_href='/programacao/' ~ id, logo_size=48) }}
+
+    <div class="ped-context">
+        <h1 class="ped-context__h">Máquina {{ id }} — Novo pedido</h1>
+    </div>
+
+    <div class="container">
+
+        <div class="form">
+
+            <label>Cliente</label>
+            <input id="cliente" placeholder="---">
+
+            <!-- DATA -->
+            <label>Data</label>
+            <input id="data" placeholder="25/04">
+
+            <label>Produto</label>
+
+            <div class="linha">
+                <select id="produto" onchange="aoMudarProdutoSelect()">
+                    <option value="">---</option>
+                    {{ opcoes|safe }}
+                </select>
+
+                <button class="lixeira" onclick="limparProduto()">🗑</button>
+            </div>
+
+            <label>Código</label>
+            <input id="prod_codigo" placeholder="---">
+
+            <label>Medida</label>
+            <input id="prod_medida" placeholder="---">
+
+            <label>Peso</label>
+            <input id="prod_peso" placeholder="---">
+
+            <button class="novo" onclick="novoProduto()">+ Novo Produto</button>
+
+            <label>Quantidade</label>
+            <input id="quantidade" value="1000">
+
+            <label>Fardos</label>
+            <div class="linha">
+                <select id="fardos">
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="200">200</option>
+                    <option value="250">250</option>
+                </select>
+            </div>
+
+            <label>Descrição</label>
+            <input id="descricao" placeholder="---">
+
+            <button class="salvar" onclick="salvar()">Salvar Pedido</button>
+
+        </div>
+
+    </div>
+
+    <style>
+    body.ped-page {
+        margin: 0;
+        background: #0b2d1f;
+        color: white;
+        font-family: "Plus Jakarta Sans", Arial, sans-serif;
+    }
+
+    .ped-context {
+        padding: 14px clamp(14px, 3vw, 22px) 10px;
+        background: linear-gradient(to right, #063d2b, #0b2d1f);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .ped-context__h {
+        margin: 0;
+        text-align: center;
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        letter-spacing: 0.06em;
+        font-weight: 800;
+    }
+
+    .container {
+        display:flex;
+        justify-content:center;
+        margin-top:20px;
+        padding-bottom: 32px;
+    }
+
+    .form {
+        width:350px;
+        background:#d1d5db;
+        padding:20px;
+        border-radius:20px;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+
+    label {
+        font-weight:bold;
+        color:black;
+    }
+
+    input, select {
+        padding:10px;
+        border-radius:10px;
+        border:none;
+        background:#1f2937;
+        color:white;
+    }
+
+    .linha {
+        display:flex;
+        gap:10px;
+    }
+
+    .linha select { flex:1; }
+
+    .lixeira {
+        background:#ef4444;
+        color:white;
+        border:none;
+        border-radius:8px;
+        padding:10px;
+    }
+
+    .novo {
+        background:#2d6a82;
+        color:white;
+        border:none;
+        border-radius:8px;
+        padding:10px;
+    }
+
+    .salvar {
+        background:#22c55e;
+        color:white;
+        border:none;
+        border-radius:10px;
+        padding:12px;
+        margin-top:10px;
+        font-size:16px;
+    }
+    </style>
+
+    <script src="/static/indupack-topbar.js"></script>
+    <script>
+
+    function aoMudarProdutoSelect() {
+        var v = document.getElementById("produto").value;
+        var c = document.getElementById("prod_codigo");
+        var m = document.getElementById("prod_medida");
+        var p = document.getElementById("prod_peso");
+        if (!v) {
+            c.value = "";
+            m.value = "";
+            p.value = "";
+            return;
+        }
+        var partes = v.trim().split(/\s+/);
+        if (partes.length >= 3) {
+            c.value = partes[0];
+            p.value = partes[partes.length - 1];
+            m.value = partes.slice(1, -1).join(" ");
+        } else if (partes.length === 2) {
+            c.value = partes[0];
+            m.value = partes[1];
+            p.value = "";
+        } else {
+            c.value = partes[0] || "";
+            m.value = "";
+            p.value = "";
+        }
+    }
+
+    function montarProdutoParam() {
+        var sel = document.getElementById("produto").value;
+        if (sel) return sel;
+        var c = document.getElementById("prod_codigo").value.trim();
+        var med = document.getElementById("prod_medida").value.trim();
+        var pe = document.getElementById("prod_peso").value.trim();
+        var partes = [c, med, pe].filter(function (x) { return x.length; });
+        return partes.join(" ");
+    }
+
+    function limparProduto() {
+        document.getElementById("produto").value = "";
+        document.getElementById("prod_codigo").value = "";
+        document.getElementById("prod_medida").value = "";
+        document.getElementById("prod_peso").value = "";
+    }
+
+    function novoProduto() {
+        let nome = prompt("Nome do produto:");
+        if(nome) {
+            fetch(`/add_produto?nome=${nome}`)
+            .then(() => location.reload());
+        }
+    }
+
+    function salvar() {
+
+        let cliente = document.getElementById("cliente").value;
+        let produto = montarProdutoParam();
+        let quantidade = document.getElementById("quantidade").value;
+        let fardos = document.getElementById("fardos").value;
+        let descricao = document.getElementById("descricao").value;
+        let data = document.getElementById("data").value;
+
+        if (!produto) {
+            alert("Selecione um produto!");
+            return;
+        }
+
+        fetch(`/salvar_pedido/{{ id }}?cliente=${encodeURIComponent(cliente)}&produto=${encodeURIComponent(produto)}&quantidade=${encodeURIComponent(quantidade)}&fardos=${encodeURIComponent(fardos)}&descricao=${encodeURIComponent(descricao)}&data=${encodeURIComponent(data)}`)
+        .then(() => {
+            alert("Salvo!");
+            window.location.href = "/producao";
+        });
+    }
+
+    </script>
+
+</body>
+</html>

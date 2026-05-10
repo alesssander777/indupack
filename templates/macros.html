@@ -1,0 +1,51 @@
+{# Botão VOLTAR padrão — requer /static/indupack-nav-back.css #}
+{% macro indupack_nav_back(href="/", compact=false) -%}
+<a href="{{ href }}" class="indupack-nav-back{% if compact %} indupack-nav-back--compact{% endif %}" aria-label="Voltar">
+    <svg class="indupack-nav-back__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="indupack-nav-back__txt">VOLTAR</span>
+</a>
+{%- endmacro %}
+
+{# Barra superior única — requer /static/indupack-topbar.css + indupack-topbar.js #}
+{% macro indupack_topbar(usuario_nome="Administrador", nav_back_href=none, logo_size=52, show_logout=true) -%}
+<header class="hm-header">
+    <div class="hm-header__shine" aria-hidden="true"></div>
+    <div class="hm-header__inner">
+        <div class="hm-header__left">
+            {% if nav_back_href is not none and nav_back_href != false %}
+            {{ indupack_nav_back(nav_back_href, compact=true) }}
+            {% endif %}
+            <a href="/" class="hm-header__brand-link" title="Início">
+                <img src="/logo" alt="Indupack" class="hm-header__logo" width="{{ logo_size|int }}" height="{{ logo_size|int }}">
+                <strong class="hm-header__brand">INDUPACK</strong>
+            </a>
+            <span class="hm-header__sep" aria-hidden="true"></span>
+            <div class="hm-header__titles">
+                <span class="hm-header__sys">Sistema de Gestão Industrial</span>
+                <span class="hm-header__sub">Monitoramento e Controle de Produção</span>
+            </div>
+        </div>
+        <div class="hm-header__right">
+            <div class="hm-header__clock" aria-live="polite">
+                <span class="hm-header__clock-ico" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </span>
+                <div>
+                    <span id="hm-clock-time" class="hm-header__time">--:--:--</span>
+                    <span id="hm-clock-date" class="hm-header__date">--/--/----</span>
+                </div>
+            </div>
+            <div class="hm-header__user">
+                <span class="hm-header__user-avatar" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <span class="hm-header__user-name">{{ usuario_nome }}</span>
+                <span class="hm-header__user-chev" aria-hidden="true">▾</span>
+            </div>
+            {% if show_logout %}
+            <a href="/logout" class="hm-header__logout">Sair</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+{%- endmacro %}

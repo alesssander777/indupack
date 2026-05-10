@@ -1,0 +1,86 @@
+/**
+ * Botão VOLTAR padrão — alinhado ao header industrial / tablets.
+ * Altura fixa para consistência entre telas.
+ */
+.indupack-nav-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    min-height: 40px;
+    padding: 0 18px 0 14px;
+    margin: 0;
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: #f8fafc;
+    text-decoration: none;
+    white-space: nowrap;
+    background: linear-gradient(
+        168deg,
+        #4f6f7e 0%,
+        #3d5c6c 30%,
+        #2f4a59 65%,
+        #2a4250 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    box-shadow:
+        0 2px 12px rgba(5, 12, 18, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.indupack-nav-back:hover {
+    filter: brightness(1.05);
+    box-shadow:
+        0 4px 18px rgba(5, 12, 18, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.indupack-nav-back:active {
+    transform: scale(0.98);
+}
+
+.indupack-nav-back:focus {
+    outline: none;
+}
+
+.indupack-nav-back:focus-visible {
+    box-shadow:
+        0 0 0 3px rgba(180, 210, 220, 0.35),
+        0 4px 16px rgba(5, 12, 18, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.indupack-nav-back__ico {
+    display: block;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-left: -2px;
+}
+
+.indupack-nav-back__txt {
+    position: relative;
+    top: 0.5px;
+}
+
+/* Compacto (painel MES / header baixo) */
+.indupack-nav-back--compact {
+    min-height: 36px;
+    padding: 0 14px 0 12px;
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    gap: 6px;
+}
+
+.indupack-nav-back--compact .indupack-nav-back__ico {
+    width: 18px;
+    height: 18px;
+}

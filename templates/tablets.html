@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tablets — Gestão administrativa — Indupack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-nav-back.css">
+    <link rel="stylesheet" href="/static/indupack-topbar.css">
+</head>
+<body class="tb-admin has-indupack-topbar">
+{% from "macros.html" import indupack_topbar %}
+{{ indupack_topbar(usuario_nome, nav_back_href='/') }}
+
+{% set st = namespace(on=0, off=0, last_ms=0, sync_txt='—') %}
+{% for t in terminais %}
+    {% if t.online %}{% set st.on = st.on + 1 %}{% else %}{% set st.off = st.off + 1 %}{% endif %}
+    {% if t.ultimo_acesso_ms > st.last_ms %}
+        {% set st.last_ms = t.ultimo_acesso_ms %}
+        {% set st.sync_txt = t.ultimo_acesso_txt %}
+    {% endif %}
+{% endfor %}
+
+<main class="tb-main">
+    <header class="tb-head">
+        <div class="tb-head__titles">
+            <p class="tb-eyebrow">MES · Terminais industriais</p>
+            <h1 class="tb-title">Painel de tablets</h1>
+        </div>
+    </header>
+
+    <section class="tb-kpi-row" aria-label="Resumo do painel">
+        <article class="tb-kpi tb-kpi--on">
+            <span class="tb-kpi__ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </span>
+            <div class="tb-kpi__body">
+                <span class="tb-kpi__val">{{ st.on }}</span>
+                <span class="tb-kpi__lbl">Tablets online</span>
+            </div>
+        </article>
+        <article class="tb-kpi tb-kpi--off">
+            <span class="tb-kpi__ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+            </span>
+            <div class="tb-kpi__body">
+                <span class="tb-kpi__val">{{ st.off }}</span>
+                <span class="tb-kpi__lbl">Tablets offline</span>
+            </div>
+        </article>
+        <article class="tb-kpi tb-kpi--reg">
+            <span class="tb-kpi__ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 15h6"/></svg>
+            </span>
+            <div class="tb-kpi__body">
+                <span class="tb-kpi__val">{{ terminais|length }}</span>
+                <span class="tb-kpi__lbl">Terminais cadastrados</span>
+            </div>
+        </article>
+        <article class="tb-kpi tb-kpi--sync">
+            <span class="tb-kpi__ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            </span>
+            <div class="tb-kpi__body">
+                <span class="tb-kpi__val tb-kpi__val--time">{{ st.sync_txt }}</span>
+                <span class="tb-kpi__lbl">Última sincronização</span>
+            </div>
+        </article>
+    </section>
+
+    <section class="tb-term-section" aria-labelledby="tb-term-title">
+        <h2 id="tb-term-title" class="tb-section-title">Terminais</h2>
+        <div class="tb-term-grid">
+            {% for t in terminais %}
+            <article class="tb-term{% if t.online %} tb-term--online{% else %} tb-term--offline{% endif %}">
+                <div class="tb-term__topline" aria-hidden="true"></div>
+                <div class="tb-term__glow" aria-hidden="true"></div>
+                <div class="tb-term__sheen" aria-hidden="true"></div>
+
+                <header class="tb-term__head">
+                    <div class="tb-term__head-left">
+                        <div class="tb-term__device" aria-hidden="true">
+                            <svg class="tb-term__device-svg" width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="1.75"/>
+                                <path d="M9 19h6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                                <path d="M10 6h4M10 9h4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" opacity="0.5"/>
+                            </svg>
+                        </div>
+                        <div class="tb-term__titles">
+                            <span class="tb-term__eyebrow">Terminal industrial</span>
+                            <h3 class="tb-term__name">{{ t.identificador }}</h3>
+                        </div>
+                    </div>
+                    <div class="tb-term__head-right">
+                        {% if t.online %}
+                        <span class="tb-realtime"><span class="tb-realtime__dot"></span> Ao vivo</span>
+                        <span class="tb-badge tb-badge--live">Online</span>
+                        {% else %}
+                        <span class="tb-badge tb-badge--down">Offline</span>
+                        {% endif %}
+                    </div>
+                </header>
+
+                <div class="tb-term__machine-bar">
+                    <span class="tb-term__machine-glyph" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                    </span>
+                    <div class="tb-term__machine-text">
+                        <span class="tb-term__machine-k">Máquina vinculada</span>
+                        <p class="tb-term__machine-v">{{ t.maquina_nome }}<span class="tb-term__hash"> #{{ t.maquina_id }}</span></p>
+                    </div>
+                </div>
+
+                <div class="tb-term__dash">
+                    <div class="tb-mini">
+                        <span class="tb-mini__k">Operador no terminal</span>
+                        <span class="tb-mini__v">{{ t.operador }}</span>
+                    </div>
+                    <div class="tb-mini">
+                        <span class="tb-mini__k">IP</span>
+                        <span class="tb-mini__v tb-mono">{{ t.ip }}</span>
+                    </div>
+                    <div class="tb-mini">
+                        <span class="tb-mini__k">Último sync</span>
+                        <span class="tb-mini__v tb-mono">{{ t.ultimo_acesso_txt }}</span>
+                    </div>
+                    <div class="tb-mini">
+                        <span class="tb-mini__k">Bateria</span>
+                        <span class="tb-mini__v tb-mini__v--ph" title="Integração MDM futura">—</span>
+                    </div>
+                </div>
+
+                <p class="tb-term__act-hint">Ações exclusivas do <strong>dispositivo</strong> (sem produção nem programação).</p>
+                <div class="tb-term__actions">
+                    <span class="tb-act tb-act--disabled" title="Em breve — logs do terminal">
+                        <svg class="tb-act__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                        <span>Logs</span>
+                    </span>
+                    <span class="tb-act tb-act--disabled" title="Em breve — reinício remoto do terminal">
+                        <svg class="tb-act__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        <span>Reiniciar</span>
+                    </span>
+                    <span class="tb-act tb-act--disabled" title="Em breve — política kiosk">
+                        <svg class="tb-act__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                        <span>Kiosk</span>
+                    </span>
+                    <span class="tb-act tb-act--disabled" title="Em breve — manutenção do terminal">
+                        <svg class="tb-act__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        <span>Manutenção</span>
+                    </span>
+                </div>
+            </article>
+            {% else %}
+            <p class="tb-empty">Nenhuma máquina cadastrada.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <footer class="tb-foot">
+        <p>Políticas de terminal, kiosk e auditoria em evolução neste módulo — sem integração com fluxo de produção.</p>
+    </footer>
+</main>
+
+<style>
+    * { box-sizing: border-box; }
+    body.tb-admin {
+        margin: 0;
+        font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+        color: #020617;
+        min-height: 100vh;
+        position: relative;
+        background:
+            linear-gradient(168deg, #c8d4e4 0%, #d8e0eb 22%, #e4eaf2 52%, #dce3ed 78%, #cfd9e6 100%);
+    }
+    body.tb-admin::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background:
+            radial-gradient(ellipse 85% 50% at 8% -5%, rgba(26, 74, 98, 0.14), transparent 42%),
+            radial-gradient(ellipse 65% 45% at 96% 28%, rgba(31, 77, 98, 0.11), transparent 38%),
+            radial-gradient(ellipse 50% 40% at 50% 100%, rgba(15, 23, 42, 0.06), transparent 50%),
+            repeating-linear-gradient(
+                -18deg,
+                transparent,
+                transparent 31px,
+                rgba(15, 23, 42, 0.038) 31px,
+                rgba(15, 23, 42, 0.038) 32px
+            );
+    }
+    .tb-main {
+        position: relative;
+        z-index: 1;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 22px 22px 56px;
+    }
+
+    .tb-head { margin-bottom: 20px; }
+    .tb-eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #334155;
+    }
+    .tb-title {
+        margin: 0;
+        font-size: clamp(1.45rem, 2.6vw, 1.85rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #020617;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    /* KPI — profundidade premium */
+    .tb-kpi-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1024px) {
+        .tb-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+        .tb-kpi-row { grid-template-columns: 1fr; }
+    }
+    .tb-kpi {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 17px 19px;
+        border-radius: 16px;
+        background: linear-gradient(165deg, #ffffff 0%, #f1f5f9 100%);
+        border: 1px solid rgba(30, 41, 59, 0.14);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.95) inset,
+            0 6px 20px rgba(15, 23, 42, 0.1),
+            0 14px 40px rgba(26, 74, 98, 0.08);
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+    .tb-kpi:hover {
+        transform: translateY(-3px);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.98) inset,
+            0 10px 28px rgba(15, 23, 42, 0.12),
+            0 22px 52px rgba(26, 74, 98, 0.1);
+    }
+    .tb-kpi__ico {
+        flex-shrink: 0;
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        color: inherit;
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.1);
+    }
+    .tb-kpi--on .tb-kpi__ico {
+        background: linear-gradient(145deg, #bbf7d0, #4ade80);
+        color: #14532d;
+        border: 1px solid rgba(22, 163, 74, 0.45);
+        box-shadow:
+            0 0 28px rgba(34, 197, 94, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+    .tb-kpi--off .tb-kpi__ico {
+        background: linear-gradient(145deg, #fecaca, #f87171);
+        color: #7f1d1d;
+        border: 1px solid rgba(220, 38, 38, 0.4);
+        box-shadow:
+            0 0 22px rgba(239, 68, 68, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+    .tb-kpi--reg .tb-kpi__ico {
+        background: linear-gradient(145deg, #c8d8e0, #7a9eac);
+        color: #1a4a62;
+        border: 1px solid rgba(31, 77, 98, 0.38);
+        box-shadow:
+            0 0 20px rgba(31, 77, 98, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+    .tb-kpi--sync .tb-kpi__ico {
+        background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+        color: #1e293b;
+        border: 1px solid rgba(71, 85, 105, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+    .tb-kpi__body { min-width: 0; }
+    .tb-kpi__val {
+        display: block;
+        font-size: clamp(1.5rem, 3vw, 1.85rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+    }
+    .tb-kpi__val--time {
+        font-size: clamp(0.95rem, 1.6vw, 1.12rem);
+        font-weight: 800;
+        word-break: break-word;
+        line-height: 1.2;
+    }
+    .tb-kpi__lbl {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #475569;
+        margin-top: 4px;
+        letter-spacing: 0.02em;
+    }
+
+    .tb-section-title {
+        margin: 0 0 18px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #334155;
+    }
+
+    .tb-term-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+    }
+    @media (max-width: 1100px) {
+        .tb-term-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+        .tb-term-grid { grid-template-columns: 1fr; }
+    }
+
+    .tb-term {
+        position: relative;
+        padding: 0 18px 16px;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+        border: 1px solid rgba(51, 65, 85, 0.18);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.98) inset,
+            0 8px 28px rgba(15, 23, 42, 0.11),
+            0 2px 8px rgba(15, 23, 42, 0.06),
+            0 0 0 1px rgba(255, 255, 255, 0.35);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, border-color 0.28s ease, filter 0.28s ease, opacity 0.28s ease;
+        overflow: hidden;
+    }
+
+    .tb-term__topline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 20px 20px 0 0;
+        z-index: 3;
+        pointer-events: none;
+    }
+    .tb-term--online .tb-term__topline {
+        background: linear-gradient(90deg, #15803d, #22c55e, #4ade80, #16a34a, #15803d);
+        background-size: 220% 100%;
+        box-shadow:
+            0 0 24px rgba(34, 197, 94, 0.55),
+            0 2px 8px rgba(22, 163, 74, 0.35);
+        animation: tb-topflow 3.5s linear infinite;
+    }
+    .tb-term--offline .tb-term__topline {
+        height: 3px;
+        background: linear-gradient(90deg, #b91c1c, #ef4444, #f87171, #b91c1c);
+        opacity: 1;
+        box-shadow: 0 0 18px rgba(220, 38, 38, 0.35);
+    }
+    @keyframes tb-topflow {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+    }
+
+    .tb-term__glow {
+        position: absolute;
+        inset: -35% -20% auto;
+        height: 55%;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 0;
+    }
+    .tb-term--online .tb-term__glow {
+        opacity: 1;
+        background: radial-gradient(ellipse 85% 100% at 50% -8%, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.06) 45%, transparent 68%);
+    }
+    .tb-term--offline .tb-term__glow {
+        opacity: 0.85;
+        background: radial-gradient(ellipse 80% 95% at 50% -5%, rgba(248, 113, 113, 0.12), rgba(148, 163, 184, 0.06) 50%, transparent 65%);
+    }
+
+    .tb-term__sheen {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        opacity: 0;
+        z-index: 2;
+    }
+    .tb-term--online .tb-term__sheen {
+        opacity: 1;
+        background: linear-gradient(105deg, transparent 34%, rgba(255, 255, 255, 0.32) 48%, transparent 62%);
+        background-size: 220% 100%;
+        animation: tb-sheen 6s ease-in-out infinite;
+    }
+    @keyframes tb-sheen {
+        0%, 100% { background-position: 160% 0; opacity: 0.55; }
+        50% { background-position: -60% 0; opacity: 0.85; }
+    }
+
+    .tb-term--online {
+        border-color: rgba(22, 163, 74, 0.42);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.98) inset,
+            0 0 0 1px rgba(34, 197, 94, 0.12),
+            0 10px 32px rgba(15, 23, 42, 0.12),
+            0 0 48px rgba(34, 197, 94, 0.16);
+    }
+    .tb-term--online:hover {
+        transform: translateY(-5px);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 1) inset,
+            0 0 0 1px rgba(34, 197, 94, 0.22),
+            0 18px 48px rgba(15, 23, 42, 0.14),
+            0 0 64px rgba(34, 197, 94, 0.22);
+    }
+
+    .tb-term--offline {
+        opacity: 1;
+        filter: saturate(0.78) brightness(0.97);
+        background: linear-gradient(180deg, #f1f3f6 0%, #e8ecf1 100%);
+        border-color: rgba(185, 28, 28, 0.28);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.75) inset,
+            0 6px 22px rgba(15, 23, 42, 0.09),
+            0 0 36px rgba(220, 38, 38, 0.06);
+    }
+    .tb-term--offline:hover {
+        filter: saturate(0.85) brightness(0.99);
+        transform: translateY(-2px);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.8) inset,
+            0 10px 28px rgba(15, 23, 42, 0.11),
+            0 0 40px rgba(220, 38, 38, 0.08);
+    }
+
+    .tb-term__head {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 2px 14px;
+    }
+    .tb-term__head-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+    .tb-term__device {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #d8e4ea, #9eb8c4);
+        border: 1px solid rgba(31, 77, 98, 0.35);
+        color: #1a4a62;
+        box-shadow:
+            0 3px 12px rgba(26, 74, 98, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+    .tb-term--offline .tb-term__device {
+        background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+        border-color: rgba(71, 85, 105, 0.35);
+        color: #475569;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.55),
+            0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+    .tb-term__device-svg { display: block; }
+
+    .tb-term__titles { min-width: 0; }
+    .tb-term__eyebrow {
+        display: block;
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .tb-term__name {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #020617;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        word-break: break-word;
+    }
+    .tb-term--offline .tb-term__name { color: #334155; }
+
+    .tb-term__head-right {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    .tb-realtime {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #14532d;
+    }
+    .tb-realtime__dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #16a34a;
+        box-shadow:
+            0 0 0 3px rgba(34, 197, 94, 0.45),
+            0 0 14px rgba(34, 197, 94, 0.85);
+        animation: tb-live-dot 1.8s ease-in-out infinite;
+    }
+    @keyframes tb-live-dot {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.15); opacity: 0.85; }
+    }
+
+    .tb-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding: 7px 13px;
+        border-radius: 999px;
+    }
+    .tb-badge--live {
+        color: #052e16;
+        background: linear-gradient(180deg, #86efac, #4ade80);
+        border: 1px solid rgba(22, 163, 74, 0.55);
+        box-shadow:
+            0 0 26px rgba(34, 197, 94, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+    .tb-badge--down {
+        color: #450a0a;
+        background: linear-gradient(180deg, #fecaca, #f87171);
+        border: 1px solid rgba(185, 28, 28, 0.45);
+        box-shadow:
+            0 0 20px rgba(220, 38, 38, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    .tb-term__machine-bar {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 12px;
+        padding: 11px 14px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(26, 74, 98, 0.11), rgba(74, 122, 146, 0.1));
+        border: 1px solid rgba(26, 74, 98, 0.22);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.75),
+            0 2px 8px rgba(26, 74, 98, 0.06);
+    }
+    .tb-term--offline .tb-term__machine-bar {
+        background: linear-gradient(135deg, rgba(241, 245, 249, 0.95), rgba(226, 232, 240, 0.9));
+        border-color: rgba(100, 116, 139, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .tb-term__machine-glyph {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.75);
+        color: #1a4a62;
+        border: 1px solid rgba(74, 122, 146, 0.15);
+    }
+    .tb-term--offline .tb-term__machine-glyph {
+        color: #64748b;
+        background: rgba(255, 255, 255, 0.45);
+    }
+    .tb-term__machine-text { min-width: 0; }
+    .tb-term__machine-k {
+        display: block;
+        font-size: 0.6rem;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 3px;
+    }
+    .tb-term__machine-v {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #1a4a62;
+        line-height: 1.25;
+    }
+    .tb-term--offline .tb-term__machine-v { color: #334155; }
+    .tb-term__hash {
+        font-weight: 800;
+        color: #64748b;
+        font-size: 0.88em;
+    }
+
+    /* Mini dashboard compacto */
+    .tb-term__dash {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin: 0 0 14px;
+    }
+    .tb-mini {
+        padding: 8px 10px;
+        border-radius: 11px;
+        background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+        border: 1px solid rgba(71, 85, 105, 0.18);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.95),
+            0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+    .tb-term--offline .tb-mini {
+        background: linear-gradient(180deg, #f1f5f9, #e8ecf0);
+        border-color: rgba(100, 116, 139, 0.22);
+    }
+    .tb-mini--full {
+        grid-column: 1 / -1;
+    }
+    .tb-mini__k {
+        display: block;
+        font-size: 0.58rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 3px;
+    }
+    .tb-mini__v {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.3;
+        word-break: break-word;
+    }
+    .tb-mini__v--ph {
+        color: #64748b;
+        font-style: italic;
+        font-weight: 600;
+    }
+    .tb-mono {
+        font-family: ui-monospace, monospace;
+        font-size: 0.74rem;
+        font-weight: 600;
+    }
+    .tb-chip {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #475569;
+        border: 1px solid rgba(203, 213, 225, 0.8);
+    }
+
+    .tb-term__act-hint {
+        position: relative;
+        z-index: 4;
+        margin: 0 0 8px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #475569;
+        line-height: 1.35;
+    }
+    .tb-term__act-hint strong { color: #0f172a; }
+    .tb-term__actions {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .tb-act {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 9px 13px;
+        border-radius: 11px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: #1a4a62;
+        background: linear-gradient(180deg, #ffffff, #e2e8f0);
+        border: 1px solid rgba(26, 74, 98, 0.32);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.98) inset,
+            0 3px 10px rgba(15, 23, 42, 0.1);
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+        cursor: pointer;
+    }
+    .tb-act:hover {
+        background: linear-gradient(180deg, #e2ecf0, #d0dde4);
+        border-color: rgba(31, 77, 98, 0.45);
+        color: #0f172a;
+        transform: translateY(-2px);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.98) inset,
+            0 6px 20px rgba(31, 77, 98, 0.22),
+            0 0 0 1px rgba(74, 122, 146, 0.15);
+    }
+    .tb-act:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+    }
+    .tb-act__ico {
+        flex-shrink: 0;
+        opacity: 1;
+        stroke-width: 2.25;
+        color: #1a4a62;
+    }
+    .tb-act:hover .tb-act__ico { color: #24586c; }
+    .tb-act--disabled {
+        opacity: 0.62;
+        cursor: not-allowed;
+        pointer-events: none;
+        color: #475569;
+        background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+        border: 1px solid rgba(71, 85, 105, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+    .tb-act--disabled .tb-act__ico {
+        color: #64748b;
+        opacity: 0.9;
+    }
+
+    .tb-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 48px 24px;
+        color: #475569;
+        font-weight: 600;
+        background: linear-gradient(180deg, #ffffff, #f1f5f9);
+        border-radius: 20px;
+        border: 1px dashed rgba(51, 65, 85, 0.35);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.9) inset,
+            0 8px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .tb-foot {
+        margin-top: 40px;
+        padding-top: 22px;
+        border-top: 1px solid rgba(51, 65, 85, 0.2);
+    }
+    .tb-foot p {
+        margin: 0;
+        font-size: 0.82rem;
+        color: #475569;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+    .tb-foot a {
+        color: #2d6a82;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .tb-foot a:hover { text-decoration: underline; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tb-term--online .tb-term__topline,
+        .tb-term--online .tb-term__sheen,
+        .tb-realtime__dot {
+            animation: none !important;
+        }
+        .tb-kpi:hover,
+        .tb-term--online:hover,
+        .tb-term--offline:hover {
+            transform: none;
+        }
+    }
+</style>
+<script src="/static/indupack-topbar.js"></script>
+</body>
+</html>
