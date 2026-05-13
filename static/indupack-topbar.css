@@ -28,9 +28,9 @@ html {
     min-height: calc(var(--header-h) + var(--header-safe-top));
     background: linear-gradient(
         180deg,
-        var(--indupack-petrol-top) 0%,
-        var(--indupack-petrol-mid) 42%,
-        var(--indupack-petrol-deep) 100%
+        var(--ip-brand-header-top, var(--indupack-petrol-top, #1f4d62)) 0%,
+        var(--ip-brand-header-mid, var(--indupack-petrol-mid, #1a4255)) 42%,
+        var(--ip-brand-header-deep, var(--indupack-petrol-deep, #153848)) 100%
     );
     color: #f8fafc;
     box-shadow:

@@ -1,3 +1,18 @@
+{# Variáveis de identidade visual (configurações) — incluir no <head> antes dos CSS específicos da página #}
+{% macro indupack_brand_css() -%}
+{% set b = branding() %}
+<style id="indupack-brand-vars">
+:root {
+    --ip-brand-primary: {{ b.cor_principal }};
+    --ip-brand-header-top: {{ b.cor_header_top }};
+    --ip-brand-header-mid: {{ b.cor_header_mid }};
+    --ip-brand-header-deep: {{ b.cor_header_deep }};
+    --ip-brand-header-edge: {{ b.cor_header_edge }};
+    --ip-indigo: {{ b.cor_principal }};
+}
+</style>
+{%- endmacro %}
+
 {# Botão VOLTAR padrão — requer /static/indupack-nav-back.css #}
 {% macro indupack_nav_back(href="/", compact=false) -%}
 <a href="{{ href }}" class="indupack-nav-back{% if compact %} indupack-nav-back--compact{% endif %}" aria-label="Voltar">
@@ -8,6 +23,7 @@
 
 {# Barra superior única — requer /static/indupack-topbar.css + indupack-topbar.js #}
 {% macro indupack_topbar(usuario_nome="Administrador", nav_back_href=none, logo_size=52, show_logout=true) -%}
+{% set b = branding() %}
 <header class="hm-header">
     <div class="hm-header__shine" aria-hidden="true"></div>
     <div class="hm-header__inner">
@@ -16,8 +32,8 @@
             {{ indupack_nav_back(nav_back_href, compact=true) }}
             {% endif %}
             <a href="/" class="hm-header__brand-link" title="Início">
-                <img src="/logo" alt="Indupack" class="hm-header__logo" width="{{ logo_size|int }}" height="{{ logo_size|int }}">
-                <strong class="hm-header__brand">INDUPACK</strong>
+                <img src="{{ b.logo_src }}" alt="{{ b.nome_empresa }}" class="hm-header__logo" width="{{ logo_size|int }}" height="{{ logo_size|int }}">
+                <strong class="hm-header__brand">{{ b.nome_empresa }}</strong>
             </a>
             <span class="hm-header__sep" aria-hidden="true"></span>
             <div class="hm-header__titles">

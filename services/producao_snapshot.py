@@ -1,5 +1,6 @@
 """Dados exibidos nos cards de /producao: sempre o primeiro pedido da programação."""
 
+from services import maquinas
 from storage.state import dados_maquinas, pedidos
 
 
@@ -120,5 +121,5 @@ def card_primeiro_pedido(maquina_id: int) -> dict:
 
 
 def snapshot_todas_maquinas() -> dict:
-    ids = sorted(dados_maquinas.keys())
+    ids = maquinas.ids_maquinas_ordenadas()
     return {str(i): card_primeiro_pedido(i) for i in ids}

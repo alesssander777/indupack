@@ -145,6 +145,8 @@ def role_may_access_path(role: str, path: str) -> bool:
         return role in {ROLE_ADMIN, ROLE_SUPERVISOR, ROLE_MANUTENCAO}
     if path in {"/configuracoes"}:
         return role == ROLE_ADMIN
+    if path in {"/backups"}:
+        return role == ROLE_ADMIN
     if path in {"/manutencao"}:
         return role in {ROLE_ADMIN, ROLE_MANUTENCAO}
     if path in {"/producao"}:
@@ -183,6 +185,20 @@ def api_allowed(role: str, route_name: str) -> bool:
         "salvar_pedido",
         "add_produto",
     }:
+        return role in {ROLE_ADMIN, ROLE_SUPERVISOR}
+    _ADMIN_ONLY = frozenset(
+        {
+            "backup_list",
+            "backup_database_manual",
+            "backup_full_manual",
+            "backup_download",
+            "admin_painel",
+            "config_central",
+        }
+    )
+    if route_name in _ADMIN_ONLY:
+        return role == ROLE_ADMIN
+    if route_name in {"relatorios_data", "relatorios_export", "relatorios_email"}:
         return role in {ROLE_ADMIN, ROLE_SUPERVISOR}
     return role == ROLE_ADMIN
 

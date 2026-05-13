@@ -1,6 +1,8 @@
 import json
 import os
+import shutil
 import threading
+import time
 
 ARQUIVO = "dados.json"
 _arquivo_lock = threading.Lock()
@@ -17,6 +19,7 @@ def _default_maquina_record():
         "tablet_vinculado": "",
         "tablet_ultimo_acesso_epoch": 0,
         "tablet_ultimo_ip": "",
+        "ativo": True,
     }
 
 
@@ -75,15 +78,61 @@ def _merge_resumo_fabrica(saved):
     return base
 
 
+def _arquivar_json_ilegivel() -> None:
+    """Remove `dados.json` ilegível (vazio, binário, JSON inválido) para um .bak com timestamp."""
+    if not os.path.isfile(ARQUIVO):
+        return
+    try:
+        bkp = f"{ARQUIVO}.invalid_{int(time.time())}.bak"
+        shutil.move(ARQUIVO, bkp)
+    except OSError:
+        try:
+            os.remove(ARQUIVO)
+        except OSError:
+            pass
+
+
+def _retorno_padrao_gravado() -> tuple:
+    """Estado inicial persistido (evita ficar sem `dados.json` após arquivo ilegível)."""
+    maq = _default_dados_maquinas()
+    rf = _default_resumo_fabrica()
+    salvar_dados({}, [], maq, rf)
+    return {}, [], maq, rf
+
+
 def carregar_dados():
     if not os.path.exists(ARQUIVO):
         return {}, [], _default_dados_maquinas(), _default_resumo_fabrica()
 
-    with open(ARQUIVO, "r", encoding="utf-8") as f:
-        raw = json.load(f)
+    try:
+        with open(ARQUIVO, "rb") as f:
+            blob = f.read()
+    except OSError:
+        return {}, [], _default_dados_maquinas(), _default_resumo_fabrica()
+
+    if not blob or not blob.strip():
+        _arquivar_json_ilegivel()
+        return _retorno_padrao_gravado()
+
+    try:
+        text = blob.decode("utf-8-sig").strip()
+    except UnicodeDecodeError:
+        _arquivar_json_ilegivel()
+        return _retorno_padrao_gravado()
+
+    if not text:
+        _arquivar_json_ilegivel()
+        return _retorno_padrao_gravado()
+
+    try:
+        raw = json.loads(text)
+    except json.JSONDecodeError:
+        _arquivar_json_ilegivel()
+        return _retorno_padrao_gravado()
 
     if not isinstance(raw, dict):
-        return {}, [], _default_dados_maquinas(), _default_resumo_fabrica()
+        _arquivar_json_ilegivel()
+        return _retorno_padrao_gravado()
 
     if "pedidos" in raw:
         pedidos = _normalize_pedidos_keys(raw.get("pedidos", {}))

@@ -70,7 +70,11 @@ body:not(.ref-body):not(.tp-wrap):not(.auth-body) {
 }
 
 .shell-panel {
-    background: linear-gradient(180deg, #1f4d62 0%, #0c1a28 100%);
+    background: linear-gradient(
+        180deg,
+        var(--ip-brand-header-top, #1f4d62) 0%,
+        var(--ip-brand-header-edge, #0c1a28) 100%
+    );
     color: #f0f7fb;
     max-width: 520px;
     width: 100%;

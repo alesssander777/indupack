@@ -3,14 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Programação — Máquina {{ id }}</title>
+    <title>Programação — Máquina {{ id }} — {{ branding().nome_empresa }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/indupack-global.css">
+    {% from "macros.html" import indupack_brand_css %}
+    {{ indupack_brand_css() }}
     <style>
         :root {
-            --tp-navy: #132338;
+            --tp-navy: var(--ip-brand-header-deep, #132338);
             --tp-ink: #1e293b;
         }
         html {
@@ -209,16 +211,20 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
+            justify-content: flex-start;
             gap: clamp(6px, 0.9dvh, 9px);
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .linha.cabecalho {
             flex-shrink: 0;
         }
+        /* Linhas de dados: altura natural — não usar flex-grow (1 1 0) ou uma única linha estica até ao fundo no tablet */
         .linha:not(.cabecalho) {
             padding: 4px 0;
-            flex: 1 1 0;
-            min-height: 0;
+            flex: 0 0 auto;
+            align-self: stretch;
         }
         .linha:not(.cabecalho):hover {
             transform: scale(1.005);

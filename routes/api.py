@@ -181,6 +181,14 @@ def tablet_estado_endpoint(request: Request, id: int):
     return estado_tablet(id)
 
 
+@router.get("/tablet/operadores")
+def tablet_operadores_list():
+    """Lista operadores ativos (SQLite) para o tablet — somente leitura operacional (mesmo perfil de /tablet/estado)."""
+    from services import config_params_db
+
+    return {"ok": True, "operadores": config_params_db.list_operadores_para_tablet()}
+
+
 @router.post("/tablet/iniciar/{id}")
 async def tablet_iniciar_producao(id: int, request: Request):
     try:
@@ -190,15 +198,39 @@ async def tablet_iniciar_producao(id: int, request: Request):
     retomar = bool(body.get("retomar")) if isinstance(body, dict) else False
     op = body.get("operador", "") if isinstance(body, dict) else ""
     tu = body.get("turno", "") if isinstance(body, dict) else ""
-    return pedidos.iniciar_producao_tablet(id, op, tu, retomar=retomar)
+    oid = None
+    if isinstance(body, dict):
+        raw = body.get("operador_perfil_id")
+        if raw is not None and raw != "":
+            try:
+                oid = int(raw)
+            except (TypeError, ValueError):
+                oid = None
+            if oid is not None and oid < 1:
+                oid = None
+    return pedidos.iniciar_producao_tablet(id, op, tu, retomar=retomar, operador_perfil_id=oid)
 
 
 @router.post("/tablet/finalizar/{id}/{index}")
 async def tablet_finalizar(id: int, index: int, request: Request):
-    body = await request.json()
-    operador_final = body.get("operador_final", "") if isinstance(body, dict) else ""
-    turno_final = body.get("turno_final", "") if isinstance(body, dict) else ""
-    producao_final = body.get("producao_final", 0) if isinstance(body, dict) else 0
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    operador_final = body.get("operador_final", "")
+    turno_final = body.get("turno_final", "")
+    producao_final = body.get("producao_final", 0)
+    oid = None
+    raw = body.get("operador_perfil_id")
+    if raw is not None and raw != "":
+        try:
+            oid = int(raw)
+        except (TypeError, ValueError):
+            oid = None
+        if oid is not None and oid < 1:
+            oid = None
     return pedidos.finalizar_pedido_tablet(
-        id, index, operador_final, producao_final, turno_final
+        id, index, operador_final, producao_final, turno_final, operador_perfil_id=oid
     )

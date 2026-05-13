@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from services import fabrica_dia
+from services import fabrica_dia, maquinas
 from services.fabrica_dia import total_producao_pedidos_finalizados_maquina_no_dia
 from storage.state import dados_maquinas, pedidos
 
@@ -33,6 +33,7 @@ def _pedido_serial(p: dict) -> dict:
 
 def estado_tablet(maquina_id: int) -> dict:
     fabrica_dia.garantir_dia_para_leitura()
+    maquinas.alinhar_contadores_ordem_atual(maquina_id)
     lista = pedidos.get(maquina_id, [])
     dm = dados_maquinas.get(maquina_id, {})
     hp = dm.get("historico_paradas")

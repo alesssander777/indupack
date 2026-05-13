@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backups — {{ branding().nome_empresa }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/indupack-global.css">
+    <link rel="stylesheet" href="/static/indupack-nav-back.css">
+    <link rel="stylesheet" href="/static/indupack-topbar.css">
+    {% from "macros.html" import indupack_topbar, indupack_brand_css %}
+    {{ indupack_brand_css() }}
+    <style>
+        .bk-wrap { max-width: 960px; margin: 0 auto; }
+        .bk-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1.25rem 0 1.5rem; }
+        .bk-actions button {
+            font: inherit; font-weight: 700; cursor: pointer; border: none; border-radius: 10px;
+            padding: 0.65rem 1.1rem; background: #0f172a; color: #f8fafc;
+        }
+        .bk-actions button:hover { filter: brightness(1.08); }
+        .bk-actions button:disabled { opacity: 0.55; cursor: not-allowed; }
+        .bk-note { color: #475569; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.5; }
+        .bk-table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+        table.bk-t { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        table.bk-t th, table.bk-t td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        table.bk-t th { background: #f8fafc; font-weight: 700; color: #334155; }
+        table.bk-t tr:last-child td { border-bottom: none; }
+        .bk-dl { color: #0369a1; font-weight: 600; text-decoration: none; }
+        .bk-dl:hover { text-decoration: underline; }
+        .bk-sec-title { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 1.75rem 0 0.5rem; }
+        .bk-msg { margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.9rem; }
+        .bk-msg.ok { background: #ecfdf5; color: #065f46; }
+        .bk-msg.err { background: #fef2f2; color: #991b1b; }
+    </style>
+</head>
+<body class="has-indupack-topbar">
+{{ indupack_topbar(usuario_nome, nav_back_href='/configuracoes') }}
+<main class="shell-main">
+    <div class="shell-panel bk-wrap">
+        <h1>Backups do sistema</h1>
+        <p class="bk-note">
+            Backups automáticos em segundo plano (base de dados e arquivo ZIP do projeto).
+            Pastas: <code>backups/database</code> e <code>backups/system</code>.
+            Restauração a partir destes ficheiros pode ser adicionada numa evolução futura.
+        </p>
+        <div class="bk-actions">
+            <button type="button" id="bk-refresh">Atualizar lista</button>
+            <button type="button" id="bk-db">Backup SQLite agora</button>
+            <button type="button" id="bk-full">Backup ZIP completo agora</button>
+        </div>
+        <div id="bk-feedback" class="bk-msg" style="display:none;" role="status"></div>
+
+        <h2 class="bk-sec-title">Base de dados (<code>backup_db_*.db</code>)</h2>
+        <div class="bk-table-wrap">
+            <table class="bk-t" aria-label="Backups da base de dados">
+                <thead><tr><th>Ficheiro</th><th>Tamanho</th><th>Data</th><th></th></tr></thead>
+                <tbody id="bk-tbody-db"><tr><td colspan="4">A carregar…</td></tr></tbody>
+            </table>
+        </div>
+
+        <h2 class="bk-sec-title">Sistema completo (<code>indupack_full_backup_*.zip</code>)</h2>
+        <div class="bk-table-wrap">
+            <table class="bk-t" aria-label="Backups ZIP">
+                <thead><tr><th>Ficheiro</th><th>Tamanho</th><th>Data</th><th></th></tr></thead>
+                <tbody id="bk-tbody-zip"><tr><td colspan="4">A carregar…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<script src="/static/indupack-topbar.js"></script>
+<script>
+(function() {
+    function fmtBytes(n) {
+        if (n == null || isNaN(n)) return "—";
+        var u = ["B", "KB", "MB", "GB"];
+        var i = 0;
+        var v = Number(n);
+        while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+        return (i === 0 ? String(Math.round(v)) : v.toFixed(1)) + " " + u[i];
+    }
+    function showMsg(text, ok) {
+        var el = document.getElementById("bk-feedback");
+        el.style.display = "block";
+        el.textContent = text;
+        el.className = "bk-msg " + (ok ? "ok" : "err");
+    }
+    function hideMsg() {
+        var el = document.getElementById("bk-feedback");
+        el.style.display = "none";
+        el.textContent = "";
+    }
+    function rowHtml(item, kind) {
+        var href = kind === "db"
+            ? "/backup/download/database/" + encodeURIComponent(item.nome)
+            : "/backup/download/system/" + encodeURIComponent(item.nome);
+        return "<tr><td><code>" + item.nome.replace(/</g, "&lt;") + "</code></td><td>" + fmtBytes(item.bytes) + "</td><td>" + (item.mtime_iso || "—") + "</td><td><a class=\"bk-dl\" href=\"" + href + "\">Descarregar</a></td></tr>";
+    }
+    function loadList() {
+        hideMsg();
+        fetch("/backup/list", { credentials: "same-origin" })
+            .then(function(r) {
+                if (!r.ok) {
+                    document.getElementById("bk-tbody-db").innerHTML = "<tr><td colspan=\"4\">Sem permissão ou sessão expirada.</td></tr>";
+                    document.getElementById("bk-tbody-zip").innerHTML = "<tr><td colspan=\"4\">—</td></tr>";
+                    return null;
+                }
+                return r.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+                var db = data.database || [];
+                var z = data.system || [];
+                document.getElementById("bk-tbody-db").innerHTML = db.length ? db.map(function(x) { return rowHtml(x, "db"); }).join("") : "<tr><td colspan=\"4\">Nenhum backup de base ainda.</td></tr>";
+                document.getElementById("bk-tbody-zip").innerHTML = z.length ? z.map(function(x) { return rowHtml(x, "zip"); }).join("") : "<tr><td colspan=\"4\">Nenhum ZIP completo ainda.</td></tr>";
+            })
+            .catch(function() {
+                document.getElementById("bk-tbody-db").innerHTML = "<tr><td colspan=\"4\">Erro de rede.</td></tr>";
+                document.getElementById("bk-tbody-zip").innerHTML = "<tr><td colspan=\"4\">—</td></tr>";
+            });
+    }
+    function post(url, btn) {
+        if (btn) btn.disabled = true;
+        hideMsg();
+        fetch(url, { method: "POST", credentials: "same-origin" })
+            .then(function(r) {
+                return r.json().then(function(data) { return { r: r, data: data }; });
+            })
+            .then(function(pair) {
+                var r = pair.r;
+                var data = pair.data;
+                if (!r.ok) {
+                    showMsg((data && data.erro) || "Não autorizado ou erro no servidor.", false);
+                    return;
+                }
+                if (data.ok) {
+                    showMsg("Concluído: " + (data.arquivo || "OK"), true);
+                    loadList();
+                } else {
+                    showMsg(data.erro || data.detalhe || "Falhou", false);
+                }
+            })
+            .catch(function() { showMsg("Erro de rede.", false); })
+            .finally(function() { if (btn) btn.disabled = false; });
+    }
+    document.getElementById("bk-refresh").addEventListener("click", loadList);
+    document.getElementById("bk-db").addEventListener("click", function() { post("/backup/database", this); });
+    document.getElementById("bk-full").addEventListener("click", function() { post("/backup/full", this); });
+    loadList();
+})();
+</script>
+</body>
+</html>

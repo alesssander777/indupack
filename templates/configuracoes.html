@@ -3,23 +3,224 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Configurações — Indupack</title>
+    <title>Configurações do sistema — {{ branding().nome_empresa }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/indupack-global.css">
     <link rel="stylesheet" href="/static/indupack-nav-back.css">
     <link rel="stylesheet" href="/static/indupack-topbar.css">
+    {% from "macros.html" import indupack_topbar, indupack_brand_css %}
+    {{ indupack_brand_css() }}
+    <style>
+        :root {
+            --cfg-petrol: var(--ip-brand-primary, #1a4a62);
+            --cfg-navy: var(--ip-brand-header-edge, #0c1a28);
+            --cfg-line: rgba(255,255,255,0.12);
+        }
+        .cfg-page { margin:0; min-height:100vh; font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+            background: radial-gradient(120% 70% at 100% 0%, rgba(26,74,98,.12), transparent 50%),
+                linear-gradient(180deg,#e8edf4,#f1f5f9); color:#0f172a; }
+        .cfg-wrap { max-width:1200px; margin:0 auto; padding:clamp(12px,2vw,24px) clamp(14px,2.5vw,28px) 48px; }
+        .cfg-hero { border-radius:20px; padding:clamp(18px,2.5vw,28px); margin-bottom:22px;
+            background:linear-gradient(155deg,var(--cfg-petrol) 0%,var(--cfg-navy) 55%,var(--ip-brand-header-deep, #153545) 100%);
+            color:#fff; border:1px solid var(--cfg-line); box-shadow:0 16px 44px rgba(15,23,42,.2); }
+        .cfg-hero h1 { margin:0 0 8px; font-size:clamp(1.2rem,2vw+.5rem,1.85rem); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+        .cfg-hero p { margin:0; max-width:70ch; color:rgba(255,255,255,.78); font-weight:600; line-height:1.5; font-size:.95rem; }
+        .cfg-hero .cfg-note { margin-top:12px; font-size:.82rem; color:rgba(255,255,255,.62); }
+        .cfg-sec { margin-bottom:14px; border-radius:16px; border:1px solid #cbd5e1; background:#fff; overflow:hidden; box-shadow:0 4px 18px rgba(15,23,42,.06); }
+        .cfg-sec > summary { list-style:none; cursor:pointer; padding:14px 18px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+            font-size:.82rem; background:linear-gradient(90deg,#f8fafc,#eef2f7); border-bottom:1px solid #e2e8f0; }
+        .cfg-sec > summary::-webkit-details-marker { display:none; }
+        .cfg-sec[open] > summary { border-bottom:1px solid #e2e8f0; }
+        .cfg-sec-body { padding:16px 18px 20px; }
+        .cfg-grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px 16px; }
+        .cfg-kv { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
+        .cfg-kv__k { display:block; font-size:.65rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#64748b; margin-bottom:4px; }
+        .cfg-kv__v { font-weight:800; font-size:1rem; }
+        .cfg-ok { color:#15803d; }
+        .cfg-bad { color:#b91c1c; }
+        .cfg-field { display:flex; flex-direction:column; gap:4px; }
+        .cfg-field label { font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#475569; }
+        .cfg-inp { padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; font:inherit; }
+        .cfg-inp--sm { padding:6px 8px; font-size:.85rem; }
+        .cfg-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+        .cfg-btn { border:none; border-radius:10px; padding:10px 18px; font:inherit; font-weight:800; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+        .cfg-btn--pri { background:linear-gradient(180deg,var(--cfg-petrol),#132f42); color:#fff; }
+        .cfg-btn--sec { background:#e2e8f0; color:#0f172a; }
+        .cfg-mini { font:inherit; font-size:.72rem; font-weight:700; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; }
+        .cfg-mini--danger { border-color:#fecaca; color:#b91c1c; }
+        table.cfg-t { width:100%; border-collapse:collapse; font-size:.86rem; }
+        table.cfg-t th, table.cfg-t td { padding:8px 6px; border-bottom:1px solid #e2e8f0; text-align:left; vertical-align:middle; }
+        table.cfg-t th { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#64748b; }
+        .cfg-toast { position:fixed; bottom:22px; right:22px; z-index:9999; max-width:min(420px,92vw); padding:12px 16px; border-radius:12px;
+            font-weight:700; font-size:.88rem; box-shadow:0 12px 32px rgba(0,0,0,.2); }
+        .cfg-toast--ok { background:#ecfdf5; color:#065f46; border:1px solid #86efac; }
+        .cfg-toast--err { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+        .cfg-foot { margin-top:10px; font-size:.8rem; color:#64748b; }
+        .cfg-foot a { color:var(--cfg-petrol); font-weight:700; }
+    </style>
 </head>
-<body class="has-indupack-topbar">
-{% from "macros.html" import indupack_topbar %}
+<body class="cfg-page has-indupack-topbar">
 {{ indupack_topbar(usuario_nome, nav_back_href='/') }}
-<main class="shell-main">
-    <div class="shell-panel">
-        <h1>⚙ Configurações</h1>
-        <p>Área reservada para parâmetros do sistema. Conteúdo será expandido conforme necessidade.</p>
-    </div>
-</main>
+<div class="cfg-wrap">
+    <header class="cfg-hero">
+        <h1>Configurações do sistema</h1>
+        <p>Área administrativa para controle geral do sistema, parâmetros operacionais e segurança. Inclui cadastros auxiliares, identidade visual e gestão de cópias de segurança.</p>
+        <p class="cfg-note">As áreas de <strong>Relatórios</strong>, <strong>Manutenção</strong> e <strong>Tablets</strong> possuem painéis próprios de gestão. Aqui concentram-se as definições globais — sem painel de acompanhamento ao vivo da produção.</p>
+    </header>
+
+    <div id="cfg-toast" class="cfg-toast cfg-toast--ok" hidden role="status"></div>
+
+    <details class="cfg-sec" open id="sec-sistema">
+        <summary>Sistema</summary>
+        <div class="cfg-sec-body">
+            <div class="cfg-grid2">
+                <div class="cfg-kv"><span class="cfg-kv__k">Versão</span><span id="v-ver" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Ligação aos dados</span><span id="v-db" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Servidor</span><span id="v-srv" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Data/hora servidor</span><span id="v-hora" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Máquinas cadastradas</span><span id="v-maq-c" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Máquinas ativas</span><span id="v-maq-a" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Contas de utilizador</span><span id="v-user" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Terminais identificados</span><span id="v-tab" class="cfg-kv__v">—</span></div>
+            </div>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-maquinas">
+        <summary>Máquinas — cadastro geral</summary>
+        <div class="cfg-sec-body">
+            <p class="cfg-foot" style="margin-top:0;">Nome, setor, meta e estado <em>ativo / inativo</em>. Equipamentos inativos deixam de aparecer no painel de produção. Esta secção é apenas cadastro — não mostra andamento em tempo real.</p>
+            <div style="overflow-x:auto;">
+                <table class="cfg-t" aria-label="Máquinas">
+                    <thead><tr><th>ID</th><th>Nome</th><th>Setor</th><th>Meta</th><th>Ativa</th><th></th></tr></thead>
+                    <tbody id="tbl-maq"></tbody>
+                </table>
+            </div>
+            <h3 style="margin:18px 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b;">Nova máquina</h3>
+            <form id="form-nova-maq" class="cfg-grid2">
+                <div class="cfg-field"><label for="nm-maq">Nome</label><input id="nm-maq" class="cfg-inp" required></div>
+                <div class="cfg-field"><label for="st-maq">Setor</label><input id="st-maq" class="cfg-inp"></div>
+                <div class="cfg-field"><label for="mt-maq">Meta padrão</label><input id="mt-maq" class="cfg-inp" type="number" value="1000" min="1"></div>
+                <div class="cfg-field" style="align-self:end;"><button type="submit" class="cfg-btn cfg-btn--pri">Cadastrar máquina</button></div>
+            </form>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-operadores">
+        <summary>Operadores (cadastro auxiliar)</summary>
+        <div class="cfg-sec-body">
+            <p class="cfg-foot" style="margin-top:0;">Identificação dos profissionais para apontamento e referência no chão de fábrica. Não substitui as contas de utilizador utilizadas no início de sessão.</p>
+            <div style="overflow-x:auto;">
+                <table class="cfg-t"><thead><tr><th>Nome</th><th>Turno padrão</th><th>Nível</th><th>Ativo</th><th></th></tr></thead><tbody id="tbl-op"></tbody></table>
+            </div>
+            <h3 style="margin:18px 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b;">Novo operador</h3>
+            <form id="form-novo-op" class="cfg-grid2">
+                <div class="cfg-field"><label for="op-nome">Nome</label><input id="op-nome" class="cfg-inp" required></div>
+                <div class="cfg-field"><label for="op-turno">Turno padrão</label><input id="op-turno" class="cfg-inp" placeholder="Ex.: A"></div>
+                <div class="cfg-field"><label for="op-nivel">Perfil de acesso</label>
+                    <select id="op-nivel" class="cfg-inp">
+                        <option value="operador">Operador</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="cfg-field" style="align-self:end;"><button type="submit" class="cfg-btn cfg-btn--pri">Cadastrar</button></div>
+            </form>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-producao">
+        <summary>Produção — parâmetros globais</summary>
+        <div class="cfg-sec-body">
+            <form id="form-producao" class="cfg-grid2">
+                <div class="cfg-field"><label for="f-parada-max">Tempo máx. parada (min)</label><input id="f-parada-max" class="cfg-inp" type="number" min="1"></div>
+                <div class="cfg-field"><label for="f-meta-glob">Meta padrão global</label><input id="f-meta-glob" class="cfg-inp" type="number" min="1"></div>
+                <div class="cfg-field"><label for="f-ef">Cálculo eficiência</label>
+                    <select id="f-ef" class="cfg-inp"><option value="padrao">Padrão (progresso vs meta)</option><option value="apenas_producao">Só tempo produção</option></select></div>
+                <div class="cfg-field"><label for="f-prog">Barra de progresso</label>
+                    <select id="f-prog" class="cfg-inp"><option value="linear">Linear</option><option value="segmentos">Segmentos</option></select></div>
+                <div class="cfg-field"><label for="f-prod-mod">Total produzido</label>
+                    <select id="f-prod-mod" class="cfg-inp"><option value="substituicao">Substituição (valor informado substitui o anterior)</option><option value="cumulativo">Acumulativo</option></select></div>
+                <div class="cfg-field" style="grid-column:1/-1;">
+                    <label><input type="checkbox" id="f-reset-os"> Zerar contadores automaticamente ao mudar de ordem de serviço</label>
+                </div>
+                <div class="cfg-actions" style="grid-column:1/-1;">
+                    <button type="submit" class="cfg-btn cfg-btn--pri">Guardar produção</button>
+                </div>
+            </form>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-paradas">
+        <summary>Paradas — catálogo</summary>
+        <div class="cfg-sec-body">
+            <p class="cfg-foot" style="margin-top:0;">Motivos padronizados para registo de paradas no chão de fábrica. Os operadores escolhem estes itens nos terminais ao interromper a produção.</p>
+            <div style="overflow-x:auto;">
+                <table class="cfg-t"><thead><tr><th>Código</th><th>Rótulo</th><th>Categoria</th><th>Ativo</th><th>Ordem</th><th></th></tr></thead><tbody id="tbl-par"></tbody></table>
+            </div>
+            <h3 style="margin:18px 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b;">Novo motivo</h3>
+            <form id="form-novo-par" class="cfg-grid2">
+                <div class="cfg-field"><label for="par-cod">Código identificador</label><input id="par-cod" class="cfg-inp" placeholder="ex.: troca_matriz (sem espaços)" required></div>
+                <div class="cfg-field"><label for="par-rot">Rótulo</label><input id="par-rot" class="cfg-inp" required></div>
+                <div class="cfg-field"><label for="par-cat">Categoria</label><input id="par-cat" class="cfg-inp" value="geral"></div>
+                <div class="cfg-field" style="align-self:end;"><button type="submit" class="cfg-btn cfg-btn--pri">Criar</button></div>
+            </form>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-backup">
+        <summary>Backups</summary>
+        <div class="cfg-sec-body">
+            <div class="cfg-grid2">
+                <div class="cfg-kv"><span class="cfg-kv__k">Último backup</span><span id="bk-ult" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Quantidade</span><span id="bk-qtd" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Tamanho total</span><span id="bk-tam" class="cfg-kv__v">—</span></div>
+                <div class="cfg-kv"><span class="cfg-kv__k">Estado</span><span id="bk-st" class="cfg-kv__v">—</span></div>
+            </div>
+            <div class="cfg-actions">
+                <button type="button" id="btn-bk-db" class="cfg-btn cfg-btn--pri">Gerar backup do banco</button>
+                <button type="button" id="btn-bk-full" class="cfg-btn cfg-btn--sec">Gerar backup completo (ZIP)</button>
+                <a class="cfg-btn cfg-btn--sec" href="/backups" style="text-decoration:none;display:inline-flex;align-items:center;">Lista e downloads</a>
+            </div>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-visual">
+        <summary>Visual / identidade</summary>
+        <div class="cfg-sec-body">
+            <form id="form-visual" class="cfg-grid2">
+                <div class="cfg-field"><label for="f-empresa">Nome empresa</label><input id="f-empresa" class="cfg-inp"></div>
+                <div class="cfg-field"><label for="f-cor">Cor principal</label><input id="f-cor" class="cfg-inp" type="text" pattern="#[0-9A-Fa-f]{6}" placeholder="#1a4a62"></div>
+                <div class="cfg-field"><label for="f-title">Título na barra do navegador</label><input id="f-title" class="cfg-inp"></div>
+                <div class="cfg-field" style="grid-column:1/-1;"><label><input type="checkbox" id="f-fs"> Fullscreen padrão em terminais (preferência)</label></div>
+                <div class="cfg-actions" style="grid-column:1/-1;"><button type="submit" class="cfg-btn cfg-btn--pri">Guardar visual</button></div>
+            </form>
+            <p class="cfg-foot">Logo atual: <strong id="f-logo-url">—</strong></p>
+            <form id="form-logo" class="cfg-grid2" style="margin-top:8px;">
+                <div class="cfg-field"><label for="file-logo">Enviar logo</label><input id="file-logo" type="file" accept="image/*"></div>
+                <div class="cfg-field" style="align-self:end;"><button type="submit" class="cfg-btn cfg-btn--sec">Upload</button></div>
+            </form>
+        </div>
+    </details>
+
+    <details class="cfg-sec" open id="sec-seg">
+        <summary>Segurança</summary>
+        <div class="cfg-sec-body">
+            <form id="form-seg" class="cfg-grid2">
+                <div class="cfg-field"><label for="f-sess">Sessão máx. (min)</label><input id="f-sess" class="cfg-inp" type="number" min="30"></div>
+                <div class="cfg-field"><label for="f-lo">Logout automático (min, 0=off)</label><input id="f-lo" class="cfg-inp" type="number" min="0"></div>
+                <div class="cfg-field" style="grid-column:1/-1;"><label><input type="checkbox" id="f-multi"> Permitir múltiplos logins</label></div>
+                <div class="cfg-field" style="grid-column:1/-1;"><label><input type="checkbox" id="f-adm-av"> Aviso conta admin padrão (instalação)</label></div>
+                <div class="cfg-actions" style="grid-column:1/-1;"><button type="submit" class="cfg-btn cfg-btn--pri">Guardar segurança</button></div>
+            </form>
+            <p class="cfg-foot">Quando alterar o tempo máximo de sessão, reinicie o Indupack para que a nova regra passe a valer em todos os acessos.</p>
+        </div>
+    </details>
+</div>
 <script src="/static/indupack-topbar.js"></script>
+<script src="/static/config-central.js"></script>
 </body>
 </html>

@@ -4,6 +4,22 @@ from services import fabrica_dia, maquinas
 from storage.state import dados_maquinas, pedidos, persist
 
 
+def normalizar_turno_operacional(t: str) -> str:
+    """Alinha turno do cadastro ao formato da programação (TURNO A/B/C ou COMERCIAL)."""
+    raw = str(t or "").strip()
+    if not raw:
+        return ""
+    s = raw.upper()
+    if "COMERCIAL" in s:
+        return "COMERCIAL"
+    core = s.replace("TURNO", "").strip()
+    if core in ("A", "B", "C"):
+        return f"TURNO {core}"
+    if s.startswith("TURNO ") and len(s) >= 8:
+        return s
+    return s
+
+
 def salvar_pedido(
     id: int,
     cliente: str = "",
@@ -59,6 +75,10 @@ def editar_pedido(id: int, index: int, campo, valor):
         except (TypeError, ValueError):
             valor = 0
 
+    primeiro_aberto_antes = -1
+    if campo == "finalizado":
+        primeiro_aberto_antes = indice_primeiro_pedido_aberto(id)
+
     pedidos[id][index][campo] = valor
 
     if campo == "finalizado":
@@ -82,6 +102,13 @@ def editar_pedido(id: int, index: int, campo, valor):
     persist()
     if campo == "finalizado":
         fabrica_dia.garantir_dia_para_leitura()
+        if marcar_on and primeiro_aberto_antes == index:
+            if str(dados_maquinas.get(id, {}).get("status", "")).upper() == "RODANDO":
+                maquinas.set_status(id, "PARADA")
+            maquinas.set_produzido_total(id, 0)
+            maquinas.reset_tempo_producao(id)
+        maquinas.invalidar_pedido_atual_fp(id)
+        maquinas.alinhar_contadores_ordem_atual(id)
     return {"ok": True}
 
 
@@ -94,6 +121,8 @@ def deletar_pedido(id: int, index: int):
 
     pedidos[id].pop(index)
     persist()
+    maquinas.invalidar_pedido_atual_fp(id)
+    maquinas.alinhar_contadores_ordem_atual(id)
     return {"ok": True}
 
 
@@ -135,6 +164,8 @@ def reordenar_pedidos(id: int, indices: list):
 
     pedidos[id] = [lst[i] for i in idxs]
     persist()
+    maquinas.invalidar_pedido_atual_fp(id)
+    maquinas.alinhar_contadores_ordem_atual(id)
     return {"ok": True}
 
 
@@ -143,6 +174,7 @@ def iniciar_producao_tablet(
     operador: str = "",
     turno: str = "",
     retomar: bool = False,
+    operador_perfil_id: int | None = None,
 ):
     """Inicia ou retoma RODANDO. Modal nome/turno só no 1º início; retomar usa dados gravados no pedido."""
     ix = indice_primeiro_pedido_aberto(id)
@@ -153,18 +185,40 @@ def iniciar_producao_tablet(
 
     if retomar:
         op = str(p.get("operador_inicio") or "").strip()
-        tu = str(p.get("turno_inicio") or "").strip()
+        tu = normalizar_turno_operacional(str(p.get("turno_inicio") or ""))
+        if not tu:
+            tu = str(p.get("turno_inicio") or "").strip()
         if not op or not tu:
             return {"ok": False, "erro": "sem_registro_inicio_retomar"}
     else:
-        op = str(operador or "").strip()
-        tu = str(turno or "").strip()
-        if not op or not tu:
-            return {"ok": False, "erro": "operador_turno_obrigatorios"}
+        oid = operador_perfil_id
+        if oid is not None:
+            from services import config_params_db
+
+            prof = config_params_db.get_operator_profile(oid)
+            if not prof:
+                return {"ok": False, "erro": "operador_invalido"}
+            op = str(prof.get("nome") or "").strip()
+            tu = normalizar_turno_operacional(str(prof.get("turno_padrao") or ""))
+            if not tu:
+                tu = normalizar_turno_operacional(str(turno or ""))
+            if not tu:
+                tu = str(turno or "").strip().upper()
+            if not op or not tu:
+                return {"ok": False, "erro": "operador_turno_obrigatorios"}
+        else:
+            op = str(operador or "").strip()
+            tu = normalizar_turno_operacional(str(turno or ""))
+            if not tu:
+                tu = str(turno or "").strip().upper()
+            if not op or not tu:
+                return {"ok": False, "erro": "operador_turno_obrigatorios"}
         if not str(p.get("operador_inicio") or "").strip():
             p["operador_inicio"] = op
             p["turno_inicio"] = tu
             p["hora_inicio_operacao"] = datetime.now().strftime("%d/%m %H:%M:%S")
+            if oid is not None:
+                p["operador_perfil_id_inicio"] = oid
             persist()
 
     try:
@@ -200,9 +254,26 @@ def finalizar_pedido_tablet(
     operador_final: str,
     producao_final: int,
     turno_final: str = "",
+    operador_perfil_id: int | None = None,
 ):
-    of = str(operador_final or "").strip()
-    tf = str(turno_final or "").strip()
+    oid = operador_perfil_id
+    if oid is not None:
+        from services import config_params_db
+
+        prof = config_params_db.get_operator_profile(oid)
+        if not prof:
+            return {"ok": False, "erro": "operador_invalido"}
+        of = str(prof.get("nome") or "").strip()
+        tf = normalizar_turno_operacional(str(prof.get("turno_padrao") or ""))
+        if not tf:
+            tf = normalizar_turno_operacional(str(turno_final or ""))
+        if not tf:
+            tf = str(turno_final or "").strip().upper()
+    else:
+        of = str(operador_final or "").strip()
+        tf = normalizar_turno_operacional(str(turno_final or ""))
+        if not tf:
+            tf = str(turno_final or "").strip().upper()
     if not of or not tf:
         return {"ok": False, "erro": "operador_turno_obrigatorios"}
     if id not in pedidos:
@@ -219,6 +290,8 @@ def finalizar_pedido_tablet(
     p["finalizado"] = True
     p["operador_final"] = of
     p["turno_final"] = tf
+    if oid is not None:
+        p["operador_perfil_id_final"] = oid
     p["hora_finalizacao"] = datetime.now().strftime("%d/%m %H:%M:%S")
     p["data_final_iso"] = date.today().isoformat()
     try:
@@ -233,4 +306,6 @@ def finalizar_pedido_tablet(
     maquinas.reset_tempo_producao(id)
     # Terminal não deve ficar “RODANDO” sem pedido ativo — operador precisa iniciar de novo no próximo.
     maquinas.set_status(id, "PARADA")
+    maquinas.invalidar_pedido_atual_fp(id)
+    maquinas.alinhar_contadores_ordem_atual(id)
     return {"ok": True}

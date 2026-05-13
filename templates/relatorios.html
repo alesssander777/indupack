@@ -3,23 +3,230 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Relatórios — Indupack</title>
+    <title>Relatórios — {{ branding().nome_empresa }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/indupack-global.css">
     <link rel="stylesheet" href="/static/indupack-nav-back.css">
     <link rel="stylesheet" href="/static/indupack-topbar.css">
+    <link rel="stylesheet" href="/static/relatorios.css">
+    {% from "macros.html" import indupack_topbar, indupack_brand_css %}
+    {{ indupack_brand_css() }}
 </head>
 <body class="has-indupack-topbar">
-{% from "macros.html" import indupack_topbar %}
 {{ indupack_topbar(usuario_nome, nav_back_href='/') }}
 <main class="shell-main">
-    <div class="shell-panel">
-        <h1>📊 Relatórios</h1>
-        <p>Módulo em preparação. Em breve: produção, eficiência e histórico.</p>
+    <div class="shell-panel rel-shell">
+        <header class="rel-page-head">
+            <p class="rel-page-head__eyebrow">MES · Supervisão</p>
+            <h1 class="rel-page-head__title">Central analítica</h1>
+            <p class="rel-page-head__lead">Painel gerencial com apontamentos (SQLite) e paradas do chão de fábrica.</p>
+        </header>
+
+        <!-- TOPO: período, filtros, exportações -->
+        <div class="rel-top-card">
+            <div class="rel-top-card__row rel-top-card__row--period">
+                <div class="rel-period">
+                    <span class="rel-period__label">Período ativo</span>
+                    <p class="rel-period__value" id="rel-periodo-resumo">—</p>
+                </div>
+                <div class="rel-presets">
+                    <button type="button" class="rel-chip" id="rel-hoje">Hoje</button>
+                    <button type="button" class="rel-chip" id="rel-semana">7 dias</button>
+                    <button type="button" class="rel-chip" id="rel-mes">Mês</button>
+                    <button type="button" class="rel-btn rel-btn--solid" id="rel-aplicar">Aplicar filtros</button>
+                </div>
+            </div>
+            <div class="rel-filters" role="search" aria-label="Filtros do relatório">
+                <label class="rel-field"><span class="rel-field__l">Início</span><input type="date" id="rel-inicio" autocomplete="off"></label>
+                <label class="rel-field"><span class="rel-field__l">Fim</span><input type="date" id="rel-fim" autocomplete="off"></label>
+                <label class="rel-field rel-field--grow"><span class="rel-field__l">Máquina</span><select id="rel-maquina"></select></label>
+                <label class="rel-field"><span class="rel-field__l">Setor</span><input type="text" id="rel-setor" list="rel-setor-list" placeholder="Filtrar…" autocomplete="off"></label>
+                <datalist id="rel-setor-list"></datalist>
+                <label class="rel-field"><span class="rel-field__l">Operador</span><input type="text" id="rel-operador" placeholder="Contém…" autocomplete="off"></label>
+                <label class="rel-field"><span class="rel-field__l">Turno</span><input type="text" id="rel-turno" placeholder="Contém…" autocomplete="off"></label>
+                <label class="rel-field rel-field--grow"><span class="rel-field__l">Produto</span><input type="text" id="rel-produto" placeholder="Contém…" autocomplete="off"></label>
+            </div>
+            <div class="rel-top-card__row rel-top-card__row--exports">
+                <span class="rel-exports__label">Exportar</span>
+                <div class="rel-exports">
+                    <button type="button" class="rel-btn rel-btn--excel" id="rel-xlsx">Excel</button>
+                    <button type="button" class="rel-btn rel-btn--pdf" id="rel-pdf">PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <p id="rel-warn" class="rel-banner rel-banner--warn" hidden></p>
+        <p id="rel-loading" class="rel-banner rel-banner--info">Carregando dados…</p>
+
+        <!-- KPIs grandes -->
+        <section class="rel-kpi-deck" aria-live="polite">
+            <article class="rel-kpi-tile rel-kpi-tile--hero">
+                <span class="rel-kpi-tile__label">Produção total</span>
+                <p class="rel-kpi-tile__value" id="kpi-prod">—</p>
+                <span class="rel-kpi-tile__hint" id="kpi-prod-sub">unidades no período</span>
+            </article>
+            <article class="rel-kpi-tile rel-kpi-tile--pos">
+                <span class="rel-kpi-tile__label">OEE <span class="rel-kpi-tile__tag">proxy</span></span>
+                <p class="rel-kpi-tile__value" id="kpi-oee">—</p>
+                <span class="rel-kpi-tile__hint">indicador composto estimado</span>
+            </article>
+            <article class="rel-kpi-tile rel-kpi-tile--disp">
+                <span class="rel-kpi-tile__label">Disponibilidade</span>
+                <p class="rel-kpi-tile__value" id="kpi-disp">—</p>
+                <span class="rel-kpi-tile__hint">eficiência de tempo (proxy)</span>
+            </article>
+            <article class="rel-kpi-tile rel-kpi-tile--stop">
+                <span class="rel-kpi-tile__label">Tempo parado</span>
+                <p class="rel-kpi-tile__value" id="kpi-par">—</p>
+                <span class="rel-kpi-tile__hint">somatório paradas no intervalo</span>
+            </article>
+            <article class="rel-kpi-tile rel-kpi-tile--brand">
+                <span class="rel-kpi-tile__label">Melhor máquina</span>
+                <p class="rel-kpi-tile__name" id="kpi-best-maq-name">—</p>
+                <p class="rel-kpi-tile__value rel-kpi-tile__value--sm" id="kpi-best-maq-val">—</p>
+            </article>
+            <article class="rel-kpi-tile rel-kpi-tile--brand rel-kpi-tile--besto">
+                <span class="rel-kpi-tile__label">Melhor operador</span>
+                <p class="rel-kpi-tile__name" id="kpi-best-op-name">—</p>
+                <p class="rel-kpi-tile__value rel-kpi-tile__value--sm" id="kpi-best-op-val">—</p>
+            </article>
+        </section>
+
+        <nav class="rel-tabs" role="tablist" aria-label="Tipo de relatório">
+            <button type="button" role="tab" data-panel="dia" aria-selected="true">Diário</button>
+            <button type="button" role="tab" data-panel="sem" aria-selected="false">Semanal</button>
+            <button type="button" role="tab" data-panel="mes" aria-selected="false">Mensal</button>
+            <button type="button" role="tab" data-panel="det" aria-selected="false">Detalhado</button>
+        </nav>
+
+        <div class="rel-panels">
+            <section id="panel-dia" class="rel-panel">
+                <header class="rel-sec-head">
+                    <h2 class="rel-sec-head__title">Distribuição e desempenho</h2>
+                    <p class="rel-sec-head__sub">Gráficos consolidados · <span id="kpi-ev-inline">—</span> eventos de produção</p>
+                </header>
+                <div class="rel-chart-strip">
+                    <article class="rel-chart-card">
+                        <h3 class="rel-chart-card__title">Produção por máquina</h3>
+                        <div class="rel-chart-card__canvas"><canvas id="chart-maq" aria-label="Gráfico por máquina"></canvas></div>
+                    </article>
+                    <article class="rel-chart-card">
+                        <h3 class="rel-chart-card__title">Produtos em destaque</h3>
+                        <div class="rel-chart-card__canvas"><canvas id="chart-prod" aria-label="Gráfico por produto"></canvas></div>
+                    </article>
+                </div>
+                <div class="rel-mosaic">
+                    <div class="rel-mini">
+                        <h3 class="rel-mini__title">Por máquina</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Máquina</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-dia-maq"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini">
+                        <h3 class="rel-mini__title">Por operador</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Operador</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-dia-op"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini">
+                        <h3 class="rel-mini__title">Por turno</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Turno</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-dia-turno"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini">
+                        <h3 class="rel-mini__title">Produtos</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Produto</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-dia-prod"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini rel-mini--wide">
+                        <h3 class="rel-mini__title">Paradas por motivo</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Motivo</th><th class="rel-num">Tempo</th></tr></thead><tbody id="tb-dia-par"></tbody></table></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-sem" hidden>
+                <header class="rel-sec-head">
+                    <h2 class="rel-sec-head__title">Comparativo semanal</h2>
+                    <p class="rel-sec-head__sub">Mesmo intervalo dos filtros · ideal para últimos 7 dias</p>
+                </header>
+                <div class="rel-mosaic rel-mosaic--2">
+                    <div class="rel-mini rel-mini--wide">
+                        <h3 class="rel-mini__title">Máquinas</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Máquina</th><th class="rel-num">Prod.</th><th class="rel-num">Parada</th><th class="rel-num">Efic. %</th></tr></thead><tbody id="tb-sem-maq"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini">
+                        <h3 class="rel-mini__title">Turnos</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Turno</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-sem-turno"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini">
+                        <h3 class="rel-mini__title">Produtos</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Produto</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-sem-prod"></tbody></table></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-mes" hidden>
+                <header class="rel-sec-head">
+                    <h2 class="rel-sec-head__title">Fechamento mensal</h2>
+                    <div class="rel-mes-strip">
+                        <div class="rel-mes-pill"><span>Produção</span><strong id="mes-total">—</strong></div>
+                        <div class="rel-mes-pill"><span>OEE médio</span><strong id="mes-oee">—</strong></div>
+                        <div class="rel-mes-pill rel-mes-pill--warn"><span>Perdas (est.)</span><strong id="mes-perdas">—</strong></div>
+                        <div class="rel-mes-pill"><span>un/h</span><strong id="mes-produt">—</strong></div>
+                    </div>
+                </header>
+                <div class="rel-mosaic rel-mosaic--2">
+                    <div class="rel-mini rel-mini--wide">
+                        <h3 class="rel-mini__title">Ranking máquinas</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Máquina</th><th class="rel-num">Prod.</th><th class="rel-num">Parada</th><th class="rel-num">Efic. %</th></tr></thead><tbody id="tb-mes-maq"></tbody></table></div>
+                    </div>
+                    <div class="rel-mini rel-mini--wide">
+                        <h3 class="rel-mini__title">Ranking operadores</h3>
+                        <div class="rel-mini__scroll"><table class="rel-table rel-table--compact"><thead><tr><th>Operador</th><th class="rel-num">Qtd</th></tr></thead><tbody id="tb-mes-op"></tbody></table></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-det" hidden>
+                <header class="rel-sec-head">
+                    <h2 class="rel-sec-head__title">Apontamentos detalhados</h2>
+                    <p class="rel-sec-head__sub">Linha a linha · rolagem para grandes volumes</p>
+                </header>
+                <div class="rel-detail-wrap">
+                    <table class="rel-table rel-table--compact">
+                        <thead>
+                            <tr>
+                                <th>Produto</th><th>Operador</th><th>Turno</th><th>Máquina</th>
+                                <th class="rel-num">Qtd</th><th>Horário</th><th>T. prod.</th><th>T. parada</th><th>Obs.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tb-det"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <details class="rel-meta-details">
+            <summary>Metodologia e limites dos indicadores</summary>
+            <ul id="rel-notes" class="rel-meta-details__list"></ul>
+        </details>
+
+        <footer class="rel-footer-card">
+            <div class="rel-footer-card__main">
+                <h3 class="rel-footer-card__title">Enviar PDF por e-mail</h3>
+                <p class="rel-footer-card__txt">Requer SMTP no servidor (<code>INDUPACK_SMTP_HOST</code>, <code>INDUPACK_SMTP_FROM</code>).</p>
+                <div class="rel-footer-card__row">
+                    <label class="rel-field rel-field--inline"><span class="rel-field__l">Destino</span><input type="email" id="rel-mail-to" placeholder="gestao@empresa.com.br" autocomplete="email"></label>
+                    <button type="button" class="rel-btn rel-btn--mail" id="rel-mail-btn">Enviar</button>
+                </div>
+                <div id="rel-mail-toast" class="rel-toast" role="status"></div>
+            </div>
+            <div class="rel-footer-card__side">
+                <h4 class="rel-footer-card__st">Agendamento (futuro)</h4>
+                <pre id="rel-agenda-json" class="rel-footer-pre" aria-label="Estrutura JSON"></pre>
+            </div>
+        </footer>
     </div>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <script src="/static/indupack-topbar.js"></script>
+<script src="/static/relatorios.js"></script>
 </body>
 </html>

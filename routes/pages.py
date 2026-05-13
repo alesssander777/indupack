@@ -12,12 +12,14 @@ from services import maquinas as maquinas_service
 from services.catalogo_produtos import build_options_html
 from services.home_resumo import resumo_home
 from services.producao_snapshot import card_primeiro_pedido
+from services.runtime_config import visual_branding
 from services.tablet_estado import estado_tablet
 from services.tablets_admin import listagem_terminais_admin
 from storage.state import dados_maquinas, pedidos, produtos_cadastrados
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.globals["branding"] = visual_branding
 
 router = APIRouter()
 
@@ -117,6 +119,8 @@ def _historico_paradas_rows(maquina_id: int, limit: int = 15) -> list:
                 "retorno": fmt_ms(h.get("retorno_epoch")),
                 "duracao": fmt_dur(h.get("duracao_s")),
                 "motivo": str(h.get("motivo") or ""),
+                "operador": str(h.get("operador") or "").strip() or "—",
+                "turno": str(h.get("turno") or "").strip() or "—",
             }
         )
     return rows
@@ -231,6 +235,18 @@ def configuracoes(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="configuracoes.html",
+        context={"usuario_nome": _nome_topo(request)},
+    )
+
+
+@router.get("/backups", response_class=HTMLResponse)
+def backups_admin(request: Request):
+    g = indupack_auth.guard_page(request, "/backups")
+    if g:
+        return g
+    return templates.TemplateResponse(
+        request=request,
+        name="backups.html",
         context={"usuario_nome": _nome_topo(request)},
     )
 

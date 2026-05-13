@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Acesse sua conta — Indupack</title>
+    <title>Acesse sua conta — {{ branding().nome_empresa }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/indupack-global.css">
+    {% from "macros.html" import indupack_brand_css %}
+    {{ indupack_brand_css() }}
 </head>
 <body class="auth-body">
     <div class="auth-shell">
@@ -20,10 +22,10 @@
                 <div class="auth-brand">
                     <div class="auth-brand__row">
                         <div class="auth-brand__logo-wrap">
-                            <img class="auth-brand__logo-img" src="/logo" alt="Indupack" width="72" height="72" decoding="async">
+                            <img class="auth-brand__logo-img" src="{{ branding().logo_src }}" alt="{{ branding().nome_empresa }}" width="72" height="72" decoding="async">
                         </div>
                         <div class="auth-brand__titles">
-                            <strong class="auth-brand__name">INDUPACK</strong>
+                            <strong class="auth-brand__name">{{ branding().nome_empresa }}</strong>
                             <span class="auth-brand__sys">Sistema de Gestão Industrial</span>
                         </div>
                     </div>
@@ -75,7 +77,7 @@
                         </button>
                     </form>
 
-                    <p class="auth-card__foot">© 2026 INDUPACK. Todos os direitos reservados.</p>
+                    <p class="auth-card__foot">© 2026 {{ branding().nome_empresa }}. Todos os direitos reservados.</p>
                 </div>
             </main>
         </div>
@@ -86,9 +88,9 @@
         <div class="auth-boot__backdrop"></div>
         <div class="auth-boot__inner">
             <div class="auth-boot__logo" aria-hidden="true">
-                <img class="auth-boot__logo-img" src="/logo" alt="" width="72" height="72" decoding="async">
+                <img class="auth-boot__logo-img" src="{{ branding().logo_src }}" alt="" width="72" height="72" decoding="async">
             </div>
-            <strong class="auth-boot__brand">INDUPACK</strong>
+            <strong class="auth-boot__brand">{{ branding().nome_empresa }}</strong>
             <p class="auth-boot__msg">Inicializando sistema...</p>
             <div class="auth-boot__bar" aria-hidden="true"><span class="auth-boot__bar-fill"></span></div>
             <div class="auth-boot__ring" aria-hidden="true"></div>
@@ -96,6 +98,7 @@
     </div>
 
     <style>
+{% set b = branding() %}
         :root {
             /* Petróleo / navy enterprise (menos “azul padrão”) */
             --petrol-void: #050a10;
@@ -104,9 +107,9 @@
             --petrol-mid: #17394c;
             --petrol-soft: #214a5f;
             --petrol-glow: #2d5f75;
-            --ip-navy-deep: #0c1a28;
-            --ip-navy: #1a4a62;
-            --ip-navy-mid: #1c455a;
+            --ip-navy-deep: {{ b.cor_header_edge }};
+            --ip-navy: {{ b.cor_principal }};
+            --ip-navy-mid: {{ b.cor_escura }};
             --ip-blue-ink: #153547;
             --ip-on-navy: #ffffff;
             --ip-on-navy-soft: #f0f7fb;

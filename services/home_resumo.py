@@ -1,5 +1,6 @@
 """Métricas consolidadas para a HOME (resumo de máquinas + produção diária da fábrica)."""
 
+from services import maquinas
 from services.fabrica_dia import garantir_dia_para_leitura
 from services.producao_snapshot import _status_from_maquina
 from storage.state import dados_maquinas, resumo_fabrica
@@ -10,7 +11,7 @@ def resumo_home() -> dict:
 
     rodando = parada = manut = 0
 
-    for i in sorted(dados_maquinas.keys()):
+    for i in maquinas.ids_maquinas_ordenadas():
         dm = dados_maquinas.get(i) or {}
         _, _, _, kind = _status_from_maquina(dm)
         if kind == "run":

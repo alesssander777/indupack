@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Operação — Máquina {{ id }}</title>
+    <title>Operação — Máquina {{ id }} — {{ branding().nome_empresa }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/indupack-global.css">
+    {% from "macros.html" import indupack_brand_css %}
+    {{ indupack_brand_css() }}
 </head>
 <body class="ref-body">
     <div class="ref-shell">
@@ -273,20 +275,25 @@
         <div class="hmi-modal" role="dialog" aria-modal="true" aria-labelledby="modal-inicio-op-title">
             <div class="hmi-modal__head">
                 <h2 id="modal-inicio-op-title" class="hmi-modal__title">Identificação do operador</h2>
-                <p class="hmi-modal__lead" id="modal-inicio-op-lead">Informe <strong>nome</strong> e <strong>turno</strong> para iniciar a produção neste pedido.</p>
+                <p class="hmi-modal__lead" id="modal-inicio-op-lead">Selecione o <strong>operador</strong> cadastrado. O <strong>turno</strong> vem do cadastro (ajuste se precisar).</p>
             </div>
             <div class="hmi-modal-form-grid">
-                <label class="hmi-modal-lbl" for="modal-inicio-nome">Nome do operador</label>
-                <input type="text" id="modal-inicio-nome" class="hmi-modal-inp" maxlength="80" autocomplete="name" placeholder="Nome completo" />
+                <label class="hmi-modal-lbl" for="modal-inicio-operador">Operador</label>
+                <select id="modal-inicio-operador" class="hmi-modal-inp hmi-modal-inp--select">
+                    <option value="">Carregando…</option>
+                </select>
+                <label class="hmi-modal-lbl" for="modal-inicio-nome-manual" id="modal-inicio-nome-manual-lbl" hidden>Nome (sem cadastro)</label>
+                <input type="text" id="modal-inicio-nome-manual" class="hmi-modal-inp" maxlength="80" autocomplete="name" placeholder="Nome do operador" hidden />
                 <label class="hmi-modal-lbl" for="modal-inicio-turno">Turno</label>
                 <select id="modal-inicio-turno" class="hmi-modal-inp hmi-modal-inp--select">
                     <option value="">Selecione…</option>
                     <option value="TURNO A">TURNO A</option>
                     <option value="TURNO B">TURNO B</option>
+                    <option value="TURNO C">TURNO C</option>
                     <option value="COMERCIAL">COMERCIAL</option>
                 </select>
             </div>
-            <p id="modal-inicio-op-err" class="hmi-modal-err" role="alert" hidden>Preencha nome e turno.</p>
+            <p id="modal-inicio-op-err" class="hmi-modal-err" role="alert" hidden>Preencha operador e turno.</p>
             <div class="hmi-modal-actions">
                 <button type="button" id="modal-inicio-op-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
                 <button type="button" id="modal-inicio-op-confirm" class="hmi-modal-btn hmi-modal-btn--primary">Confirmar e iniciar</button>
@@ -299,20 +306,25 @@
         <div class="hmi-modal" role="dialog" aria-modal="true" aria-labelledby="modal-fim-op-title">
             <div class="hmi-modal__head">
                 <h2 id="modal-fim-op-title" class="hmi-modal__title">Finalizar pedido</h2>
-                <p class="hmi-modal__lead">Informe <strong>nome</strong> e <strong>turno</strong> de quem encerra este pedido no tablet. Os dados aparecem na programação administrativa.</p>
+                <p class="hmi-modal__lead">Selecione quem <strong>finaliza</strong> o pedido no tablet. Dados seguem para a programação.</p>
             </div>
             <div class="hmi-modal-form-grid">
-                <label class="hmi-modal-lbl" for="modal-fim-nome">Nome do operador</label>
-                <input type="text" id="modal-fim-nome" class="hmi-modal-inp" maxlength="80" autocomplete="name" placeholder="Nome completo" />
+                <label class="hmi-modal-lbl" for="modal-fim-operador">Operador</label>
+                <select id="modal-fim-operador" class="hmi-modal-inp hmi-modal-inp--select">
+                    <option value="">Carregando…</option>
+                </select>
+                <label class="hmi-modal-lbl" for="modal-fim-nome-manual" id="modal-fim-nome-manual-lbl" hidden>Nome (sem cadastro)</label>
+                <input type="text" id="modal-fim-nome-manual" class="hmi-modal-inp" maxlength="80" autocomplete="name" placeholder="Nome do operador" hidden />
                 <label class="hmi-modal-lbl" for="modal-fim-turno">Turno</label>
                 <select id="modal-fim-turno" class="hmi-modal-inp hmi-modal-inp--select">
                     <option value="">Selecione…</option>
                     <option value="TURNO A">TURNO A</option>
                     <option value="TURNO B">TURNO B</option>
+                    <option value="TURNO C">TURNO C</option>
                     <option value="COMERCIAL">COMERCIAL</option>
                 </select>
             </div>
-            <p id="modal-fim-op-err" class="hmi-modal-err" role="alert" hidden>Preencha nome e turno.</p>
+            <p id="modal-fim-op-err" class="hmi-modal-err" role="alert" hidden>Preencha operador e turno.</p>
             <div class="hmi-modal-actions">
                 <button type="button" id="modal-fim-op-cancel" class="hmi-modal-btn hmi-modal-btn--ghost">Cancelar</button>
                 <button type="button" id="modal-fim-op-confirm" class="hmi-modal-btn hmi-modal-btn--primary">Confirmar finalização</button>
@@ -364,16 +376,26 @@
     --hmi-value: clamp(1.32rem, 2.6vw, 1.85rem);
 }
 
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
+* {
+    box-sizing: border-box;
+}
+html {
+    height: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+}
+body {
+    height: 100%;
+    margin: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+}
 
 /*
  * Altura real da viewport (iOS/Android ao girar o celular costumam errar 100vh).
  * Preenchido por JS: --vh-tabl = 1% da altura interna.
  */
-html {
-    height: 100%;
-}
 
 .hmi-sr-only,
 .sr-only {
@@ -406,8 +428,12 @@ html {
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     overflow: hidden;
+    overflow-x: hidden;
     height: 100%;
     max-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .ref-shell {
@@ -422,6 +448,10 @@ html {
     display: grid;
     grid-template-rows: auto 1fr auto;
     min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
 /* —— Topo integrado ao terminal —— */
@@ -435,6 +465,8 @@ html {
     border-bottom: 1px solid var(--mes-line-strong);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
     z-index: 6;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .ref-top__left {
@@ -526,7 +558,8 @@ html {
     align-items: center;
     justify-content: center;
     padding: 10px 22px 12px;
-    min-width: clamp(92px, 11vw, 124px);
+    min-width: 0;
+    max-width: 100%;
     border-radius: var(--r);
     background: rgba(10, 18, 28, 0.82);
     border: 1px solid rgba(100, 168, 205, 0.22);
@@ -586,7 +619,7 @@ html {
     font-size: 0.68rem;
     color: var(--mes-muted);
     display: block;
-    max-width: 160px;
+    max-width: min(200px, 72vw);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -595,11 +628,13 @@ html {
 /* Área principal + sidebar (fila estreita — foco no miolo) */
 .hmi-work.ref-work {
     display: grid;
-    grid-template-columns: minmax(148px, 188px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, clamp(100px, 30vw, 188px)) minmax(0, 1fr);
     gap: 0;
     min-height: 0;
+    min-width: 0;
     align-items: stretch;
     overflow: hidden;
+    overflow-x: hidden;
 }
 
 .hmi-work.ref-work > .ref-main.hmi-main,
@@ -617,7 +652,10 @@ html {
     border-right: 1px solid var(--mes-line-strong);
     box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
     min-height: 0;
+    min-width: 0;
+    max-width: 100%;
     overflow: hidden;
+    overflow-x: hidden;
 }
 
 .hmi-side__head {
@@ -895,6 +933,8 @@ html {
 /* Conteúdo principal — sempre pode rolar se não couber (paisagem / tablets largos inclusos) */
 .ref-main.hmi-main {
     min-height: 0;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -952,6 +992,14 @@ html {
     border-radius: var(--r);
     border: 1px solid var(--mes-line);
     box-shadow: none;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.ref-hero-wrap,
+section.ref-actions.hmi-actions {
+    min-width: 0;
+    max-width: 100%;
 }
 
 /* Banner herói — cores sólidas MES */
@@ -1075,6 +1123,8 @@ html {
     font-weight: 900;
     letter-spacing: 0.04em;
     line-height: 1.05;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .ref-hero__sub {
@@ -1252,6 +1302,9 @@ html {
     background: var(--mes-panel);
     border: 1px solid var(--mes-line);
     box-shadow: none;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .ref-apont-block {
@@ -1268,6 +1321,9 @@ html {
     flex-wrap: wrap;
     align-items: stretch;
     gap: 12px 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .ref-apont-actions__ctrl {
@@ -1343,8 +1399,8 @@ html {
 
 /* Mesmo “PROGRESSO DA PRODUÇÃO” da área principal, compacto ao lado do apontamento */
 .ref-apont-progress {
-    flex: 1 1 300px;
-    min-width: min(240px, 100%);
+    flex: 1 1 min(100%, 360px);
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -1499,6 +1555,8 @@ html {
     background: transparent;
     box-shadow: none;
     flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 .ref-actions.hmi-actions.ref-actions--focus-retomar .hmi-cmd.ref-cmd:disabled {
@@ -1518,6 +1576,8 @@ html {
     justify-content: center;
     gap: 6px;
     min-height: 80px;
+    min-width: 0;
+    max-width: 100%;
     padding: 12px 10px;
     border: none;
     border-radius: var(--r);
@@ -1534,6 +1594,15 @@ html {
     font-weight: 900;
     letter-spacing: 0.06em;
     line-height: 1.25;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.hmi-cmd__ico {
+    flex-shrink: 0;
+    max-width: 100%;
 }
 
 .hmi-cmd__ico svg {
@@ -1600,9 +1669,12 @@ html {
 }
 
 .hmi-modal {
-    width: min(980px, 100%);
+    width: min(980px, calc(100vw - 32px));
+    max-width: 100%;
     max-height: min(92dvh, 900px);
     overflow: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
     background: var(--mes-panel-raised);
     border: 1px solid var(--mes-line-strong);
     border-radius: var(--r);
@@ -1639,9 +1711,15 @@ html {
     gap: 12px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1040px) {
     .hmi-modal-motivos {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .hmi-modal-motivos {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -1848,6 +1926,7 @@ html {
     align-items: center;
     padding: 8px 10px 10px;
     min-height: 76px;
+    min-width: 0;
     border-radius: var(--r-sm);
     background: var(--mes-cell);
     border: 1px solid var(--mes-cell-border);
@@ -1933,6 +2012,8 @@ html {
     background: rgba(0, 0, 0, 0.4);
     border-top: 1px solid var(--mes-line-strong);
     box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.04);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .ref-foot__tag {
@@ -2005,6 +2086,28 @@ html {
     }
 }
 
+/* Telas médias — menos colunas antes de empilhar fila + miolo (evita compressão) */
+@media (max-width: 1200px) {
+    .ref-order-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .ref-mini--qty {
+        grid-column: 1 / -1;
+    }
+
+    .ref-mes-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .ref-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+}
+
 /* ——— Terminal responsivo: tablet/celular/touch (não é dashboard admin) ——— */
 @media (max-width: 520px) {
     .ref-kpi-grid {
@@ -2023,7 +2126,7 @@ html {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1040px) {
     .hmi-work.ref-work {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
@@ -2202,8 +2305,8 @@ html {
     }
 }
 
-/* Celular em pé (retrato): empilhar comandos — largura pequena em retrato */
-@media (max-width: 480px) and (orientation: portrait) {
+/* Celular em pé (retrato): empilhar comandos — largura típica de smartphone */
+@media (max-width: 600px) and (orientation: portrait) {
     .ref-order-grid {
         display: flex;
         flex-direction: column;
@@ -2244,7 +2347,7 @@ html {
  */
 @media (orientation: landscape) and (max-height: 560px) {
     .hmi-work.ref-work {
-        grid-template-columns: minmax(120px, min(28vw, 240px)) minmax(0, 1fr);
+        grid-template-columns: minmax(0, clamp(88px, 24vw, 220px)) minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr);
         align-items: stretch;
         min-height: 0;
@@ -2264,7 +2367,7 @@ html {
         gap: 6px;
         padding-top: 6px;
         padding-bottom: 8px;
-        /* garante rolagem no miolo em paisagem (largura pode ser >900px) */
+        /* garante rolagem no miolo em paisagem (largura pode ser >1040px) */
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -2340,7 +2443,7 @@ html {
 /* Paisagem muito baixa: fila ainda mais compacta */
 @media (orientation: landscape) and (max-height: 420px) {
     .hmi-side.ref-side {
-        min-width: 100px;
+        min-width: 0;
         padding: 4px 4px 6px 6px;
     }
 
@@ -2466,6 +2569,26 @@ html {
                 if (v === null || v === undefined || String(v).trim() === "") return "—";
                 return String(v);
             }
+            /** Linha industrial: MEDIDA — PESO (ex.: 18x28x10 — 5KG), aceita hífen com ou sem espaços. */
+            function medidaComPeso(raw) {
+                var s = String(raw || "").trim();
+                if (!s) return "—";
+                var m = s.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+                if (m) {
+                    var a = String(m[1] || "").trim();
+                    var b = String(m[2] || "").trim();
+                    if (a && b) return a + " — " + b;
+                }
+                var parts = s.split(/\s+/).filter(Boolean);
+                if (parts.length >= 2) {
+                    var last = parts[parts.length - 1];
+                    if (/kg$/i.test(last)) {
+                        var med = parts.slice(0, -1).join(" ");
+                        if (med) return med + " — " + last;
+                    }
+                }
+                return s;
+            }
             function parseProduto(produto) {
                 var txt = String(produto || "").trim();
                 if (!txt) return { codigo: "—", medida: "—" };
@@ -2475,6 +2598,91 @@ html {
             function toInt(v, fb) {
                 var n = parseInt(v, 10);
                 return isNaN(n) ? (fb || 0) : n;
+            }
+            var operadoresTabletList = [];
+            function normalizarTurnoTablet(raw) {
+                var t = String(raw || "").trim();
+                if (!t) return "";
+                var s = t.toUpperCase();
+                if (s.indexOf("COMERCIAL") >= 0) return "COMERCIAL";
+                var core = s.replace(/TURNO/g, "").replace(/\s+/g, " ").trim();
+                if (core === "A" || core === "B" || core === "C") return "TURNO " + core;
+                if (/^TURNO\s+[A-C]$/.test(s)) return s;
+                return s;
+            }
+            function fetchOperadoresTablet(callback) {
+                fetch("/tablet/operadores")
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        operadoresTabletList = d && d.ok && Array.isArray(d.operadores) ? d.operadores : [];
+                        if (callback) callback();
+                    })
+                    .catch(function() {
+                        operadoresTabletList = [];
+                        if (callback) callback();
+                    });
+            }
+            function _toggleManualOperador(pref, show) {
+                var man = document.getElementById(pref + "-nome-manual");
+                var lbl = document.getElementById(pref + "-nome-manual-lbl");
+                if (man) man.hidden = !show;
+                if (lbl) lbl.hidden = !show;
+                if (!show && man) man.value = "";
+            }
+            function aplicarTurnoDoOperadorSelecionado(pref) {
+                var selOp = document.getElementById(pref + "-operador");
+                var selTu = document.getElementById(pref + "-turno");
+                if (!selOp || !selTu) return;
+                if (selOp.value === "__manual__") {
+                    _toggleManualOperador(pref, true);
+                    return;
+                }
+                _toggleManualOperador(pref, false);
+                if (!selOp.value) return;
+                var opt = selOp.options[selOp.selectedIndex];
+                if (!opt) return;
+                var tr = normalizarTurnoTablet(opt.getAttribute("data-turno") || "");
+                if (tr) selTu.value = tr;
+            }
+            function preencherSelectOperador(pref) {
+                var selOp = document.getElementById(pref + "-operador");
+                if (!selOp) return;
+                var curNome = String((estado.maquina || {}).operador_atual || "").trim();
+                selOp.innerHTML = "";
+                var o0 = document.createElement("option");
+                o0.value = "";
+                o0.textContent = operadoresTabletList.length ? "Selecione…" : "Sem cadastro — manual";
+                selOp.appendChild(o0);
+                operadoresTabletList.forEach(function(o) {
+                    var opt = document.createElement("option");
+                    opt.value = String(o.id);
+                    opt.textContent = o.nome;
+                    opt.setAttribute("data-turno", o.turno_padrao || "");
+                    selOp.appendChild(opt);
+                });
+                var om = document.createElement("option");
+                om.value = "__manual__";
+                om.textContent = "Outro (sem cadastro)";
+                selOp.appendChild(om);
+                var found = false;
+                for (var i = 0; i < selOp.options.length; i++) {
+                    var op = selOp.options[i];
+                    if (op.value && op.value !== "__manual__" && String(op.textContent || "").trim() === curNome) {
+                        selOp.selectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                var selTu = document.getElementById(pref + "-turno");
+                if (selTu) selTu.value = String((estado.maquina || {}).turno_atual || "").trim();
+                if (!found && curNome) {
+                    selOp.value = "__manual__";
+                    _toggleManualOperador(pref, true);
+                    var man = document.getElementById(pref + "-nome-manual");
+                    if (man) man.value = curNome;
+                } else {
+                    aplicarTurnoDoOperadorSelecionado(pref);
+                }
             }
             function fmtInt(n) {
                 var x = typeof n === "number" ? n : parseInt(n, 10);
@@ -2717,7 +2925,13 @@ html {
                 if (cbtn) cbtn.disabled = true;
                 var t = Date.now();
                 stopReason = motivo;
-                postContexto({ motivo_parada: motivo, parada_inicio_epoch: t })
+                var maqPause = estado.maquina || {};
+                postContexto({
+                    motivo_parada: motivo,
+                    parada_inicio_epoch: t,
+                    pausa_operador: String(maqPause.operador_atual || "").trim(),
+                    pausa_turno: String(maqPause.turno_atual || "").trim()
+                })
                     .then(function() { return fetch("/status/" + MAQ + "/PARADA").then(function(r) { return r.json(); }); })
                     .then(function(data) {
                         closeStopModal();
@@ -2735,24 +2949,23 @@ html {
             function openModalInicioOp() {
                 var m = document.getElementById("modal-inicio-op");
                 if (!m) return;
-                var maq = estado.maquina || {};
-                var nomeEl = document.getElementById("modal-inicio-nome");
-                var turnoEl = document.getElementById("modal-inicio-turno");
                 var err = document.getElementById("modal-inicio-op-err");
                 var lead = document.getElementById("modal-inicio-op-lead");
-                if (nomeEl) nomeEl.value = String(maq.operador_atual || "").trim();
-                if (turnoEl) turnoEl.value = String(maq.turno_atual || "").trim();
                 if (err) {
-                    err.textContent = "Preencha nome e turno.";
+                    err.textContent = "Preencha operador e turno.";
                     err.hidden = true;
                 }
                 if (lead) {
                     lead.innerHTML =
-                        "Informe <strong>nome</strong> e <strong>turno</strong> para <strong>iniciar</strong> a produção neste pedido.";
+                        "Selecione o <strong>operador</strong> cadastrado. O <strong>turno</strong> vem do cadastro (ajuste se precisar).";
                 }
                 m.hidden = false;
                 m.setAttribute("aria-hidden", "false");
-                if (nomeEl) setTimeout(function() { nomeEl.focus(); }, 80);
+                fetchOperadoresTablet(function() {
+                    preencherSelectOperador("modal-inicio");
+                    var selOp = document.getElementById("modal-inicio-operador");
+                    if (selOp) setTimeout(function() { selOp.focus(); }, 80);
+                });
             }
 
             function closeModalInicioOp() {
@@ -2763,10 +2976,23 @@ html {
             }
 
             function confirmModalInicioOp() {
-                var nome = String((document.getElementById("modal-inicio-nome") || {}).value || "").trim();
+                var selOp = document.getElementById("modal-inicio-operador");
                 var turno = String((document.getElementById("modal-inicio-turno") || {}).value || "").trim();
                 var err = document.getElementById("modal-inicio-op-err");
-                if (!nome || !turno) {
+                var v = String((selOp || {}).value || "").trim();
+                var payload = { operador: "", turno: turno, operador_perfil_id: null };
+                if (v === "__manual__") {
+                    payload.operador = String((document.getElementById("modal-inicio-nome-manual") || {}).value || "").trim();
+                } else if (v) {
+                    var pid = parseInt(v, 10);
+                    if (!isNaN(pid) && pid > 0) payload.operador_perfil_id = pid;
+                }
+                if (v === "__manual__") {
+                    if (!payload.operador || !turno) {
+                        if (err) err.hidden = false;
+                        return;
+                    }
+                } else if (!v || !turno) {
                     if (err) err.hidden = false;
                     return;
                 }
@@ -2776,7 +3002,7 @@ html {
                 fetch("/tablet/iniciar/" + MAQ, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ operador: nome, turno: turno })
+                    body: JSON.stringify(payload)
                 })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
@@ -2805,19 +3031,18 @@ html {
                 if (!p || p.finalizado) return;
                 var m = document.getElementById("modal-fim-op");
                 if (!m) return;
-                var maq = estado.maquina || {};
-                var nomeEl = document.getElementById("modal-fim-nome");
-                var turnoEl = document.getElementById("modal-fim-turno");
                 var err = document.getElementById("modal-fim-op-err");
-                if (nomeEl) nomeEl.value = String(maq.operador_atual || "").trim();
-                if (turnoEl) turnoEl.value = String(maq.turno_atual || "").trim();
                 if (err) {
-                    err.textContent = "Preencha nome e turno.";
+                    err.textContent = "Preencha operador e turno.";
                     err.hidden = true;
                 }
                 m.hidden = false;
                 m.setAttribute("aria-hidden", "false");
-                if (nomeEl) setTimeout(function() { nomeEl.focus(); }, 80);
+                fetchOperadoresTablet(function() {
+                    preencherSelectOperador("modal-fim");
+                    var selOp = document.getElementById("modal-fim-operador");
+                    if (selOp) setTimeout(function() { selOp.focus(); }, 80);
+                });
             }
 
             function closeModalFimOp() {
@@ -2832,33 +3057,47 @@ html {
                 if (!p || p.finalizado) return;
                 var ix = getCurrentOrderIndex();
                 if (ix < 0) return;
-                var nome = String((document.getElementById("modal-fim-nome") || {}).value || "").trim();
+                var selOp = document.getElementById("modal-fim-operador");
                 var turno = String((document.getElementById("modal-fim-turno") || {}).value || "").trim();
                 var err = document.getElementById("modal-fim-op-err");
-                if (!nome || !turno) {
+                var v = String((selOp || {}).value || "").trim();
+                var maq = estado.maquina || {};
+                var prodFim = toInt(maq.produzido, 0);
+                var payload = {
+                    operador_final: "",
+                    turno_final: turno,
+                    producao_final: prodFim,
+                    operador_perfil_id: null
+                };
+                if (v === "__manual__") {
+                    payload.operador_final = String((document.getElementById("modal-fim-nome-manual") || {}).value || "").trim();
+                } else if (v) {
+                    var pid2 = parseInt(v, 10);
+                    if (!isNaN(pid2) && pid2 > 0) payload.operador_perfil_id = pid2;
+                }
+                if (v === "__manual__") {
+                    if (!payload.operador_final || !turno) {
+                        if (err) err.hidden = false;
+                        return;
+                    }
+                } else if (!v || !turno) {
                     if (err) err.hidden = false;
                     return;
                 }
                 if (err) err.hidden = true;
-                var maq = estado.maquina || {};
-                var prodFim = toInt(maq.produzido, 0);
                 var cbtn = document.getElementById("modal-fim-op-confirm");
                 if (cbtn) cbtn.disabled = true;
                 fetch("/tablet/finalizar/" + MAQ + "/" + ix, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        operador_final: nome,
-                        turno_final: turno,
-                        producao_final: prodFim
-                    })
+                    body: JSON.stringify(payload)
                 })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
                         if (cbtn) cbtn.disabled = false;
                         if (!d || !d.ok) {
                             if (err) {
-                                err.textContent = "Não foi possível finalizar. Confira nome e turno.";
+                                err.textContent = "Não foi possível finalizar. Confira operador e turno.";
                                 err.hidden = false;
                             }
                             return;
@@ -2893,6 +3132,34 @@ html {
                 var ix = getCurrentOrderIndex();
                 if (ix < 0 || ix >= list.length) return null;
                 return list[ix];
+            }
+
+            /** Mesma lógica do backend (fingerprint_pedido_operacional) — detecta troca de OS. */
+            function pedidoFingerprintFromEstado() {
+                var list = estado.pedidos || [];
+                for (var i = 0; i < list.length; i++) {
+                    if (!list[i].finalizado) {
+                        var p = list[i];
+                        return (
+                            i +
+                            "|" +
+                            String(p.data || "").trim() +
+                            "|" +
+                            String(p.cod || "").trim() +
+                            "|" +
+                            String(p.cliente || "").trim() +
+                            "|" +
+                            String(p.quantidade != null ? p.quantidade : "")
+                        );
+                    }
+                }
+                return "__vazio__";
+            }
+            var _lastOrderFp = "";
+
+            function onPedidoOperacionalChanged() {
+                var inp = document.getElementById("apont-total");
+                if (inp) inp.value = "";
             }
 
             function renderLista() {
@@ -2943,9 +3210,8 @@ html {
                     var prodLine;
                     if (!prodRaw) {
                         prodLine = disp(prod.codigo);
-                        if (prod.medida && prod.medida !== "—") prodLine += " · " + disp(prod.medida);
                     } else {
-                        prodLine = disp(prodRaw);
+                        prodLine = disp(medidaComPeso(prodRaw));
                     }
 
                     var qVal = fmtInt(toInt(p.quantidade, 0));
@@ -3045,7 +3311,7 @@ html {
                 document.getElementById("f-cliente").textContent = p ? disp(p.cliente) : "—";
                 document.getElementById("f-codigo").textContent = p ? disp(codPed) : "—";
                 document.getElementById("f-fardos").textContent = p ? fmtInt(toInt(p.fardos, 0)) : "—";
-                document.getElementById("f-medida").textContent = p ? disp(prodParts.medida) : "—";
+                document.getElementById("f-medida").textContent = p ? disp(medidaComPeso(p.produto)) : "—";
                 document.getElementById("f-obs").textContent = p ? disp(p.descricao) : "—";
 
                 document.getElementById("f-quantidade").textContent = p ? fmtInt(toInt(p.quantidade, 0)) : "0";
@@ -3138,6 +3404,11 @@ html {
                         if (dotOn) dotOn.classList.remove("is-off");
                         estado = data;
                         var maq = estado.maquina || {};
+                        var nfp = pedidoFingerprintFromEstado();
+                        if (nfp !== _lastOrderFp) {
+                            _lastOrderFp = nfp;
+                            onPedidoOperacionalChanged();
+                        }
                         var mp = String(maq.motivo_parada || "").trim();
                         if (mp) stopReason = mp;
                         var next = String(maq.status || "PARADA").toUpperCase();
@@ -3242,6 +3513,10 @@ html {
             document.getElementById("modal-inicio-op-confirm").addEventListener("click", confirmModalInicioOp);
             document.getElementById("modal-fim-op-cancel").addEventListener("click", closeModalFimOp);
             document.getElementById("modal-fim-op-confirm").addEventListener("click", confirmModalFimOp);
+            var sOpIn = document.getElementById("modal-inicio-operador");
+            if (sOpIn) sOpIn.addEventListener("change", function() { aplicarTurnoDoOperadorSelecionado("modal-inicio"); });
+            var sOpFim = document.getElementById("modal-fim-operador");
+            if (sOpFim) sOpFim.addEventListener("change", function() { aplicarTurnoDoOperadorSelecionado("modal-fim"); });
             document.addEventListener("keydown", function(ev) {
                 if (ev.key !== "Escape") return;
                 var mp = document.getElementById("modal-parada");
@@ -3266,6 +3541,7 @@ html {
             });
 
             renderClock();
+            _lastOrderFp = pedidoFingerprintFromEstado();
             render();
             setInterval(renderClock, 1000);
             setInterval(function() {

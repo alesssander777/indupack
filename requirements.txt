@@ -3,3 +3,7 @@ uvicorn
 jinja2
 python-multipart
 itsdangerous
+sqlalchemy>=2.0
+openpyxl
+reportlab
+pillow
