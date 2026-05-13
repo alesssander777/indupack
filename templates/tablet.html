@@ -3132,6 +3132,10 @@ section.ref-actions.hmi-actions {
  * Volta fila à esquerda + barra superior numa linha + rodapé em linha — típico iPhone deitado.
  */
 @media (max-width: 932px) and (orientation: landscape) {
+    .ref-body {
+        touch-action: manipulation;
+    }
+
     .hmi-work.ref-work {
         display: grid;
         grid-template-columns: minmax(0, clamp(72px, 19vw, 150px)) minmax(0, 1fr);
@@ -3242,44 +3246,278 @@ section.ref-actions.hmi-actions {
         justify-content: space-between;
         align-items: center;
         text-align: left;
-        gap: 8px;
-        padding: 4px max(8px, env(safe-area-inset-left)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+        gap: 6px;
+        flex-shrink: 0;
+        padding: 2px max(6px, env(safe-area-inset-left)) max(2px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-right));
+        line-height: 1.2;
     }
 
     .ref-foot__tag,
     .ref-foot__conn {
-        font-size: 0.68rem;
+        font-size: 0.62rem;
+        margin: 0;
     }
 
+    .ref-foot__dot {
+        width: 9px;
+        height: 9px;
+    }
+
+    /* Ocupa só a altura útil do shell — evita “estourar” por baixo do footer */
+    .hmi-work.ref-work {
+        height: 100%;
+        max-height: 100%;
+    }
+
+    /*
+     * Miolo: sem rolagem vertical — conteúdo compactado (não empilhar os 3 comandos).
+     * O bloco ≤932 força 1 coluna nos botões; aqui sobrescrevemos para paisagem.
+     */
     .ref-main.hmi-main {
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-y: contain;
-        overscroll-behavior-x: none;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        gap: 4px;
-        /* Layout industrial real — áreas de toque amplas, sem miniaturização por zoom */
+        overflow-x: hidden !important;
+        overflow-y: hidden !important;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        padding: 3px 5px 3px 5px !important;
+        gap: 3px !important;
         min-height: 0;
+        flex: 1 1 auto;
+        max-height: 100%;
+    }
+
+    .ref-main.hmi-main > .ref-card.ref-kpi {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .ref-actions.hmi-actions {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 5px !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .hmi-cmd.ref-cmd {
-        min-height: max(56px, min(14dvh, 96px)) !important;
-        padding: 10px 8px !important;
+        min-height: clamp(46px, 11vmin, 58px) !important;
+        max-height: none !important;
+        padding: 5px 4px !important;
+        gap: 3px !important;
     }
 
     .hmi-cmd__ico svg {
-        width: 34px !important;
-        height: 34px !important;
+        width: 22px !important;
+        height: 22px !important;
     }
 
     .hmi-cmd__txt {
-        font-size: clamp(0.72rem, 2.2dvh, 0.88rem) !important;
+        font-size: clamp(0.58rem, 1.8vmin, 0.72rem) !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0.04em !important;
+    }
+
+    .ref-apont-actions {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 5px !important;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .ref-apont-actions__ctrl {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        gap: 5px !important;
+        align-items: stretch !important;
+    }
+
+    .ref-apont__input {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        min-height: 44px !important;
+        max-height: 52px !important;
+        padding: 6px 8px !important;
+        font-size: 0.95rem !important;
     }
 
     .ref-apont__btn {
-        min-height: max(52px, min(12dvh, 88px)) !important;
+        flex: 0 0 auto !important;
+        min-width: min(112px, 26vw) !important;
+        max-width: 34vw !important;
+        min-height: 44px !important;
+        max-height: 52px !important;
+        padding: 5px 6px !important;
+    }
+
+    .ref-apont__btn-text {
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
+    }
+
+    .ref-apont-progress {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        min-height: 36px !important;
+        padding: 4px 5px !important;
+        gap: 3px !important;
+    }
+
+    .ref-apont-progress__head {
+        gap: 2px !important;
+    }
+
+    .ref-apont-progress__widget {
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        gap: 4px !important;
+        align-items: center !important;
+    }
+
+    .ref-apont-progress__pct-big {
+        font-size: 1rem !important;
+    }
+
+    .ref-apont-progress__track {
+        height: 22px !important;
+    }
+
+    .ref-apont-progress__pct-in {
+        font-size: 0.7rem !important;
+    }
+
+    .ref-apont-block {
+        gap: 4px !important;
+    }
+
+    .ref-apont-terminal.ref-keypad {
+        padding: 4px 5px !important;
+    }
+
+    .ref-order-grid {
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: 3px !important;
+    }
+
+    .ref-mini {
+        padding: 3px 4px !important;
+    }
+
+    .ref-mini__k {
+        font-size: 0.52rem !important;
+        margin-bottom: 0 !important;
+        letter-spacing: 0.06em !important;
+    }
+
+    .ref-mini__v {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+    }
+
+    .ref-mini__v--qty {
+        font-size: 0.88rem !important;
+    }
+
+    .ref-mes-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 3px !important;
+    }
+
+    .ref-mes-cell {
+        padding: 3px 5px !important;
+    }
+
+    .ref-mes__k {
+        font-size: 0.52rem !important;
+        margin-bottom: 0 !important;
+    }
+
+    .ref-mes__v {
+        font-size: 0.72rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .ref-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 2px !important;
+    }
+
+    .ref-kpi-item {
+        min-height: 0 !important;
+        padding: 2px 3px 3px !important;
+    }
+
+    .ref-kpi-k {
+        font-size: 0.48rem !important;
+    }
+
+    .ref-kpi-v {
+        font-size: 0.68rem !important;
+    }
+
+    .ref-kpi-ico svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .ref-kpi-dia {
+        margin-top: 2px !important;
+        padding: 2px 5px !important;
+        gap: 4px !important;
+    }
+
+    .ref-kpi-dia__k {
+        font-size: 0.55rem !important;
+    }
+
+    .ref-kpi-dia__v {
+        font-size: 0.78rem !important;
+    }
+
+    .ref-obs {
+        padding: 3px 5px !important;
+        gap: 2px !important;
+        flex-shrink: 1;
+        min-height: 0;
+    }
+
+    .ref-obs__k {
+        font-size: 0.58rem !important;
+    }
+
+    .ref-obs__v {
+        font-size: 0.68rem !important;
+        line-height: 1.2 !important;
+        -webkit-line-clamp: 1 !important;
+    }
+
+    .hmi-status,
+    .op-hero {
+        padding: 4px 6px !important;
+    }
+
+    .ref-hero__ring {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    .ref-hero__title {
+        font-size: clamp(0.82rem, 2.8vmin, 1.05rem) !important;
+        line-height: 1.05 !important;
+    }
+
+    .ref-hero__sub {
+        font-size: clamp(0.58rem, 1.8vmin, 0.72rem) !important;
+        margin-top: 0 !important;
+    }
+
+    .hmi-side__empty {
+        padding: 6px 4px !important;
+        font-size: 0.68rem !important;
     }
 }
 
