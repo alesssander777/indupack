@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Operação — Máquina {{ id }} — {{ branding().nome_empresa }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,8 +12,25 @@
     <link rel="stylesheet" href="/static/indupack-global.css">
     {% from "macros.html" import indupack_brand_css %}
     {{ indupack_brand_css() }}
+    {% set _brand = branding() %}
 </head>
 <body class="ref-body">
+    <!-- Retrato em telas estreitas: bloqueio tipo terminal — operação só em paisagem -->
+    <div id="hmi-orient-gate" class="hmi-orient-gate" role="region" aria-label="Operação disponível somente com o dispositivo na horizontal">
+        <div class="hmi-orient-gate__inner">
+            <img class="hmi-orient-gate__logo" src="{{ _brand.logo_src }}" width="160" height="160" alt="" decoding="async" />
+            <p class="hmi-orient-gate__brand">INDUPACK</p>
+            <p class="hmi-orient-gate__msg">Gire o dispositivo para iniciar operação</p>
+            <div class="hmi-orient-gate__hint" aria-hidden="true">
+                <svg class="hmi-orient-gate__ico" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="38" y="22" width="44" height="76" rx="8" stroke="rgba(142,202,230,0.55)" stroke-width="4"/>
+                    <path d="M60 34v18M52 46h16" stroke="rgba(142,202,230,0.45)" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M88 58h18l-10-14M88 58l-10 14" stroke="#5eb0d6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="hmi-orient-gate__arrow"/>
+                </svg>
+                <span class="hmi-orient-gate__hint-txt">Paisagem obrigatória</span>
+            </div>
+        </div>
+    </div>
     <div class="ref-shell">
         <header class="ref-top" aria-label="Barra superior">
             <div class="ref-top__left">
@@ -452,6 +471,114 @@ body {
     max-width: 100%;
     min-width: 0;
     overflow-x: hidden;
+}
+
+/* Tela de orientação — retrato em viewport estreita (celular / tablet pequeno) */
+.hmi-orient-gate {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100050;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    font-family: var(--font);
+    text-align: center;
+    background:
+        radial-gradient(ellipse 90% 60% at 50% 0%, rgba(50, 120, 160, 0.18), transparent 55%),
+        linear-gradient(165deg, #060a10 0%, #0c1522 42%, #070b10 100%);
+    border: none;
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+.hmi-orient-gate__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 22rem;
+}
+
+.hmi-orient-gate__logo {
+    display: block;
+    width: auto;
+    max-width: min(200px, 48vw);
+    max-height: min(120px, 22vh);
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+}
+
+.hmi-orient-gate__brand {
+    margin: 0;
+    font-size: clamp(1.35rem, 5.5vw, 1.85rem);
+    font-weight: 900;
+    letter-spacing: 0.28em;
+    color: var(--mes-blue-mid);
+    text-transform: uppercase;
+}
+
+.hmi-orient-gate__msg {
+    margin: 0;
+    font-size: clamp(1rem, 3.8vw, 1.2rem);
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--mes-ink-dim);
+}
+
+.hmi-orient-gate__hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    color: var(--mes-muted);
+}
+
+.hmi-orient-gate__ico {
+    width: min(100px, 26vw);
+    height: auto;
+    overflow: visible;
+}
+
+.hmi-orient-gate__arrow {
+    animation: hmi-orient-nudge 2.2s ease-in-out infinite;
+    transform-origin: 60px 60px;
+}
+
+@keyframes hmi-orient-nudge {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    35% { transform: translateX(6px) rotate(-6deg); }
+    65% { transform: translateX(2px) rotate(4deg); }
+}
+
+.hmi-orient-gate__hint-txt {
+    font-size: clamp(0.72rem, 2.8vw, 0.82rem);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 932px) and (orientation: portrait) {
+    .hmi-orient-gate {
+        display: flex;
+    }
+
+    .ref-shell {
+        display: none !important;
+    }
+}
+
+.ref-body.ref-body--portrait-lock .hmi-orient-gate {
+    display: flex;
+}
+
+.ref-body.ref-body--portrait-lock .ref-shell {
+    display: none !important;
 }
 
 /* —— Topo integrado ao terminal —— */
@@ -2744,10 +2871,10 @@ section.ref-actions.hmi-actions {
 }
 
 /*
- * Uma tela só (sem rolar o miolo): telas tipo iPhone 12 Pro Max — compacta + zoom leve.
- * Deve ficar DEPOIS dos blocos touch para poder reduzir alturas mínimas.
+ * Paisagem em telefone: altura baixa — layout denso (sem zoom), terminal touch.
+ * Só aplica em paisagem; retrato estreito usa tela de orientação.
  */
-@media (max-width: 932px) and (max-height: 950px) {
+@media (max-width: 932px) and (max-height: 950px) and (orientation: landscape) {
     .hmi-side__head-hint,
     .hmi-side__note {
         display: none !important;
@@ -2788,6 +2915,19 @@ section.ref-actions.hmi-actions {
     .ref-top__week,
     .ref-top__date {
         font-size: 0.72rem;
+    }
+
+    /* Badge máquina no topo — em telas baixas ocupa altura demais */
+    .ref-top__machine {
+        padding: 4px 12px 5px;
+    }
+
+    .ref-top__mach-text {
+        gap: 2px;
+    }
+
+    .ref-top__mach-id {
+        font-size: clamp(1.05rem, 4vmin, 1.45rem) !important;
     }
 
     .hmi-status,
@@ -2975,21 +3115,171 @@ section.ref-actions.hmi-actions {
     }
 
     .ref-main.hmi-main {
-        overflow-y: hidden;
-        overscroll-behavior-y: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
         gap: 3px;
         padding-top: 3px;
         padding-bottom: 3px;
         justify-content: flex-start;
-        /* Safari iOS: reduz altura “lógica” do miolo para caber na viewport útil */
-        zoom: 0.78;
     }
 }
 
-/* Se ainda couber pouco, zoom um pouco menor em aparelhos muito baixos */
-@media (max-width: 932px) and (max-height: 780px) {
+/*
+ * Celular em PAISAGEM: o bloco ≤932 empilha fila+miolo e “come” quase toda a altura útil.
+ * Volta fila à esquerda + barra superior numa linha + rodapé em linha — típico iPhone deitado.
+ */
+@media (max-width: 932px) and (orientation: landscape) {
+    .hmi-work.ref-work {
+        display: grid;
+        grid-template-columns: minmax(0, clamp(72px, 19vw, 150px)) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        align-items: stretch;
+        min-height: 0;
+    }
+
+    .hmi-side.ref-side {
+        width: auto;
+        max-width: none;
+        max-height: none !important;
+        height: 100%;
+        min-height: 0;
+        align-self: stretch;
+        flex: unset;
+        border-bottom: none;
+        border-right: 1px solid var(--mes-line-strong);
+        box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+        padding: 4px 5px 6px 6px;
+    }
+
+    .hmi-side__head {
+        padding-bottom: 3px;
+        margin-bottom: 0;
+    }
+
+    .hmi-side__head-title {
+        font-size: 0.62rem;
+    }
+
+    .ref-top {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: max(3px, env(safe-area-inset-top)) 8px 4px 8px;
+        text-align: left;
+    }
+
+    .ref-top__left {
+        flex: 1 1 auto;
+        min-width: 0;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        gap: 6px;
+        width: auto;
+    }
+
+    .ref-top__trail {
+        display: none;
+    }
+
+    .ref-top__clock {
+        gap: 6px;
+    }
+
+    .ref-top__clock-ico {
+        display: none;
+    }
+
+    .ref-top__clock-text {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 10px;
+    }
+
+    .ref-top__time {
+        font-size: clamp(0.95rem, 2.8vmin, 1.2rem);
+        width: auto;
+    }
+
+    .ref-top__week,
+    .ref-top__date {
+        font-size: 0.62rem;
+    }
+
+    .ref-top__fila-link {
+        min-height: 34px !important;
+        padding: 0 10px !important;
+        font-size: 0.65rem !important;
+    }
+
+    .ref-top__machine {
+        flex-shrink: 0;
+        padding: 2px 10px 3px;
+    }
+
+    .ref-top__mach-text {
+        gap: 1px;
+    }
+
+    .ref-top__mach-lbl {
+        font-size: 0.48rem;
+        letter-spacing: 0.14em;
+    }
+
+    .ref-top__mach-id {
+        font-size: clamp(0.95rem, 3.2vmin, 1.2rem) !important;
+    }
+
+    .ref-foot {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        gap: 8px;
+        padding: 4px max(8px, env(safe-area-inset-left)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+    }
+
+    .ref-foot__tag,
+    .ref-foot__conn {
+        font-size: 0.68rem;
+    }
+
     .ref-main.hmi-main {
-        zoom: 0.72;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        gap: 4px;
+        /* Layout industrial real — áreas de toque amplas, sem miniaturização por zoom */
+        min-height: 0;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: max(56px, min(14dvh, 96px)) !important;
+        padding: 10px 8px !important;
+    }
+
+    .hmi-cmd__ico svg {
+        width: 34px !important;
+        height: 34px !important;
+    }
+
+    .hmi-cmd__txt {
+        font-size: clamp(0.72rem, 2.2dvh, 0.88rem) !important;
+    }
+
+    .ref-apont__btn {
+        min-height: max(52px, min(12dvh, 88px)) !important;
     }
 }
 
@@ -3014,6 +3304,37 @@ section.ref-actions.hmi-actions {
             if (window.visualViewport) {
                 window.visualViewport.addEventListener("resize", indupackTabletVH, { passive: true });
             }
+
+            /* Retrato estreito: sincroniza classe + aria (Safari / Chrome iOS às vezes atrasam orientation) */
+            function indupackOrientLock() {
+                try {
+                    var mq = window.matchMedia("(max-width: 932px) and (orientation: portrait)");
+                    var gate = document.getElementById("hmi-orient-gate");
+                    var shell = document.querySelector(".ref-shell");
+                    function apply() {
+                        var lock = mq.matches;
+                        document.body.classList.toggle("ref-body--portrait-lock", lock);
+                        if (gate) {
+                            gate.setAttribute("aria-hidden", lock ? "false" : "true");
+                        }
+                        if (shell) {
+                            shell.setAttribute("aria-hidden", lock ? "true" : "false");
+                        }
+                    }
+                    apply();
+                    if (mq.addEventListener) {
+                        mq.addEventListener("change", apply);
+                    } else if (mq.addListener) {
+                        mq.addListener(apply);
+                    }
+                    window.addEventListener("orientationchange", function () {
+                        setTimeout(apply, 0);
+                        setTimeout(apply, 200);
+                        setTimeout(apply, 500);
+                    });
+                } catch (e) {}
+            }
+            indupackOrientLock();
 
             var MAQ = {{ id }};
             var bootEl = document.getElementById("tablet-boot");
