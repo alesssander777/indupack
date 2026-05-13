@@ -1658,7 +1658,8 @@ section.ref-actions.hmi-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    box-sizing: border-box;
     background: rgba(4, 8, 14, 0.82);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -1669,8 +1670,9 @@ section.ref-actions.hmi-actions {
 }
 
 .hmi-modal {
-    width: min(980px, calc(100vw - 32px));
-    max-width: 100%;
+    width: 100%;
+    max-width: min(980px, 100%);
+    min-width: 0;
     max-height: min(92dvh, 900px);
     overflow: auto;
     overflow-x: hidden;
@@ -2525,6 +2527,219 @@ section.ref-actions.hmi-actions {
     .ref-apont__btn {
         min-height: 52px;
         font-size: clamp(0.85rem, 2.8vmin, 1.05rem);
+    }
+}
+
+/* ========== iPhone / Android estreito: layout REAL empilhado, zero scroll horizontal ========== */
+@supports (height: 100svh) {
+    .ref-shell {
+        max-height: min(100dvh, 100svh);
+    }
+}
+
+@media (max-width: 932px) {
+    .ref-body {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+    }
+
+    .ref-shell {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        height: 100%;
+        max-height: 100%;
+        max-height: 100dvh;
+        max-height: calc(var(--vh-tab, 1dvh) * 100);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        overflow: hidden;
+    }
+
+    .hmi-work.ref-work {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .hmi-side.ref-side {
+        flex: 0 1 auto;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        max-height: min(36vh, 260px);
+        border-right: none;
+        border-bottom: 1px solid var(--mes-line-strong);
+    }
+
+    .ref-main.hmi-main {
+        flex: 1 1 auto;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-x: none;
+        padding: 8px max(10px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
+    }
+
+    .ref-top {
+        min-width: 0;
+        max-width: 100%;
+        padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+    }
+
+    .ref-top__left {
+        width: 100%;
+        max-width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .ref-top__clock-text {
+        min-width: 0;
+        align-items: center;
+        text-align: center;
+    }
+
+    .ref-order-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .ref-mini {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .ref-mini--qty {
+        order: -1;
+    }
+
+    .ref-mes-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .ref-kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .ref-kpi-item {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .ref-kpi-dia {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .ref-actions.hmi-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .ref-hero__grid {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .ref-hero__gear {
+        display: none;
+    }
+
+    .ref-hero__title {
+        letter-spacing: 0.02em;
+    }
+
+    .ref-apont-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .ref-apont-actions__ctrl {
+        flex-direction: column;
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .ref-apont__input,
+    .ref-apont__btn {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .ref-apont-progress {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .ref-apont-progress__widget {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+    }
+
+    .ref-apont-progress__pct-wrap {
+        justify-self: center;
+    }
+
+    .ref-foot {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 6px;
+        width: 100%;
+        max-width: 100%;
+        padding: 8px max(12px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+    }
+
+    :root {
+        --card-pad-x: 12px;
+        --card-pad-y: 9px;
+        --stack-gap: 8px;
+    }
+}
+
+@media (max-width: 932px) and (pointer: coarse) {
+    .ref-apont__btn {
+        min-height: 56px;
+        font-size: clamp(0.92rem, 4vmin, 1.1rem);
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: 72px;
+        padding: 12px 10px;
+    }
+
+    .hmi-cmd__ico svg {
+        width: 36px;
+        height: 36px;
     }
 }
 
