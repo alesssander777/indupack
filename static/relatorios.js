@@ -386,12 +386,25 @@
             window.location.href = "/api/relatorios/export.pdf?" + q();
         });
         document.getElementById("rel-mail-btn").addEventListener("click", function () {
+            function mailToastCopy(j, fallbackErr) {
+                if (!j || typeof j !== "object") return fallbackErr;
+                if (j.ok && j.mensagem) return j.mensagem;
+                if (j.mensagem) return j.mensagem;
+                var map = {
+                    email_invalido: "Informe um endereço de e-mail válido.",
+                    smtp_nao_configurado:
+                        "O envio por e-mail ainda não está disponível. Solicite ao administrador do sistema a configuração do serviço de notificações.",
+                    smtp_falha:
+                        "Não foi possível enviar o relatório no momento. Tente novamente em instantes ou contate o administrador do sistema.",
+                };
+                return map[j.erro] || fallbackErr;
+            }
             var em = document.getElementById("rel-mail-to").value.trim();
             var toast = document.getElementById("rel-mail-toast");
             toast.textContent = "";
             toast.className = "rel-toast";
             if (!em || em.indexOf("@") < 0) {
-                toast.textContent = "Informe um e-mail válido.";
+                toast.textContent = "Informe um endereço de e-mail válido.";
                 toast.className = "rel-toast rel-toast--err";
                 return;
             }
@@ -419,12 +432,15 @@
                 })
                 .then(function (x) {
                     document.getElementById("rel-mail-btn").disabled = false;
-                    toast.textContent = x.j.mensagem || x.j.erro || "Resposta sem mensagem.";
-                    toast.className = "rel-toast " + (x.j.ok ? "rel-toast--ok" : "rel-toast--err");
+                    var fallback =
+                        "Não foi possível concluir o envio. Tente novamente ou contate o administrador do sistema.";
+                    toast.textContent = mailToastCopy(x.j, fallback);
+                    toast.className = "rel-toast " + (x.j && x.j.ok ? "rel-toast--ok" : "rel-toast--err");
                 })
                 .catch(function () {
                     document.getElementById("rel-mail-btn").disabled = false;
-                    toast.textContent = "Falha de rede ao enviar.";
+                    toast.textContent =
+                        "Não foi possível contatar o servidor. Verifique sua conexão e tente novamente.";
                     toast.className = "rel-toast rel-toast--err";
                 });
         });
@@ -451,16 +467,25 @@
         }
     }
 
-    function loadAgendaStub() {
-        fetch("/api/relatorios/agendamento-stub", { credentials: "same-origin" })
-            .then(function (r) {
-                return r.json();
-            })
-            .then(function (j) {
-                var pre = document.getElementById("rel-agenda-json");
-                if (pre) pre.textContent = JSON.stringify(j.estrutura_futura || {}, null, 2);
-            })
-            .catch(function () {});
+    function wireAgendaPrefs() {
+        function syncGroup(checkboxId, groupName) {
+            var cb = document.getElementById(checkboxId);
+            var nodes = document.querySelectorAll('[data-agenda-group="' + groupName + '"]');
+            function apply() {
+                var on = cb && cb.checked;
+                nodes.forEach(function (el) {
+                    el.disabled = !on;
+                    el.setAttribute("aria-disabled", on ? "false" : "true");
+                });
+            }
+            if (cb) {
+                cb.addEventListener("change", apply);
+                apply();
+            }
+        }
+        syncGroup("rel-agenda-diario", "diario");
+        syncGroup("rel-agenda-semanal", "semanal");
+        syncGroup("rel-agenda-mensal", "mensal");
     }
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -473,6 +498,7 @@
         tickClock();
         setConnStatus(null, "Conectando…");
         setInterval(tickClock, 1000);
+        wireAgendaPrefs();
         loadMeta()
             .then(function (m) {
                 populateMeta(m);
@@ -482,6 +508,5 @@
                 setConnStatus(false, "Erro de acesso");
                 alert("Sem permissão ou erro ao carregar filtros.");
             });
-        loadAgendaStub();
     });
 })();

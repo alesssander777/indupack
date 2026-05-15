@@ -246,8 +246,9 @@
 
         <footer class="rel-footer-card">
             <div class="rel-footer-card__main">
-                <h3 class="rel-footer-card__title">Enviar PDF por e-mail</h3>
-                <p class="rel-footer-card__txt">Requer SMTP no servidor (<code>INDUPACK_SMTP_HOST</code>, <code>INDUPACK_SMTP_FROM</code>).</p>
+                <h3 class="rel-footer-card__title">Enviar relatório por e-mail</h3>
+                <p class="rel-footer-card__txt">Gere o PDF do período filtrado e envie diretamente para a caixa de entrada informada.</p>
+                <p class="rel-mail-notice">Se o envio não estiver disponível no momento, entre em contato com o administrador do sistema para habilitar as notificações por e-mail na sua empresa.</p>
                 <div class="rel-footer-card__row">
                     <label class="rel-field rel-field--inline"><span class="rel-field__l">Destino</span><input type="email" id="rel-mail-to" placeholder="gestao@empresa.com.br" autocomplete="email"></label>
                     <button type="button" class="rel-btn rel-btn--mail" id="rel-mail-btn">Enviar</button>
@@ -255,8 +256,63 @@
                 <div id="rel-mail-toast" class="rel-toast" role="status"></div>
             </div>
             <div class="rel-footer-card__side">
-                <h4 class="rel-footer-card__st">Agendamento (futuro)</h4>
-                <pre id="rel-agenda-json" class="rel-footer-pre" aria-label="Estrutura JSON"></pre>
+                <h4 class="rel-footer-card__st">Agendamento de relatórios</h4>
+                <p class="rel-agenda-lead">Defina periodicidade e horários para envio automático dos relatórios por e-mail.</p>
+                <p class="rel-agenda-hint">Preferências visuais — a confirmação no servidor será disponibilizada em atualização futura do módulo.</p>
+                <div class="rel-agenda-panel" aria-label="Preferências de agendamento">
+                    <fieldset class="rel-agenda-block">
+                        <label class="rel-agenda-head">
+                            <input type="checkbox" id="rel-agenda-diario" class="rel-agenda-check" autocomplete="off">
+                            <span class="rel-agenda-head__txt">Enviar relatório diário</span>
+                        </label>
+                        <div class="rel-agenda-fields">
+                            <label class="rel-agenda-field">
+                                <span class="rel-agenda-field__l">Horário</span>
+                                <input type="time" id="rel-agenda-diario-hora" class="rel-agenda-input" value="07:30" data-agenda-group="diario" autocomplete="off">
+                            </label>
+                        </div>
+                    </fieldset>
+                    <fieldset class="rel-agenda-block">
+                        <label class="rel-agenda-head">
+                            <input type="checkbox" id="rel-agenda-semanal" class="rel-agenda-check" autocomplete="off">
+                            <span class="rel-agenda-head__txt">Enviar relatório semanal</span>
+                        </label>
+                        <div class="rel-agenda-fields rel-agenda-fields--split">
+                            <label class="rel-agenda-field">
+                                <span class="rel-agenda-field__l">Dia</span>
+                                <select id="rel-agenda-semanal-dia" class="rel-agenda-select" data-agenda-group="semanal" autocomplete="off">
+                                    <option value="1" selected>Segunda-feira</option>
+                                    <option value="2">Terça-feira</option>
+                                    <option value="3">Quarta-feira</option>
+                                    <option value="4">Quinta-feira</option>
+                                    <option value="5">Sexta-feira</option>
+                                    <option value="6">Sábado</option>
+                                    <option value="0">Domingo</option>
+                                </select>
+                            </label>
+                            <label class="rel-agenda-field">
+                                <span class="rel-agenda-field__l">Horário</span>
+                                <input type="time" id="rel-agenda-semanal-hora" class="rel-agenda-input" value="08:00" data-agenda-group="semanal" autocomplete="off">
+                            </label>
+                        </div>
+                    </fieldset>
+                    <fieldset class="rel-agenda-block">
+                        <label class="rel-agenda-head">
+                            <input type="checkbox" id="rel-agenda-mensal" class="rel-agenda-check" autocomplete="off">
+                            <span class="rel-agenda-head__txt">Enviar relatório mensal</span>
+                        </label>
+                        <div class="rel-agenda-fields rel-agenda-fields--split">
+                            <label class="rel-agenda-field">
+                                <span class="rel-agenda-field__l">Dia do mês</span>
+                                <input type="number" id="rel-agenda-mensal-dia" class="rel-agenda-input rel-agenda-input--num" min="1" max="28" value="1" data-agenda-group="mensal" autocomplete="off">
+                            </label>
+                            <label class="rel-agenda-field">
+                                <span class="rel-agenda-field__l">Horário</span>
+                                <input type="time" id="rel-agenda-mensal-hora" class="rel-agenda-input" value="07:00" data-agenda-group="mensal" autocomplete="off">
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
             </div>
         </footer>
     </div>

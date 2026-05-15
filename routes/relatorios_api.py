@@ -117,7 +117,14 @@ async def relatorios_email_pdf(request: Request):
         body = {}
     dest = str(body.get("email") or "").strip()
     if not dest or "@" not in dest:
-        return JSONResponse({"ok": False, "erro": "email_invalido"}, status_code=400)
+        return JSONResponse(
+            {
+                "ok": False,
+                "erro": "email_invalido",
+                "mensagem": "Informe um endereço de e-mail válido.",
+            },
+            status_code=400,
+        )
     flt = parse_filtros(
         body.get("inicio"),
         body.get("fim"),

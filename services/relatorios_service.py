@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 from collections import defaultdict
 from dataclasses import dataclass
@@ -17,6 +18,8 @@ from database.models import Apontamento
 from storage.state import dados_maquinas
 
 _ROOT = Path(__file__).resolve().parent.parent
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -749,7 +752,7 @@ def enviar_pdf_email(destinatario: str, assunto: str, corpo: str, pdf_bytes: byt
         return {
             "ok": False,
             "erro": "smtp_nao_configurado",
-            "mensagem": "Defina INDUPACK_SMTP_HOST e INDUPACK_SMTP_FROM no servidor para habilitar o envio.",
+            "mensagem": "O envio por e-mail ainda não está disponível. Solicite ao administrador do sistema a configuração do serviço de notificações.",
         }
     import smtplib
     from email.message import EmailMessage
@@ -775,9 +778,14 @@ def enviar_pdf_email(destinatario: str, assunto: str, corpo: str, pdf_bytes: byt
             if user:
                 smtp.login(user, pw)
             smtp.send_message(msg)
-        return {"ok": True, "mensagem": "E-mail enviado com sucesso."}
+        return {"ok": True, "mensagem": "Relatório enviado por e-mail com sucesso."}
     except Exception as exc:
-        return {"ok": False, "erro": "smtp_falha", "mensagem": str(exc)}
+        _log.warning("Falha ao enviar relatório por e-mail", exc_info=True)
+        return {
+            "ok": False,
+            "erro": "smtp_falha",
+            "mensagem": "Não foi possível enviar o relatório no momento. Tente novamente em instantes ou contate o administrador do sistema.",
+        }
 
 
 def stub_agendamento_relatorios() -> dict[str, Any]:
