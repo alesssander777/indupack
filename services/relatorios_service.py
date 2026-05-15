@@ -643,6 +643,32 @@ def _pdf_fmt_br_int(n: Any) -> str:
         return "—"
 
 
+def _pdf_pct_gestao(val: Any, cap: float = 100.0) -> str:
+    """Percentual para leitura gerencial: valores acima do teto aparecem como meta superada."""
+    try:
+        x = float(val)
+    except (TypeError, ValueError):
+        return "—"
+    x = max(0.0, x)
+    if x > cap:
+        return "≥100 %"
+    txt = f"{round(x, 1)}".replace(".", ",")
+    return f"{txt} %"
+
+
+def _pdf_ritmo_meta_chart_vals(raw_list: list[Any]) -> list[float]:
+    """Barras ‘ritmo vs meta’ em escala 0–100 % para visual estável."""
+    out: list[float] = []
+    for raw in raw_list:
+        try:
+            x = float(raw)
+        except (TypeError, ValueError):
+            x = 0.0
+        x = max(0.0, x)
+        out.append(min(x, 100.0))
+    return out
+
+
 class _PdfDrawingFlowable(Flowable):
     """Flowable que desenha um reportlab.graphics.shapes.Drawing."""
 
@@ -666,7 +692,15 @@ class _PdfDrawingFlowable(Flowable):
         return []
 
 
-def _pdf_vertical_bars(labels: list[str], values: list[float], title: str, w_pt: float = 480, h_pt: float = 175) -> Any:
+def _pdf_vertical_bars(
+    labels: list[str],
+    values: list[float],
+    title: str,
+    w_pt: float = 480,
+    h_pt: float = 175,
+    *,
+    value_axis_max: float | None = None,
+) -> Any:
     from reportlab.graphics.charts.barcharts import VerticalBarChart
     from reportlab.graphics.shapes import Drawing, String
     from reportlab.lib import colors as rl_colors
@@ -693,17 +727,26 @@ def _pdf_vertical_bars(labels: list[str], values: list[float], title: str, w_pt:
     bc.categoryAxis.strokeWidth = 0.5
     bc.categoryAxis.labels.fontName = "Helvetica"
     bc.categoryAxis.labels.fontSize = 7
-    bc.categoryAxis.labels.angle = 30
+    bc.categoryAxis.labels.angle = 28
     bc.valueAxis.strokeColor = rl_colors.HexColor("#cbd5e1")
     bc.valueAxis.labels.fontName = "Helvetica"
     bc.valueAxis.labels.fontSize = 7
     bc.valueAxis.valueMin = 0
+    if value_axis_max is not None:
+        bc.valueAxis.valueMax = value_axis_max
     bc.groupSpacing = 6
     d.add(bc)
     return d
 
 
-def _pdf_horizontal_bars(labels: list[str], values: list[float], title: str, w_pt: float = 480, row_h: float = 16) -> Any:
+def _pdf_horizontal_bars(
+    labels: list[str],
+    values: list[float],
+    title: str,
+    w_pt: float = 480,
+    row_h: float = 16,
+    valores_exibicao: list[str] | None = None,
+) -> Any:
     from reportlab.graphics.shapes import Drawing, Rect, String
     from reportlab.lib import colors as rl_colors
 
@@ -719,7 +762,7 @@ def _pdf_horizontal_bars(labels: list[str], values: list[float], title: str, w_p
     h_pt = head + len(labels) * row_h + 14
     d = Drawing(w_pt, h_pt)
     d.add(String(8, h_pt - 12, title, fontSize=9, fillColor=rl_colors.HexColor("#0f2744"), fontName="Helvetica-Bold"))
-    bar_max = w_pt - 150
+    bar_max = w_pt - 168
     x0 = 130
     y_top = h_pt - head - 8
     for i, (lb, v) in enumerate(zip(labels, vals)):
@@ -727,7 +770,11 @@ def _pdf_horizontal_bars(labels: list[str], values: list[float], title: str, w_p
         bw = bar_max * (v / mx)
         d.add(String(4, y - 2, lb, fontSize=7.5, fillColor=muted, fontName="Helvetica"))
         d.add(Rect(x0, y - 10, bw, 9, fillColor=navy, strokeColor=rl_colors.HexColor("#0c2744"), strokeWidth=0.3))
-        d.add(String(x0 + bar_max + 4, y - 2, _pdf_fmt_br_int(int(v)) if v == int(v) else f"{v:.1f}", fontSize=7, fillColor=muted))
+        if valores_exibicao is not None and i < len(valores_exibicao):
+            vx = valores_exibicao[i]
+        else:
+            vx = _pdf_fmt_br_int(int(v)) if v == int(v) else f"{v:.1f}"
+        d.add(String(x0 + bar_max + 4, y - 2, vx[:14], fontSize=7, fillColor=muted, fontName="Helvetica"))
     return d
 
 
@@ -756,16 +803,16 @@ def _pdf_make_header_table(
         left_cells.append(Paragraph("", styles["hdr_white"]))
     left_cells.append(
         Paragraph(
-            f"<font size=18><b>{empresa}</b></font><br/><font size=11>MES · Relatório executivo industrial</font>",
+            f"<font size=18><b>{empresa}</b></font><br/><font size=11 color='#bae6fd'>Painel executivo · Produção industrial</font>",
             styles["hdr_white"],
         )
     )
 
     meta_html = (
-        f"<font size=9><b>{titulo_pdf}</b></font><br/><br/>"
-        f"<font size=8>Período analisado<br/><b>{periodo_txt}</b></font><br/><br/>"
-        f"<font size=8>Emissão<br/><b>{gerado_txt}</b></font><br/><br/>"
-        f"<font size=8>Status<br/><b>{status_txt}</b></font>"
+        f"<font size=10><b>{titulo_pdf}</b></font><br/><br/>"
+        f"<font size=8 color='#cbd5e1'>Período analisado<br/><b><font color='#f8fafc'>{periodo_txt}</font></b></font><br/><br/>"
+        f"<font size=8 color='#cbd5e1'>Emitido em<br/><b><font color='#f8fafc'>{gerado_txt}</font></b></font><br/><br/>"
+        f"<font size=8 color='#cbd5e1'>Situação<br/><b><font color='#f8fafc'>{status_txt}</font></b></font>"
     )
     right_cell = Paragraph(meta_html, styles["hdr_white_right"])
 
@@ -813,28 +860,26 @@ def _pdf_kpi_cards(payload: dict[str, Any], styles: dict[str, Any], tw: float) -
     best_o_val = _pdf_fmt_br_int((po[0] or {}).get("quantidade")) if po else "—"
 
     prod = _pdf_fmt_br_int(kp.get("producao_total"))
-    oee = kp.get("oee_proxy_pct")
-    oee_s = f"{oee} %" if oee is not None else "—"
-    disp = kp.get("disponibilidade_proxy_pct")
-    disp_s = f"{disp} %" if disp is not None else "—"
+    oee_s = _pdf_pct_gestao(kp.get("oee_proxy_pct"))
+    disp_s = _pdf_pct_gestao(kp.get("disponibilidade_proxy_pct"))
     par = str(kp.get("tempo_parado_fmt") or "—")
 
     def card(label: str, value: str, sub: str = "") -> Any:
-        lab = Paragraph(f"<font size=7 color='#64748b'>{label}</font>", styles["card_lab"])
-        val = Paragraph(f"<font size=16><b>{value}</b></font>", styles["card_val"])
+        lab = Paragraph(f"<font size=8 color='#475569'><b>{label}</b></font>", styles["card_lab"])
+        val = Paragraph(f"<font size=19><b>{value}</b></font>", styles["card_val"])
         rows: list[list[Any]] = [[lab], [val]]
         if sub:
-            rows.append([Paragraph(f"<font size=9 color='#475569'>{sub}</font>", styles["card_lab"])])
+            rows.append([Paragraph(f"<font size=8 color='#64748b'>{sub}</font>", styles["card_lab"])])
         inner = Table(rows, colWidths=[tw / 3 - 18])
         inner.setStyle(
             TableStyle(
                 [
                     ("BACKGROUND", (0, 0), (-1, -1), rl_colors.HexColor("#f4f7fb")),
                     ("BOX", (0, 0), (-1, -1), 0.9, rl_colors.HexColor("#cbd5e1")),
-                    ("TOPPADDING", (0, 0), (-1, -1), 10),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ("TOPPADDING", (0, 0), (-1, -1), 12),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 11),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 11),
                 ]
             )
         )
@@ -844,9 +889,9 @@ def _pdf_kpi_cards(payload: dict[str, Any], styles: dict[str, Any], tw: float) -
     r1 = Table(
         [
             [
-                card("Produção total", prod, ""),
-                card("OEE (proxy)", oee_s, ""),
-                card("Disponibilidade", disp_s, ""),
+                card("Produção total no período", prod, "Volume consolidado"),
+                card("Eficiência operacional", oee_s, "Síntese do desempenho no período"),
+                card("Tempo disponível (plantas)", disp_s, "Estimativa de utilização do tempo útil"),
             ]
         ],
         colWidths=[w3, w3, w3],
@@ -856,9 +901,9 @@ def _pdf_kpi_cards(payload: dict[str, Any], styles: dict[str, Any], tw: float) -
     r2 = Table(
         [
             [
-                card("Tempo parado (total)", par, ""),
-                card("Melhor máquina", best_m_name[:20], best_m_val + " un." if best_m_val != "—" else "—"),
-                card("Melhor operador", best_o_name[:20], best_o_val + " un." if best_o_val != "—" else "—"),
+                card("Tempo total em parada", par, "Somatório no período filtrado"),
+                card("Equipamento líder em volume", best_m_name[:20], best_m_val + " un." if best_m_val != "—" else "Sem dados"),
+                card("Operador em destaque", best_o_name[:20], best_o_val + " un." if best_o_val != "—" else "Sem dados"),
             ]
         ],
         colWidths=[w3, w3, w3],
@@ -948,16 +993,53 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
             leading=12,
         )
     )
-    styles.add(ParagraphStyle(name="SecTitle", parent=styles["Heading2"], textColor=rl_colors.HexColor("#0c2744"), fontSize=12, spaceAfter=8, fontName="Helvetica-Bold"))
-    styles.add(ParagraphStyle(name="card_lab", parent=styles["Normal"], alignment=0, leading=10))
-    styles.add(ParagraphStyle(name="card_val", parent=styles["Normal"], alignment=0, leading=20))
+    styles.add(
+        ParagraphStyle(
+            name="SecTitle",
+            parent=styles["Heading2"],
+            textColor=rl_colors.HexColor("#0c2744"),
+            fontSize=13,
+            leading=16,
+            spaceAfter=6,
+            spaceBefore=2,
+            fontName="Helvetica-Bold",
+        )
+    )
+    styles.add(ParagraphStyle(name="SecLead", parent=styles["Normal"], fontSize=9, leading=12, textColor=rl_colors.HexColor("#64748b"), spaceAfter=10))
+    styles.add(ParagraphStyle(name="card_lab", parent=styles["Normal"], alignment=0, leading=11))
+    styles.add(ParagraphStyle(name="card_val", parent=styles["Normal"], alignment=0, leading=22))
+    styles.add(
+        ParagraphStyle(
+            name="MetaNoteTitle",
+            parent=styles["Normal"],
+            fontSize=7.5,
+            leading=10,
+            textColor=rl_colors.HexColor("#94a3b8"),
+            fontName="Helvetica-Bold",
+            spaceBefore=18,
+            spaceAfter=5,
+        )
+    )
+    styles.add(
+        ParagraphStyle(
+            name="MetaNoteBody",
+            parent=styles["Normal"],
+            fontSize=6.5,
+            leading=9,
+            textColor=rl_colors.HexColor("#94a3b8"),
+            spaceAfter=3,
+        )
+    )
 
     hdr_map = {
         "hdr_white": styles["HdrWhite"],
         "hdr_white_right": styles["HdrWhiteRight"],
         "sec": styles["SecTitle"],
+        "sec_lead": styles["SecLead"],
         "card_lab": styles["card_lab"],
         "card_val": styles["card_val"],
+        "meta_title": styles["MetaNoteTitle"],
+        "meta_body": styles["MetaNoteBody"],
     }
 
     logo_p = _resolve_logo_path()
@@ -972,7 +1054,7 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
     gerado_txt = now.strftime("%d/%m/%Y   %H:%M")
     ok = payload.get("ok", True)
     aviso = str(payload.get("aviso") or "").strip()
-    status_txt = "Consolidado" if ok and not aviso else ("Atenção — " + aviso[:80] if aviso else "Consolidado")
+    status_txt = "Dados consolidados" if ok and not aviso else ("Revisar indicadores — " + aviso[:72] if aviso else "Dados consolidados")
 
     story: list[Any] = []
     story.append(
@@ -988,8 +1070,13 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
         )
     )
     story.append(Spacer(1, 0.55 * cm))
-    story.append(Paragraph("<b>Indicadores executivos</b>", hdr_map["sec"]))
-    story.append(Spacer(1, 0.25 * cm))
+    story.append(Paragraph("<b>Panorama da produção</b>", hdr_map["sec"]))
+    story.append(
+        Paragraph(
+            "Visão rápida para supervisão e gestão: volume produzido, ritmo operacional, paradas e destaques por equipamento e equipe.",
+            hdr_map["sec_lead"],
+        )
+    )
     story.append(_pdf_kpi_cards(payload, hdr_map, tw))
     story.append(Spacer(1, 0.55 * cm))
 
@@ -998,9 +1085,9 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
     if cmq:
         labs = [str(x.get("nome") or "")[:16] for x in cmq[:10]]
         vals = [float(x.get("producao") or 0) for x in cmq[:10]]
-        story.append(Paragraph("<b>Produção por máquina</b>", hdr_map["sec"]))
-        story.append(Spacer(1, 0.15 * cm))
-        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs, vals, "Volume produzido no período (unidades)", tw, 168)))
+        story.append(Paragraph("<b>Onde mais se produziu</b>", hdr_map["sec"]))
+        story.append(Paragraph("Comparativo de volume entre equipamentos no período.", hdr_map["sec_lead"]))
+        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs, vals, "Volume por equipamento", tw, 158)))
         story.append(Spacer(1, 0.35 * cm))
         rows_m = []
         for x in cmq[:18]:
@@ -1010,12 +1097,12 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
                     str(x.get("setor") or "—")[:18],
                     _pdf_fmt_br_int(x.get("producao")),
                     str(x.get("tempo_parado_fmt") or "—"),
-                    f"{x.get('eficiencia_est')}%",
+                    _pdf_pct_gestao(x.get("eficiencia_est")),
                 ]
             )
         story.append(
             _pdf_ent_table(
-                ["Máquina", "Setor", "Produção", "Tempo parado", "Eficiência est."],
+                ["Equipamento", "Área / setor", "Produção", "Tempo em parada", "Ritmo vs meta"],
                 rows_m,
                 [tw * 0.26, tw * 0.18, tw * 0.18, tw * 0.20, tw * 0.18],
             )
@@ -1026,36 +1113,43 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
     if prod_top:
         labs_p = [str(x.get("nome") or "")[:18] for x in prod_top[:8]]
         vals_p = [float(x.get("quantidade") or 0) for x in prod_top[:8]]
-        story.append(Paragraph("<b>Distribuição — produtos em destaque</b>", hdr_map["sec"]))
-        story.append(Spacer(1, 0.15 * cm))
-        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs_p, vals_p, "Quantidade por produto (unidades)", tw, 168)))
+        story.append(Paragraph("<b>Produtos que mais rodaram</b>", hdr_map["sec"]))
+        story.append(Paragraph("Principais referências em quantidade movimentada.", hdr_map["sec_lead"]))
+        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs_p, vals_p, "Distribuição por produto", tw, 158)))
         story.append(Spacer(1, 0.35 * cm))
 
     if cmq:
+        story.append(Spacer(1, 0.45 * cm))
         labs_e = [str(x.get("nome") or "")[:14] for x in cmq[:10]]
-        vals_e = [float(x.get("eficiencia_est") or 0) for x in cmq[:10]]
-        story.append(Paragraph("<b>Eficiência estimada por máquina</b>", hdr_map["sec"]))
-        story.append(Spacer(1, 0.15 * cm))
-        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs_e, vals_e, "Eficiência vs meta referência (%)", tw, 155)))
+        vals_e_cap = _pdf_ritmo_meta_chart_vals([x.get("eficiencia_est") for x in cmq[:10]])
+        story.append(Paragraph("<b>Ritmo de produção frente à meta</b>", hdr_map["sec"]))
+        story.append(
+            Paragraph(
+                "Percentual em escala até 100 % no gráfico. Na tabela anterior, valores acima da meta aparecem como ≥100 %.",
+                hdr_map["sec_lead"],
+            )
+        )
+        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs_e, vals_e_cap, "Ritmo vs meta por equipamento (%)", tw, 148, value_axis_max=100)))
 
     dia = payload.get("diario") or {}
     par_mot = dia.get("paradas_motivo") or []
     if par_mot:
         story.append(Spacer(1, 0.45 * cm))
-        story.append(Paragraph("<b>Paradas — tempo por motivo</b>", hdr_map["sec"]))
-        story.append(Spacer(1, 0.15 * cm))
+        story.append(Paragraph("<b>Principais motivos de parada</b>", hdr_map["sec"]))
+        story.append(Paragraph("Tempo acumulado por tipo de motivo registrado.", hdr_map["sec_lead"]))
         labs_s = [str(x.get("motivo") or x.get("nome") or "") for x in par_mot[:12]]
         vals_s = [float(x.get("duracao_s") or 0) for x in par_mot[:12]]
-        story.append(_PdfDrawingFlowable(_pdf_horizontal_bars(labs_s, vals_s, "Somatório de duração (segundos)", tw)))
+        disp_par = [str(x.get("duracao_fmt") or "—")[:12] for x in par_mot[:12]]
+        story.append(_PdfDrawingFlowable(_pdf_horizontal_bars(labs_s, vals_s, "Comparativo relativo de tempo em parada", tw, valores_exibicao=disp_par)))
         story.append(Spacer(1, 0.25 * cm))
         rows_p = [[str(x.get("motivo") or "—")[:36], str(x.get("duracao_fmt") or "—")] for x in par_mot[:14]]
-        story.append(_pdf_ent_table(["Motivo / tipo", "Tempo parado"], rows_p, [tw * 0.72, tw * 0.28]))
+        story.append(_pdf_ent_table(["Motivo registrado", "Tempo total"], rows_p, [tw * 0.72, tw * 0.28]))
 
     det = (payload.get("detalhado") or [])[:35]
     if det:
         story.append(Spacer(1, 0.45 * cm))
-        story.append(Paragraph("<b>Apontamentos — amostra analítica</b>", hdr_map["sec"]))
-        story.append(Spacer(1, 0.15 * cm))
+        story.append(Paragraph("<b>Histórico de produção</b>", hdr_map["sec"]))
+        story.append(Paragraph("Registros recentes no período (amostra para conferência).", hdr_map["sec_lead"]))
         rows_d = []
         for d in det:
             rows_d.append(
@@ -1067,14 +1161,14 @@ def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
                     str(d.get("horario") or "")[:16],
                 ]
             )
-        story.append(_pdf_ent_table(["Produto", "Operador", "Máquina", "Quantidade", "Horário"], rows_d, [tw * 0.30, tw * 0.18, tw * 0.18, tw * 0.14, tw * 0.20]))
+        story.append(_pdf_ent_table(["Produto", "Operador", "Equipamento", "Quantidade", "Horário"], rows_d, [tw * 0.30, tw * 0.18, tw * 0.18, tw * 0.14, tw * 0.20]))
 
     notas = payload.get("notas_metodologia") or []
     if notas:
-        story.append(Spacer(1, 0.45 * cm))
-        story.append(Paragraph("<b>Metodologia e observações</b>", hdr_map["sec"]))
-        for line in notas[:6]:
-            story.append(Paragraph(f"<font size=8 color='#64748b'>• {line}</font>", styles["Normal"]))
+        story.append(Spacer(1, 0.35 * cm))
+        story.append(Paragraph("Referências do relatório", hdr_map["meta_title"]))
+        for line in notas[:5]:
+            story.append(Paragraph(line, hdr_map["meta_body"]))
 
     emit_iso = now.strftime("%Y-%m-%d %H:%M:%S")
 
