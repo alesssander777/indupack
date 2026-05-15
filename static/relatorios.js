@@ -25,6 +25,38 @@
         return { inicio: fmtISO(ini), fim: fmtISO(fim) };
     }
 
+    function tickClock() {
+        var now = new Date();
+        var clk = document.getElementById("rel-live-clock");
+        var dt = document.getElementById("rel-live-date");
+        var ts = now.toLocaleTimeString("pt-BR", { hour12: false });
+        if (clk) {
+            clk.textContent = ts;
+            try {
+                clk.setAttribute("datetime", now.toISOString());
+            } catch (e) {}
+        }
+        if (dt) {
+            dt.textContent = now.toLocaleDateString("pt-BR", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+            });
+        }
+    }
+
+    function setConnStatus(ok, msg) {
+        var el = document.getElementById("rel-conn-status");
+        if (!el) return;
+        var txt = el.querySelector(".rel-online-pill__txt");
+        var offline = ok === false;
+        var busy = ok === null;
+        el.classList.toggle("is-offline", offline);
+        el.classList.toggle("is-busy", busy);
+        if (txt) txt.textContent = msg || (offline ? "Offline" : busy ? "Atualizando…" : "Sincronizado");
+    }
+
     function qs() {
         var p = new URLSearchParams();
         p.set("inicio", document.getElementById("rel-inicio").value);
@@ -58,6 +90,8 @@
         }
         var root = getComputedStyle(document.documentElement);
         var col = root.getPropertyValue("--ip-brand-primary").trim() || "#1a4a62";
+        var gridCol = "rgba(148, 163, 184, 0.12)";
+        var tickCol = "#94a3b8";
         state.charts[canvasId] = new Chart(el.getContext("2d"), {
             type: "bar",
             data: {
@@ -67,7 +101,8 @@
                         label: label,
                         data: values,
                         backgroundColor: colorHex || col,
-                        borderRadius: 4,
+                        borderRadius: 6,
+                        borderSkipped: false,
                     },
                 ],
             },
@@ -76,8 +111,17 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { maxRotation: 45, minRotation: 0 } },
-                    y: { beginAtZero: true },
+                    x: {
+                        ticks: { color: tickCol, maxRotation: 45, minRotation: 0, font: { size: 10 } },
+                        grid: { color: gridCol },
+                        border: { color: gridCol },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: tickCol, font: { size: 10 } },
+                        grid: { color: gridCol },
+                        border: { color: gridCol },
+                    },
                 },
             },
         });
@@ -226,7 +270,7 @@
         var valsM = (sem.comparacao_maquinas || []).map(function (x) {
             return Number(x.producao) || 0;
         });
-        barChart("chart-maq", labelsM, valsM, "Produção", "#1a4a62");
+        barChart("chart-maq", labelsM, valsM, "Produção", "rgba(56, 189, 248, 0.85)");
 
         var labelsP = (sem.produtos_top || []).slice(0, 8).map(function (x) {
             return (x.nome || "—").slice(0, 18);
@@ -236,7 +280,7 @@
             .map(function (x) {
                 return Number(x.quantidade) || 0;
             });
-        barChart("chart-prod", labelsP, valsP, "Qtd", "#0f766e");
+        barChart("chart-prod", labelsP, valsP, "Qtd", "rgba(52, 211, 153, 0.82)");
 
         var notes = document.getElementById("rel-notes");
         if (notes) {
@@ -268,6 +312,7 @@
 
     function loadData() {
         document.getElementById("rel-loading").hidden = false;
+        setConnStatus(null, "Atualizando…");
         return fetch("/api/relatorios/dados?" + qs(), { credentials: "same-origin" })
             .then(function (r) {
                 if (r.status === 401) {
@@ -280,10 +325,12 @@
             .then(function (j) {
                 document.getElementById("rel-loading").hidden = true;
                 state.payload = j;
+                setConnStatus(true, "Sincronizado");
                 renderAll();
             })
             .catch(function () {
                 document.getElementById("rel-loading").hidden = true;
+                setConnStatus(false, "Sem conexão");
                 alert("Não foi possível carregar os relatórios.");
             });
     }
@@ -423,12 +470,16 @@
         wireTabs();
         wireFilters();
         wireExports();
+        tickClock();
+        setConnStatus(null, "Conectando…");
+        setInterval(tickClock, 1000);
         loadMeta()
             .then(function (m) {
                 populateMeta(m);
                 return loadData();
             })
             .catch(function () {
+                setConnStatus(false, "Erro de acesso");
                 alert("Sem permissão ou erro ao carregar filtros.");
             });
         loadAgendaStub();
