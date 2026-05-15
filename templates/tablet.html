@@ -70,11 +70,11 @@
             <aside class="hmi-side ref-side" aria-label="Fila de pedidos (somente leitura)">
                 <div class="hmi-side__head">
                     <span class="hmi-side__head-title">Fila</span>
-                    <span class="hmi-side__head-hint">Sequência automática — não é possível alterar a ordem aqui</span>
+                    <span class="hmi-side__head-hint hmi-sec--desktop-only">Sequência automática — não é possível alterar a ordem aqui</span>
                 </div>
                 <div id="list-pedidos" class="hmi-queue" role="list"></div>
                 <p id="list-empty" class="hmi-side__empty" hidden>Sem pedidos na programação.</p>
-                <p class="hmi-side__note">A ordem liberada para operação é sempre a <strong>primeira pendente</strong> na sequência definida pela programação.</p>
+                <p class="hmi-side__note hmi-sec--desktop-only">A ordem liberada para operação é sempre a <strong>primeira pendente</strong> na sequência definida pela programação.</p>
             </aside>
 
             <main class="ref-main hmi-main">
@@ -107,7 +107,7 @@
                 <!-- 2 Pedido — linha única referência -->
                 <section class="ref-card ref-order" aria-label="Pedido atual">
                     <div class="ref-order-grid">
-                        <div class="ref-mini">
+                        <div class="ref-mini hmi-sec--desktop-only">
                             <span class="ref-mini__k">Cliente</span>
                             <span id="f-cliente" class="ref-mini__v">—</span>
                         </div>
@@ -115,7 +115,7 @@
                             <span class="ref-mini__k">Código</span>
                             <span id="f-codigo" class="ref-mini__v">—</span>
                         </div>
-                        <div class="ref-mini">
+                        <div class="ref-mini hmi-sec--desktop-only">
                             <span class="ref-mini__k">Fardos</span>
                             <span id="f-fardos" class="ref-mini__v">—</span>
                         </div>
@@ -131,7 +131,7 @@
                 </section>
 
                 <!-- 3 Observações -->
-                <section class="ref-card ref-obs" aria-label="Observações">
+                <section class="ref-card ref-obs hmi-sec--desktop-only" aria-label="Observações">
                     <span class="ref-obs__k">OBSERVAÇÕES</span>
                     <p id="f-obs" class="ref-obs__v">—</p>
                 </section>
@@ -139,21 +139,21 @@
                 <!-- 4 Operação — 4 cartões -->
                 <section class="ref-card ref-mes" aria-label="Informações operacionais">
                     <div class="ref-mes-grid">
-                        <div class="ref-mes-cell">
+                        <div class="ref-mes-cell hmi-sec--desktop-only">
                             <span class="ref-mes__k">Status da máquina</span>
                             <span id="hmi-mid-status" class="ref-mes__v ref-mes__v--status"><span class="hmi-dot" id="hmi-mid-dot"></span><span id="hmi-mid-status-txt">PARADA</span></span>
                         </div>
-                        <div class="ref-mes-cell">
+                        <div class="ref-mes-cell ref-mes-cell--mob-op">
                             <span class="ref-mes__k">Operador / Turno</span>
                             <span id="hmi-op-combo" class="ref-mes__v">—</span>
                             <span id="hmi-op-operador" class="sr-only" aria-hidden="true">—</span>
                             <span id="hmi-op-turno" class="sr-only" aria-hidden="true">—</span>
                         </div>
-                        <div class="ref-mes-cell">
+                        <div class="ref-mes-cell hmi-sec--desktop-only">
                             <span class="ref-mes__k">Tempo parado</span>
                             <span id="hmi-op-tempo-parado" class="ref-mes__v ref-mes__mono">00:00:00</span>
                         </div>
-                        <div class="ref-mes-cell">
+                        <div class="ref-mes-cell hmi-sec--desktop-only">
                             <span class="ref-mes__k">Motivo parado</span>
                             <span id="hmi-motivo-parada" class="ref-mes__v ref-mes__motivo">—</span>
                         </div>
@@ -210,7 +210,7 @@
                 </section>
 
                 <!-- 7 KPI -->
-                <section class="ref-card ref-kpi" aria-label="Indicadores">
+                <section class="ref-card ref-kpi hmi-sec--desktop-only" aria-label="Indicadores">
                     <div class="ref-kpi-grid">
                         <div class="ref-kpi-item">
                             <span class="ref-kpi-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 8h6v6"/></svg></span>
@@ -251,7 +251,7 @@
             </main>
         </div>
 
-        <footer class="ref-foot" aria-label="Rodapé">
+        <footer class="ref-foot ref-foot--mobile-slim" aria-label="Rodapé">
             <span id="ft-prod-time" class="hmi-hidden" hidden>00:00:00</span>
             <p class="ref-foot__tag">Sistema de Gestão Industrial</p>
             <p class="ref-foot__conn">
@@ -2871,10 +2871,10 @@ section.ref-actions.hmi-actions {
 }
 
 /*
- * Paisagem em telefone: altura baixa — layout denso (sem zoom), terminal touch.
- * Só aplica em paisagem; retrato estreito usa tela de orientação.
+ * Paisagem em tablet (altura maior) — compactação extra.
+ * Exclui celular (ex.: iPhone 12 Pro Max ~428px de altura lógica em paisagem).
  */
-@media (max-width: 932px) and (max-height: 950px) and (orientation: landscape) {
+@media (max-width: 932px) and (min-height: 480px) and (max-height: 950px) and (orientation: landscape) {
     .hmi-side__head-hint,
     .hmi-side__note {
         display: none !important;
@@ -3521,26 +3521,673 @@ section.ref-actions.hmi-actions {
     }
 }
 
+/*
+ * Ajuste fino — iPhone 12 Pro Max e similares (paisagem ~926×428, Safari ~380–432px úteis).
+ * Deve ficar por último para refinar sem quebrar toque (mín. 44px nos comandos).
+ */
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 440px) {
+    :root {
+        --stack-gap: 2px;
+        --card-pad-x: 4px;
+        --card-pad-y: 2px;
+    }
+
+    .ref-shell {
+        max-height: calc(var(--vh-tab, 1dvh) * 100);
+        height: calc(var(--vh-tab, 1dvh) * 100);
+    }
+
+    .ref-top {
+        padding: max(2px, env(safe-area-inset-top)) 6px 2px 6px !important;
+        gap: 4px !important;
+    }
+
+    .ref-top__left {
+        gap: 5px !important;
+    }
+
+    .ref-top__fila-link {
+        min-height: 32px !important;
+        padding: 0 8px !important;
+        font-size: 0.6rem !important;
+    }
+
+    .ref-top__time {
+        font-size: clamp(0.86rem, 2.35vmin, 1rem) !important;
+    }
+
+    .ref-top__week,
+    .ref-top__date {
+        font-size: 0.56rem !important;
+    }
+
+    .ref-top__machine {
+        padding: 1px 8px 2px !important;
+    }
+
+    .ref-top__mach-lbl {
+        font-size: 0.44rem !important;
+    }
+
+    .ref-top__mach-id {
+        font-size: clamp(0.86rem, 2.5vmin, 1.02rem) !important;
+    }
+
+    .ref-foot {
+        padding: 1px max(5px, env(safe-area-inset-left)) max(1px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-right)) !important;
+        gap: 4px !important;
+        min-height: 0;
+    }
+
+    .ref-foot__tag,
+    .ref-foot__conn {
+        font-size: 0.54rem !important;
+    }
+
+    .ref-foot__dot {
+        width: 7px;
+        height: 7px;
+        border-width: 1px;
+    }
+
+    .hmi-side.ref-side {
+        padding: 3px 4px 4px 5px !important;
+    }
+
+    .hmi-side__head {
+        padding-bottom: 2px !important;
+    }
+
+    .hmi-side__head-title {
+        font-size: 0.58rem !important;
+    }
+
+    .ref-main.hmi-main {
+        gap: 2px !important;
+        padding: 2px 4px !important;
+    }
+
+    .hmi-status,
+    .op-hero {
+        padding: 3px 5px !important;
+    }
+
+    .ref-hero__grid {
+        gap: 4px 6px !important;
+    }
+
+    .ref-hero__ring {
+        width: 26px !important;
+        height: 26px !important;
+        border-width: 2px;
+    }
+
+    .ref-hero__title {
+        font-size: clamp(0.76rem, 2.35vmin, 0.96rem) !important;
+    }
+
+    .ref-hero__sub {
+        font-size: clamp(0.52rem, 1.6vmin, 0.66rem) !important;
+    }
+
+    .ref-order-grid {
+        gap: 2px !important;
+    }
+
+    .ref-mini {
+        padding: 2px 3px !important;
+    }
+
+    .ref-mini__k {
+        font-size: 0.46rem !important;
+    }
+
+    .ref-mini__v {
+        font-size: 0.66rem !important;
+    }
+
+    .ref-mini__v--qty {
+        font-size: 0.8rem !important;
+    }
+
+    .ref-obs {
+        padding: 2px 4px !important;
+        gap: 1px !important;
+    }
+
+    .ref-obs__k {
+        font-size: 0.54rem !important;
+    }
+
+    .ref-obs__v {
+        font-size: 0.64rem !important;
+    }
+
+    .ref-mes-grid {
+        gap: 2px !important;
+    }
+
+    .ref-mes-cell {
+        padding: 2px 4px !important;
+    }
+
+    .ref-mes__k {
+        font-size: 0.48rem !important;
+    }
+
+    .ref-mes__v {
+        font-size: 0.66rem !important;
+    }
+
+    .ref-apont-terminal.ref-keypad {
+        padding: 3px 4px !important;
+    }
+
+    .ref-apont-block {
+        gap: 2px !important;
+    }
+
+    .ref-apont-actions,
+    .ref-apont-actions__ctrl {
+        gap: 4px !important;
+    }
+
+    .ref-apont__input {
+        min-height: 42px !important;
+        max-height: 46px !important;
+        padding: 5px 7px !important;
+        font-size: 0.88rem !important;
+    }
+
+    .ref-apont__btn {
+        min-height: 42px !important;
+        max-height: 46px !important;
+        min-width: min(96px, 23vw) !important;
+        padding: 4px 5px !important;
+    }
+
+    .ref-apont__btn-text {
+        font-size: 0.54rem !important;
+    }
+
+    .ref-apont-progress {
+        min-height: 30px !important;
+        padding: 2px 4px !important;
+        gap: 2px !important;
+    }
+
+    .ref-apont-progress__htitle,
+    .ref-apont-progress__hratio {
+        font-size: 0.5rem !important;
+    }
+
+    .ref-apont-progress__pct-big {
+        font-size: 0.88rem !important;
+    }
+
+    .ref-apont-progress__track {
+        height: 17px !important;
+    }
+
+    .ref-apont-progress__ticks {
+        font-size: 0.48rem;
+        margin-bottom: 1px;
+    }
+
+    .ref-apont-progress__pct-in {
+        font-size: 0.62rem !important;
+    }
+
+    .ref-actions.hmi-actions {
+        gap: 4px !important;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: 44px !important;
+        padding: 4px 3px !important;
+        gap: 2px !important;
+    }
+
+    .hmi-cmd__ico svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    .hmi-cmd__txt {
+        font-size: clamp(0.54rem, 1.55vmin, 0.66rem) !important;
+    }
+
+    .ref-kpi-grid {
+        gap: 2px !important;
+    }
+
+    .ref-kpi-item {
+        padding: 1px 3px 2px !important;
+    }
+
+    .ref-kpi-k {
+        font-size: 0.44rem !important;
+    }
+
+    .ref-kpi-v {
+        font-size: 0.64rem !important;
+    }
+
+    .ref-kpi-ico svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+
+    .ref-kpi-dia {
+        margin-top: 1px !important;
+        padding: 1px 4px !important;
+        gap: 3px !important;
+    }
+
+    .ref-kpi-dia__k {
+        font-size: 0.48rem !important;
+    }
+
+    .ref-kpi-dia__v {
+        font-size: 0.7rem !important;
+    }
+
+    .ref-main.hmi-main > .ref-card.ref-kpi {
+        flex: 0 1 auto;
+    }
+
+    .hmi-side__empty {
+        padding: 4px 3px !important;
+        font-size: 0.62rem !important;
+    }
+}
+
+/* Safari iOS: barra de endereço reduz altura útil (~12–24px a menos que 428) */
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 400px) {
+    .ref-top {
+        padding-top: max(1px, env(safe-area-inset-top)) !important;
+    }
+
+    .ref-foot {
+        padding-bottom: max(0px, env(safe-area-inset-bottom)) !important;
+    }
+
+    .ref-main.hmi-main {
+        gap: 1px !important;
+        padding: 1px 3px !important;
+    }
+
+    .hmi-cmd.ref-cmd {
+        min-height: 42px !important;
+    }
+
+    .ref-apont__input,
+    .ref-apont__btn {
+        min-height: 40px !important;
+        max-height: 44px !important;
+    }
+}
+
+/* ========== Modo mobile operacional (celular paisagem — experiência MES no chão) ========== */
+.ref-body--mobile-op .hmi-sec--desktop-only {
+    display: none !important;
+}
+
+.ref-body--mobile-op .ref-shell {
+    height: calc(var(--vh-tab, 1dvh) * 100);
+    max-height: calc(var(--vh-tab, 1dvh) * 100);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.ref-body--mobile-op .ref-top__week,
+.ref-body--mobile-op .ref-top__date,
+.ref-body--mobile-op .ref-top__clock-ico,
+.ref-body--mobile-op .ref-hero__gear {
+    display: none !important;
+}
+
+.ref-body--mobile-op .ref-top {
+    padding: max(2px, env(safe-area-inset-top)) 6px 2px 6px !important;
+    gap: 4px !important;
+}
+
+.ref-body--mobile-op .ref-top__fila-link {
+    min-height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 0.6rem !important;
+}
+
+.ref-body--mobile-op .ref-top__time {
+    font-size: clamp(0.84rem, 2.2vmin, 0.98rem) !important;
+}
+
+.ref-body--mobile-op .ref-top__machine {
+    padding: 1px 8px 2px !important;
+}
+
+.ref-body--mobile-op .ref-top__mach-id {
+    font-size: clamp(0.84rem, 2.4vmin, 1rem) !important;
+}
+
+.ref-body--mobile-op .ref-foot--mobile-slim .ref-foot__tag {
+    display: none !important;
+}
+
+.ref-body--mobile-op .ref-foot--mobile-slim {
+    justify-content: flex-end;
+    padding: 0 max(6px, env(safe-area-inset-right)) max(1px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)) !important;
+    min-height: 0;
+    border-top-width: 0;
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.ref-body--mobile-op .ref-foot__conn {
+    font-size: 0.52rem !important;
+    gap: 5px;
+}
+
+.ref-body--mobile-op .ref-foot__dot {
+    width: 7px;
+    height: 7px;
+}
+
+.ref-body--mobile-op .hmi-work.ref-work {
+    display: grid !important;
+    grid-template-columns: minmax(0, 68px) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+}
+
+.ref-body--mobile-op .hmi-side.ref-side {
+    padding: 3px 4px 4px 5px !important;
+    max-height: none !important;
+}
+
+.ref-body--mobile-op .hmi-side__head-title {
+    font-size: 0.56rem !important;
+    letter-spacing: 0.1em;
+}
+
+.ref-body--mobile-op .hmi-queue {
+    gap: 2px;
+}
+
+.ref-body--mobile-op .hmi-queue__card {
+    padding: 3px 4px !important;
+    gap: 2px !important;
+    min-height: 0 !important;
+}
+
+.ref-body--mobile-op .hmi-queue__num {
+    font-size: 0.68rem !important;
+}
+
+.ref-body--mobile-op .hmi-queue__badge {
+    font-size: 0.46rem !important;
+    padding: 1px 3px !important;
+}
+
+.ref-body--mobile-op .hmi-queue__summary {
+    font-size: 0.58rem !important;
+    line-height: 1.2;
+    -webkit-line-clamp: 1;
+    margin: 0;
+}
+
+.ref-body--mobile-op .hmi-queue__foot {
+    display: none !important;
+}
+
+.ref-body--mobile-op .hmi-queue__card--mob-op .hmi-queue__qty-inline {
+    font-size: 0.62rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink);
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.ref-body--mobile-op .hmi-queue__card--mob-op .hmi-queue__top {
+    gap: 3px;
+    width: 100%;
+}
+
+.ref-body--mobile-op .ref-main.hmi-main {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    gap: 2px !important;
+    padding: 2px 4px !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    overscroll-behavior: none;
+    min-height: 0;
+    max-height: 100%;
+}
+
+.ref-body--mobile-op .ref-main.hmi-main > * {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    min-height: 0;
+}
+
+.ref-body--mobile-op .ref-main.hmi-main > .ref-card.ref-kpi,
+.ref-body--mobile-op .ref-main.hmi-main > .ref-card.ref-obs {
+    display: none !important;
+}
+
+.ref-body--mobile-op .hmi-status,
+.ref-body--mobile-op .op-hero {
+    padding: 3px 6px !important;
+}
+
+.ref-body--mobile-op .ref-hero__grid {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 4px 6px !important;
+}
+
+.ref-body--mobile-op .ref-hero__ring {
+    width: 26px !important;
+    height: 26px !important;
+    border-width: 2px;
+}
+
+.ref-body--mobile-op .ref-hero__title {
+    font-size: clamp(0.76rem, 2.2vmin, 0.94rem) !important;
+    line-height: 1.05;
+}
+
+.ref-body--mobile-op .ref-hero__sub {
+    font-size: clamp(0.52rem, 1.5vmin, 0.66rem) !important;
+    margin: 0;
+    -webkit-line-clamp: 1;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ref-body--mobile-op .ref-order-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 0.72fr) !important;
+    gap: 2px !important;
+}
+
+.ref-body--mobile-op .ref-mini {
+    padding: 2px 4px !important;
+}
+
+.ref-body--mobile-op .ref-mini__k {
+    font-size: 0.46rem !important;
+    margin-bottom: 0 !important;
+    letter-spacing: 0.05em;
+}
+
+.ref-body--mobile-op .ref-mini__v {
+    font-size: 0.66rem !important;
+    line-height: 1.12;
+}
+
+.ref-body--mobile-op .ref-mini__v--qty {
+    font-size: 0.82rem !important;
+    color: var(--mes-ink);
+}
+
+.ref-body--mobile-op .ref-mes {
+    padding: 2px 4px !important;
+}
+
+.ref-body--mobile-op .ref-mes-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+}
+
+.ref-body--mobile-op .ref-mes-cell--mob-op {
+    padding: 3px 5px !important;
+    background: var(--mes-cell);
+    border: 1px solid var(--mes-cell-border);
+    border-radius: var(--r-sm);
+}
+
+.ref-body--mobile-op .ref-mes-cell--mob-op .ref-mes__k {
+    font-size: 0.48rem !important;
+    margin-bottom: 0;
+}
+
+.ref-body--mobile-op .ref-mes-cell--mob-op .ref-mes__v {
+    font-size: 0.72rem !important;
+    font-weight: 800;
+}
+
+.ref-body--mobile-op .ref-apont-terminal.ref-keypad {
+    padding: 3px 4px !important;
+}
+
+.ref-body--mobile-op .ref-apont-block {
+    gap: 2px !important;
+}
+
+.ref-body--mobile-op .ref-apont-actions,
+.ref-body--mobile-op .ref-apont-actions__ctrl {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    align-items: stretch !important;
+}
+
+.ref-body--mobile-op .ref-apont__input {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 44px !important;
+    max-height: 48px !important;
+    padding: 5px 7px !important;
+    font-size: 0.9rem !important;
+}
+
+.ref-body--mobile-op .ref-apont__btn {
+    flex: 0 0 auto !important;
+    min-width: min(92px, 22vw) !important;
+    min-height: 44px !important;
+    max-height: 48px !important;
+    padding: 4px 5px !important;
+}
+
+.ref-body--mobile-op .ref-apont__btn-text {
+    font-size: 0.52rem !important;
+    line-height: 1.08;
+}
+
+.ref-body--mobile-op .ref-apont-progress {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+    padding: 2px 4px !important;
+    gap: 2px !important;
+}
+
+.ref-body--mobile-op .ref-apont-progress__htitle {
+    font-size: 0.48rem !important;
+}
+
+.ref-body--mobile-op .ref-apont-progress__hratio {
+    font-size: 0.52rem !important;
+}
+
+.ref-body--mobile-op .ref-apont-progress__widget {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 3px !important;
+    align-items: center !important;
+}
+
+.ref-body--mobile-op .ref-apont-progress__pct-big {
+    font-size: 0.86rem !important;
+}
+
+.ref-body--mobile-op .ref-apont-progress__track {
+    height: 16px !important;
+}
+
+.ref-body--mobile-op .ref-apont-progress__ticks {
+    display: none;
+}
+
+.ref-body--mobile-op .ref-apont-progress__pct-in {
+    font-size: 0.6rem !important;
+}
+
+.ref-body--mobile-op .ref-apont__hint:not(:empty) {
+    font-size: 0.52rem;
+    padding: 2px 0 0;
+    line-height: 1.2;
+    -webkit-line-clamp: 1;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ref-body--mobile-op .ref-actions.hmi-actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    flex: 0 0 auto !important;
+    margin-top: auto;
+}
+
+.ref-body--mobile-op .hmi-cmd.ref-cmd {
+    min-height: 48px !important;
+    max-height: 54px !important;
+    padding: 5px 3px !important;
+    gap: 2px !important;
+}
+
+.ref-body--mobile-op .hmi-cmd__ico svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.ref-body--mobile-op .hmi-cmd__txt {
+    font-size: clamp(0.54rem, 1.5vmin, 0.66rem) !important;
+    line-height: 1.1 !important;
+}
+
 </style>
 
     <script>
         (function() {
-            /* Altura útil ao girar o celular (corrige 100vh travado no iOS/Android). */
-            function indupackTabletVH() {
+            /* Altura útil + modo mobile (corrige 100vh no iOS/Android). */
+            function indupackTabletLayoutSync() {
                 var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
                 if (!h || h < 200) {
                     h = window.innerHeight;
                 }
                 document.documentElement.style.setProperty("--vh-tabl", (h * 0.01) + "px");
-            }
-            indupackTabletVH();
-            window.addEventListener("resize", indupackTabletVH, { passive: true });
-            window.addEventListener("orientationchange", function () {
-                setTimeout(indupackTabletVH, 50);
-                setTimeout(indupackTabletVH, 300);
-            });
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener("resize", indupackTabletVH, { passive: true });
+                if (typeof indupackMobileOpMode === "function") {
+                    indupackMobileOpMode();
+                }
             }
 
             /* Retrato estreito: sincroniza classe + aria (Safari / Chrome iOS às vezes atrasam orientation) */
@@ -3573,6 +4220,51 @@ section.ref-actions.hmi-actions {
                 } catch (e) {}
             }
             indupackOrientLock();
+
+            /* Modo mobile operacional: celular em paisagem — painel simplificado */
+            var _mobileOpWasOn = false;
+            function indupackMobileOpMode() {
+                try {
+                    var portrait = window.matchMedia("(max-width: 932px) and (orientation: portrait)").matches;
+                    var landscapePhone = window.matchMedia("(max-width: 932px) and (orientation: landscape)").matches;
+                    var touch =
+                        window.matchMedia("(pointer: coarse)").matches ||
+                        window.matchMedia("(hover: none)").matches;
+                    var smallLongSide = Math.min(window.screen.width, window.screen.height) <= 480;
+                    var on = landscapePhone && !portrait && (touch || smallLongSide);
+                    document.body.classList.toggle("ref-body--mobile-op", on);
+                    var shell = document.querySelector(".ref-shell");
+                    if (shell) {
+                        shell.setAttribute("data-ui-mode", on ? "mobile-op" : "desktop");
+                    }
+                    if (on !== _mobileOpWasOn) {
+                        _mobileOpWasOn = on;
+                        if (typeof window.__indupackRenderLista === "function") {
+                            window.__indupackRenderLista();
+                        }
+                    }
+                    return on;
+                } catch (e) {
+                    return false;
+                }
+            }
+            indupackTabletLayoutSync();
+            window.addEventListener("resize", indupackTabletLayoutSync, { passive: true });
+            window.addEventListener("pageshow", indupackTabletLayoutSync, { passive: true });
+            window.addEventListener("orientationchange", function () {
+                setTimeout(indupackTabletLayoutSync, 0);
+                setTimeout(indupackTabletLayoutSync, 50);
+                setTimeout(indupackTabletLayoutSync, 200);
+                setTimeout(indupackTabletLayoutSync, 450);
+                setTimeout(indupackTabletLayoutSync, 800);
+            });
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener("resize", indupackTabletLayoutSync, { passive: true });
+                window.visualViewport.addEventListener("scroll", indupackTabletLayoutSync, { passive: true });
+            }
+            if (window.matchMedia("(max-width: 932px) and (orientation: landscape)").addEventListener) {
+                window.matchMedia("(max-width: 932px) and (orientation: landscape)").addEventListener("change", indupackTabletLayoutSync);
+            }
 
             var MAQ = {{ id }};
             var bootEl = document.getElementById("tablet-boot");
@@ -4244,30 +4936,53 @@ section.ref-actions.hmi-actions {
                     var summaryRaw = cli && prodLine ? cli + " · " + prodLine : (cli || prodLine || "—");
                     if (summaryRaw.length > 54) summaryRaw = summaryRaw.slice(0, 53) + "…";
 
+                    var mobileOp = document.body.classList.contains("ref-body--mobile-op");
+                    if (mobileOp && summaryRaw.length > 36) {
+                        summaryRaw = summaryRaw.slice(0, 35) + "…";
+                    }
+
                     var row = document.createElement("div");
                     row.className = classes.join(" ");
                     row.setAttribute("role", "listitem");
                     if (isCurrent) row.setAttribute("aria-current", "true");
-                    row.innerHTML =
-                        '<span class="hmi-queue__card">' +
-                        '<span class="hmi-queue__top">' +
-                        '<span class="hmi-queue__num">#' +
-                        String(idx + 1) +
-                        '</span><span class="hmi-queue__badges">' +
-                        badgeHtml +
-                        "</span></span>" +
-                        '<p class="hmi-queue__summary">' +
-                        escHtml(summaryRaw) +
-                        "</p>" +
-                        '<span class="hmi-queue__foot">' +
-                        '<span class="hmi-queue__qty-k">Qtd</span>' +
-                        '<span class="hmi-queue__qty-v">' +
-                        escHtml(qVal) +
-                        "</span></span></span>";
+
+                    if (mobileOp) {
+                        row.innerHTML =
+                            '<span class="hmi-queue__card hmi-queue__card--mob-op">' +
+                            '<span class="hmi-queue__top">' +
+                            '<span class="hmi-queue__num">#' +
+                            String(idx + 1) +
+                            '</span><span class="hmi-queue__badges">' +
+                            badgeHtml +
+                            '</span><span class="hmi-queue__qty-inline">' +
+                            escHtml(qVal) +
+                            "</span></span>" +
+                            '<p class="hmi-queue__summary">' +
+                            escHtml(summaryRaw) +
+                            "</p></span>";
+                    } else {
+                        row.innerHTML =
+                            '<span class="hmi-queue__card">' +
+                            '<span class="hmi-queue__top">' +
+                            '<span class="hmi-queue__num">#' +
+                            String(idx + 1) +
+                            '</span><span class="hmi-queue__badges">' +
+                            badgeHtml +
+                            "</span></span>" +
+                            '<p class="hmi-queue__summary">' +
+                            escHtml(summaryRaw) +
+                            "</p>" +
+                            '<span class="hmi-queue__foot">' +
+                            '<span class="hmi-queue__qty-k">Qtd</span>' +
+                            '<span class="hmi-queue__qty-v">' +
+                            escHtml(qVal) +
+                            "</span></span></span>";
+                    }
 
                     wrap.appendChild(row);
                 });
             }
+            window.__indupackRenderLista = renderLista;
 
             function updateHeaderStatus() {
                 var st = String((estado.maquina || {}).status || "PARADA");
