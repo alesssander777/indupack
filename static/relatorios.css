@@ -5,6 +5,7 @@
 /* Especificidade acima do tema claro global (.has-indupack-topbar) */
 body.has-indupack-topbar.rel-analytics-page {
     font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color-scheme: dark;
     background:
         radial-gradient(ellipse 120% 80% at 50% -20%, rgba(56, 189, 248, 0.12), transparent 55%),
         radial-gradient(ellipse 70% 50% at 100% 50%, rgba(34, 211, 238, 0.06), transparent 45%),
@@ -50,7 +51,7 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
     --rel-warn-dim: rgba(251, 191, 36, 0.12);
     --rel-stop: #f87171;
     --rel-stop-dim: rgba(248, 113, 113, 0.14);
-    --rel-card-bg: linear-gradient(145deg, rgba(17, 31, 51, 0.92) 0%, rgba(12, 24, 41, 0.88) 100%);
+    --rel-card-bg: linear-gradient(145deg, #141f33 0%, #101b2e 50%, #0c1628 100%);
     --rel-radius: 16px;
     --rel-radius-sm: 12px;
     --rel-glow-soft: 0 0 24px rgba(56, 189, 248, 0.08);
@@ -968,17 +969,19 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
     line-height: 1.5;
 }
 
-/* —— Footer e-mail —— */
+/* —— Footer e-mail + agendamento (painéis opacos — contraste garantido) —— */
 .rel-footer-card {
     display: grid;
     grid-template-columns: 1.15fr 0.85fr;
     gap: 1.15rem;
     margin-top: 1.65rem;
-    padding: clamp(1rem, 2vw, 1.35rem);
-    background: var(--rel-card-bg);
+    padding: clamp(1rem, 2vw, 1.25rem);
+    background: linear-gradient(155deg, #152536 0%, #101d30 42%, #0c1626 100%);
     border-radius: var(--rel-radius);
-    border: 1px solid var(--rel-line-strong);
-    box-shadow: var(--rel-shadow-card);
+    border: 1px solid rgba(94, 234, 212, 0.14);
+    box-shadow:
+        var(--rel-shadow-card),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 @media (max-width: 900px) {
@@ -987,77 +990,127 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
     }
 }
 
+.rel-footer-card__main,
+.rel-footer-card__side {
+    padding: 1.05rem 1.15rem;
+    border-radius: var(--rel-radius-sm);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: #131d31;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 .rel-footer-card__title {
     margin: 0 0 0.4rem;
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 800;
-    color: var(--rel-ink);
+    color: #f8fafc;
+    letter-spacing: -0.02em;
 }
 
 .rel-footer-card__txt {
-    margin: 0 0 0.85rem;
-    font-size: 0.78rem;
-    color: var(--rel-muted);
-    line-height: 1.45;
+    margin: 0 0 0.65rem;
+    font-size: 0.81rem;
+    color: #cbd5e1;
+    line-height: 1.5;
 }
 
 .rel-footer-card__txt code {
     font-size: 0.72em;
     padding: 0.12rem 0.35rem;
     border-radius: 4px;
-    background: rgba(56, 189, 248, 0.1);
-    border: 1px solid var(--rel-line);
-    color: var(--rel-cyan);
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    color: #7dd3fc;
 }
 
 .rel-mail-notice {
-    margin: 0 0 0.85rem;
-    padding: 0.55rem 0.72rem;
+    margin: 0 0 1rem;
+    padding: 0.62rem 0.78rem;
     font-size: 0.76rem;
     font-weight: 600;
     line-height: 1.45;
-    color: #bae6fd;
-    background: rgba(56, 189, 248, 0.08);
-    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #e0f2fe;
+    background: linear-gradient(135deg, rgba(14, 54, 82, 0.95) 0%, rgba(12, 42, 68, 0.98) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.35);
     border-radius: var(--rel-radius-sm);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.08);
 }
 
 .rel-footer-card__row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem;
-    align-items: flex-end;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.65rem 0.85rem;
+    align-items: end;
 }
 
-.rel-field--inline {
-    flex: 1 1 220px;
+@media (max-width: 520px) {
+    .rel-footer-card__row {
+        grid-template-columns: 1fr;
+    }
+
+    .rel-footer-card__row .rel-btn--mail {
+        width: 100%;
+        justify-self: stretch;
+    }
+}
+
+.rel-footer-card .rel-field--inline {
+    flex: unset;
+    margin: 0;
+}
+
+.rel-footer-card .rel-field__l {
+    color: #a8c5da;
+}
+
+.rel-footer-card .rel-field input[type="email"] {
+    background-color: #070d18;
+    color: #f8fafc;
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+.rel-footer-card .rel-field input[type="email"]::placeholder {
+    color: rgba(148, 163, 184, 0.72);
+}
+
+.rel-footer-card .rel-field input[type="email"]:focus {
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+}
+
+.rel-footer-card .rel-field input[type="email"]:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #070d18 inset;
+    box-shadow: 0 0 0 1000px #070d18 inset;
+    -webkit-text-fill-color: #f8fafc;
+    caret-color: #f8fafc;
 }
 
 .rel-footer-card__st {
-    margin: 0 0 0.55rem;
-    font-size: 0.62rem;
+    margin: 0 0 0.45rem;
+    font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.11em;
-    color: var(--rel-muted);
+    letter-spacing: 0.14em;
+    color: #7dd3fc;
 }
 
 .rel-agenda-lead {
-    margin: 0 0 0.5rem;
-    font-size: 0.81rem;
-    color: #cbd5e1;
+    margin: 0 0 0.55rem;
+    font-size: 0.84rem;
+    color: #e2e8f0;
     line-height: 1.45;
+    font-weight: 600;
 }
 
 .rel-agenda-hint {
     margin: 0 0 1rem;
-    padding: 0.5rem 0.65rem;
-    font-size: 0.72rem;
+    padding: 0.55rem 0.72rem;
+    font-size: 0.74rem;
     font-weight: 600;
-    line-height: 1.4;
-    color: var(--rel-muted);
-    background: rgba(251, 191, 36, 0.08);
-    border: 1px solid rgba(251, 191, 36, 0.22);
+    line-height: 1.45;
+    color: #fef3c7;
+    background: linear-gradient(135deg, rgba(66, 48, 8, 0.55) 0%, rgba(45, 36, 12, 0.75) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.38);
     border-radius: var(--rel-radius-sm);
 }
 
@@ -1069,22 +1122,25 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
 
 .rel-agenda-block {
     margin: 0;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid var(--rel-line);
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba(94, 234, 212, 0.18);
     border-radius: var(--rel-radius-sm);
-    background: rgba(6, 13, 24, 0.45);
+    background: linear-gradient(180deg, #1a2940 0%, #131f33 100%);
     min-inline-size: 0;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .rel-agenda-head {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: 0.6rem;
     cursor: pointer;
     font-weight: 800;
-    font-size: 0.8rem;
-    color: var(--rel-ink);
-    margin-bottom: 0.65rem;
+    font-size: 0.82rem;
+    color: #f8fafc;
+    margin-bottom: 0.7rem;
 }
 
 .rel-agenda-head__txt {
@@ -1092,9 +1148,9 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
 }
 
 .rel-agenda-check {
-    width: 1.05rem;
-    height: 1.05rem;
-    accent-color: var(--rel-cyan);
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: #22d3ee;
     flex-shrink: 0;
 }
 
@@ -1103,7 +1159,7 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
     flex-wrap: wrap;
     gap: 0.65rem;
     align-items: flex-end;
-    padding-left: 0.15rem;
+    padding-left: 0.1rem;
 }
 
 .rel-agenda-fields--split {
@@ -1121,7 +1177,7 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
 .rel-agenda-field {
     display: flex;
     flex-direction: column;
-    gap: 0.28rem;
+    gap: 0.32rem;
     min-width: 0;
     flex: 1 1 auto;
 }
@@ -1131,34 +1187,46 @@ body.has-indupack-topbar.rel-analytics-page .shell-panel.rel-shell {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--rel-muted);
+    color: #94b8d3;
 }
 
 .rel-agenda-input,
 .rel-agenda-select {
     font: inherit;
-    font-size: 0.84rem;
+    font-size: 0.86rem;
     font-weight: 600;
-    padding: 0.45rem 0.55rem;
-    border: 1px solid var(--rel-line-strong);
+    padding: 0.5rem 0.6rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
     border-radius: 10px;
-    background: rgba(4, 8, 18, 0.85);
-    color: var(--rel-ink);
+    background-color: #070d18;
+    color: #f1f5f9;
     width: 100%;
     box-sizing: border-box;
 }
 
+.rel-agenda-select {
+    cursor: pointer;
+}
+
 .rel-agenda-input:disabled,
 .rel-agenda-select:disabled {
-    opacity: 0.45;
+    opacity: 1;
     cursor: not-allowed;
+    background-color: #0f1928;
+    color: #7b8ea3;
+    border-color: rgba(100, 116, 139, 0.25);
+}
+
+.rel-agenda-input:enabled,
+.rel-agenda-select:enabled {
+    border-color: rgba(56, 189, 248, 0.28);
 }
 
 .rel-agenda-input:focus:not(:disabled),
 .rel-agenda-select:focus:not(:disabled) {
     outline: none;
-    border-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.16);
 }
 
 .rel-agenda-input--num {

@@ -106,8 +106,8 @@ body:not(.ref-body):not(.tp-wrap):not(.auth-body) {
     }
 }
 
-/* Páginas placeholder com topbar (Relatórios, Configurações, …) */
-body.has-indupack-topbar:not(.hm):not(.pr-page):not(.ped-page):not(.tb-admin):not(.prog-body) {
+/* Páginas placeholder com topbar (Relatórios exceto central analítica dark, Configurações, …) */
+body.has-indupack-topbar:not(.hm):not(.pr-page):not(.ped-page):not(.tb-admin):not(.prog-body):not(.rel-analytics-page) {
     font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
     background: #f1f5f9;
     color: #0f172a;
