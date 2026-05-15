@@ -31,7 +31,7 @@
             </div>
         </div>
     </div>
-    <div class="ref-shell">
+    <div class="ref-shell ref-shell--desktop">
         <header class="ref-top" aria-label="Barra superior">
             <div class="ref-top__left">
                 <a href="/tablet/{{ id }}/pedidos" class="ref-top__fila-link" title="Fila deste tablet (somente leitura)">
@@ -137,7 +137,7 @@
                 </section>
 
                 <!-- 4 Operação — 4 cartões -->
-                <section class="ref-card ref-mes" aria-label="Informações operacionais">
+                <section class="ref-card ref-mes hmi-sec--desktop-only" aria-label="Informações operacionais">
                     <div class="ref-mes-grid">
                         <div class="ref-mes-cell hmi-sec--desktop-only">
                             <span class="ref-mes__k">Status da máquina</span>
@@ -251,7 +251,7 @@
             </main>
         </div>
 
-        <footer class="ref-foot ref-foot--mobile-slim" aria-label="Rodapé">
+        <footer class="ref-foot" aria-label="Rodapé">
             <span id="ft-prod-time" class="hmi-hidden" hidden>00:00:00</span>
             <p class="ref-foot__tag">Sistema de Gestão Industrial</p>
             <p class="ref-foot__conn">
@@ -259,6 +259,81 @@
                 <span id="ft-link" class="ref-foot__link hmi-foot__conn-txt--ok">Conectado</span>
             </p>
         </footer>
+    </div>
+
+    <!-- Painel MOBILE operacional (layout próprio — não é o desktop comprimido) -->
+    <div id="ref-shell-mob" class="ref-shell-mob" aria-hidden="true" hidden>
+        <header class="mob-bar" aria-label="Terminal mobile">
+            <a href="/tablet/{{ id }}/pedidos" class="mob-bar__fila">FILA</a>
+            <span id="mob-clock-time" class="mob-bar__clock">--:--:--</span>
+            <span class="mob-bar__maq">MÁQ {% if id < 10 %}0{% endif %}{{ id }}</span>
+            <span class="mob-bar__conn" aria-live="polite">
+                <span id="mob-ft-dot" class="mob-bar__dot" aria-hidden="true"></span>
+                <span id="mob-ft-link" class="mob-bar__conn-txt">Conectado</span>
+            </span>
+        </header>
+        <div class="mob-body">
+            <aside class="mob-side" aria-label="Fila resumida">
+                <span class="mob-side__lbl">Fila</span>
+                <div class="mob-side__list hmi-queue" data-tablet-id="list-pedidos" role="list"></div>
+                <p class="mob-side__empty" data-tablet-id="list-empty" hidden>Sem pedidos</p>
+            </aside>
+            <div class="mob-panel">
+                <div class="mob-status op-hero op-hero--stop" data-tablet-id="op-hero" aria-live="polite">
+                    <span class="mob-status__ico" data-tablet-id="op-hero-icon" aria-hidden="true"></span>
+                    <div class="mob-status__txt">
+                        <strong class="mob-status__title" data-tablet-id="op-hero-title">PARADA</strong>
+                        <span class="mob-status__sub" data-tablet-id="op-hero-sub"></span>
+                    </div>
+                </div>
+                <div class="mob-pedido" aria-label="Pedido atual">
+                    <div class="mob-pedido__row">
+                        <span class="mob-pedido__k">Produto</span>
+                        <span class="mob-pedido__v" id="mob-f-codigo">—</span>
+                    </div>
+                    <div class="mob-pedido__row">
+                        <span class="mob-pedido__k">Medida</span>
+                        <span class="mob-pedido__v" id="mob-f-medida">—</span>
+                    </div>
+                    <div class="mob-pedido__row mob-pedido__row--qty">
+                        <span class="mob-pedido__k">Qtd</span>
+                        <span class="mob-pedido__v" id="mob-f-quantidade">0</span>
+                    </div>
+                    <div class="mob-pedido__row mob-pedido__row--op">
+                        <span class="mob-pedido__k">Operador</span>
+                        <span class="mob-pedido__v" id="mob-hmi-op-combo">—</span>
+                    </div>
+                </div>
+                <div class="mob-apont" aria-label="Apontamento">
+                    <div class="mob-apont__ctrl">
+                        <input type="number" data-tablet-id="apont-total" class="mob-apont__input" inputmode="numeric" min="0" step="1" placeholder="Produzido" autocomplete="off" aria-label="Total produzido">
+                        <button type="button" data-tablet-id="btn-aplicar-total" class="mob-apont__btn">LANÇAR</button>
+                    </div>
+                    <div class="mob-apont__prog" aria-label="Progresso">
+                        <span class="mob-apont__pct" data-tablet-id="apont-progress-pct-big">—</span>
+                        <div class="mob-apont__track">
+                            <div class="mob-apont__fill" data-tablet-id="apont-progress-fill"></div>
+                        </div>
+                        <span class="mob-apont__ratio" data-tablet-id="apont-progress-label">— / —</span>
+                    </div>
+                    <p class="mob-apont__hint" data-tablet-id="apont-hint" role="status" hidden></p>
+                </div>
+                <div class="mob-cmds" aria-label="Comandos">
+                    <button type="button" data-tablet-id="btn-stop" class="mob-cmd mob-cmd--stop" aria-pressed="false">
+                        <span data-tablet-id="btn-stop-ico" class="mob-cmd__ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></span>
+                        <span data-tablet-id="btn-stop-txt" class="mob-cmd__lbl">PARAR</span>
+                    </button>
+                    <button type="button" data-tablet-id="btn-start" class="mob-cmd mob-cmd--start">
+                        <span data-tablet-id="btn-start-ico" class="mob-cmd__ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                        <span data-tablet-id="btn-start-txt" class="mob-cmd__lbl">INICIAR</span>
+                    </button>
+                    <button type="button" data-tablet-id="btn-finish" class="mob-cmd mob-cmd--done">
+                        <span class="mob-cmd__ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></span>
+                        <span class="mob-cmd__lbl">FINALIZAR</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal obrigatório: motivo ao parar -->
@@ -568,7 +643,8 @@ body {
         display: flex;
     }
 
-    .ref-shell {
+    .ref-shell,
+    .ref-shell-mob {
         display: none !important;
     }
 }
@@ -577,7 +653,8 @@ body {
     display: flex;
 }
 
-.ref-body.ref-body--portrait-lock .ref-shell {
+.ref-body.ref-body--portrait-lock .ref-shell,
+.ref-body.ref-body--portrait-lock .ref-shell-mob {
     display: none !important;
 }
 
@@ -3828,350 +3905,475 @@ section.ref-actions.hmi-actions {
     }
 }
 
-/* ========== Modo mobile operacional (celular paisagem — experiência MES no chão) ========== */
-.ref-body--mobile-op .hmi-sec--desktop-only {
-    display: none !important;
-}
-
-.ref-body--mobile-op .ref-shell {
+/* ========== Painel MOBILE operacional (layout próprio, não desktop) ========== */
+.ref-shell-mob {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    box-sizing: border-box;
     height: calc(var(--vh-tab, 1dvh) * 100);
     max-height: calc(var(--vh-tab, 1dvh) * 100);
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    grid-template-rows: auto minmax(0, 1fr);
+    font-family: var(--font);
+    color: var(--mes-ink);
+    background:
+        linear-gradient(180deg, #121d2c 0%, var(--mes-bg) 40%, var(--mes-bg-deep) 100%);
 }
 
-.ref-body--mobile-op .ref-top__week,
-.ref-body--mobile-op .ref-top__date,
-.ref-body--mobile-op .ref-top__clock-ico,
-.ref-body--mobile-op .ref-hero__gear {
+.ref-body--mobile-op .ref-shell--desktop {
     display: none !important;
 }
 
-.ref-body--mobile-op .ref-top {
-    padding: max(2px, env(safe-area-inset-top)) 6px 2px 6px !important;
-    gap: 4px !important;
+.ref-body--mobile-op .ref-shell-mob {
+    display: grid !important;
 }
 
-.ref-body--mobile-op .ref-top__fila-link {
-    min-height: 32px !important;
-    padding: 0 8px !important;
-    font-size: 0.6rem !important;
+.ref-body--mobile-op {
+    overflow: hidden;
+    touch-action: manipulation;
 }
 
-.ref-body--mobile-op .ref-top__time {
-    font-size: clamp(0.84rem, 2.2vmin, 0.98rem) !important;
+.ref-body--mobile-op .op-hero--maint .mob-status__title,
+.ref-body--mobile-op .op-hero--maint .mob-status__sub {
+    color: #141008;
 }
 
-.ref-body--mobile-op .ref-top__machine {
-    padding: 1px 8px 2px !important;
-}
-
-.ref-body--mobile-op .ref-top__mach-id {
-    font-size: clamp(0.84rem, 2.4vmin, 1rem) !important;
-}
-
-.ref-body--mobile-op .ref-foot--mobile-slim .ref-foot__tag {
-    display: none !important;
-}
-
-.ref-body--mobile-op .ref-foot--mobile-slim {
-    justify-content: flex-end;
-    padding: 0 max(6px, env(safe-area-inset-right)) max(1px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)) !important;
+.mob-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: max(4px, env(safe-area-inset-top)) 8px 4px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--mes-line-strong);
     min-height: 0;
-    border-top-width: 0;
-    background: rgba(0, 0, 0, 0.28);
+    flex-shrink: 0;
 }
 
-.ref-body--mobile-op .ref-foot__conn {
-    font-size: 0.52rem !important;
-    gap: 5px;
+.mob-bar__fila {
+    flex-shrink: 0;
+    padding: 0 10px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    color: var(--mes-blue);
+    background: var(--mes-blue-soft);
+    border: 1px solid var(--mes-cell-border);
+    border-radius: 999px;
 }
 
-.ref-body--mobile-op .ref-foot__dot {
+.mob-bar__clock {
+    font-size: 0.9rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink);
+    flex-shrink: 0;
+}
+
+.mob-bar__maq {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--mes-muted);
+    flex-shrink: 0;
+}
+
+.mob-bar__conn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.52rem;
+    font-weight: 700;
+    color: var(--mes-green);
+    flex-shrink: 0;
+}
+
+.mob-bar__dot {
     width: 7px;
     height: 7px;
+    border-radius: 50%;
+    background: var(--mes-green);
+    border: 1px solid rgba(255, 255, 255, 0.45);
 }
 
-.ref-body--mobile-op .hmi-work.ref-work {
-    display: grid !important;
-    grid-template-columns: minmax(0, 68px) minmax(0, 1fr) !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    height: 100%;
-    max-height: 100%;
+.mob-bar__dot.is-off {
+    background: var(--mes-red);
+}
+
+.mob-body {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
     min-height: 0;
+    overflow: hidden;
 }
 
-.ref-body--mobile-op .hmi-side.ref-side {
-    padding: 3px 4px 4px 5px !important;
-    max-height: none !important;
+.mob-side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding: 4px 3px;
+    background: rgba(0, 0, 0, 0.28);
+    border-right: 1px solid var(--mes-line-strong);
 }
 
-.ref-body--mobile-op .hmi-side__head-title {
-    font-size: 0.56rem !important;
-    letter-spacing: 0.1em;
+.mob-side__lbl {
+    font-size: 0.52rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+    padding: 0 2px 3px;
+    flex-shrink: 0;
 }
 
-.ref-body--mobile-op .hmi-queue {
+.mob-side__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
     gap: 2px;
 }
 
-.ref-body--mobile-op .hmi-queue__card {
+.mob-side__list .hmi-queue__card {
     padding: 3px 4px !important;
-    gap: 2px !important;
     min-height: 0 !important;
+    gap: 2px !important;
 }
 
-.ref-body--mobile-op .hmi-queue__num {
-    font-size: 0.68rem !important;
+.mob-side__list .hmi-queue__summary {
+    font-size: 0.55rem !important;
+    -webkit-line-clamp: 1;
+    margin: 0;
 }
 
-.ref-body--mobile-op .hmi-queue__badge {
-    font-size: 0.46rem !important;
+.mob-side__list .hmi-queue__badge {
+    font-size: 0.44rem !important;
     padding: 1px 3px !important;
 }
 
-.ref-body--mobile-op .hmi-queue__summary {
-    font-size: 0.58rem !important;
-    line-height: 1.2;
-    -webkit-line-clamp: 1;
-    margin: 0;
+.mob-side__list .hmi-queue__num {
+    font-size: 0.62rem !important;
 }
 
-.ref-body--mobile-op .hmi-queue__foot {
+.mob-side__list .hmi-queue__foot {
     display: none !important;
 }
 
-.ref-body--mobile-op .hmi-queue__card--mob-op .hmi-queue__qty-inline {
-    font-size: 0.62rem;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--mes-ink);
-    margin-left: auto;
-    flex-shrink: 0;
+.mob-side__empty {
+    font-size: 0.58rem;
+    color: var(--mes-muted);
+    text-align: center;
+    padding: 6px 2px;
+    margin: 0;
 }
 
-.ref-body--mobile-op .hmi-queue__card--mob-op .hmi-queue__top {
+.mob-panel {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, auto) minmax(44px, 1fr);
     gap: 3px;
-    width: 100%;
-}
-
-.ref-body--mobile-op .ref-main.hmi-main {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-content: flex-start;
-    gap: 2px !important;
-    padding: 2px 4px !important;
-    overflow-x: hidden !important;
-    overflow-y: hidden !important;
-    overscroll-behavior: none;
     min-height: 0;
     max-height: 100%;
-}
-
-.ref-body--mobile-op .ref-main.hmi-main > * {
-    flex: 0 0 auto;
-    flex-shrink: 0;
-    min-height: 0;
-}
-
-.ref-body--mobile-op .ref-main.hmi-main > .ref-card.ref-kpi,
-.ref-body--mobile-op .ref-main.hmi-main > .ref-card.ref-obs {
-    display: none !important;
-}
-
-.ref-body--mobile-op .hmi-status,
-.ref-body--mobile-op .op-hero {
-    padding: 3px 6px !important;
-}
-
-.ref-body--mobile-op .ref-hero__grid {
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    gap: 4px 6px !important;
-}
-
-.ref-body--mobile-op .ref-hero__ring {
-    width: 26px !important;
-    height: 26px !important;
-    border-width: 2px;
-}
-
-.ref-body--mobile-op .ref-hero__title {
-    font-size: clamp(0.76rem, 2.2vmin, 0.94rem) !important;
-    line-height: 1.05;
-}
-
-.ref-body--mobile-op .ref-hero__sub {
-    font-size: clamp(0.52rem, 1.5vmin, 0.66rem) !important;
-    margin: 0;
-    -webkit-line-clamp: 1;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
     overflow: hidden;
+    padding: 3px 5px max(3px, env(safe-area-inset-bottom)) 4px;
+    box-sizing: border-box;
 }
 
-.ref-body--mobile-op .ref-order-grid {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 0.72fr) !important;
-    gap: 2px !important;
+.mob-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: var(--r-sm);
+    min-height: 0;
+    flex-shrink: 0;
 }
 
-.ref-body--mobile-op .ref-mini {
-    padding: 2px 4px !important;
+.mob-status__ico {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.ref-body--mobile-op .ref-mini__k {
-    font-size: 0.46rem !important;
-    margin-bottom: 0 !important;
-    letter-spacing: 0.05em;
+.mob-status__ico svg {
+    width: 100%;
+    height: 100%;
 }
 
-.ref-body--mobile-op .ref-mini__v {
-    font-size: 0.66rem !important;
+.mob-status__txt {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.mob-status__title {
+    font-size: 0.92rem;
+    font-weight: 900;
+    line-height: 1.05;
+    display: block;
+}
+
+.mob-status__sub {
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1.15;
+    opacity: 0.95;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mob-pedido {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 6px;
+    padding: 4px 6px;
+    background: var(--mes-panel);
+    border: 1px solid var(--mes-line);
+    border-radius: var(--r-sm);
+    flex-shrink: 0;
+}
+
+.mob-pedido__row {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.mob-pedido__row--qty .mob-pedido__v,
+.mob-pedido__row--op .mob-pedido__v {
+    font-weight: 900;
+}
+
+.mob-pedido__row--op {
+    grid-column: 1 / -1;
+}
+
+.mob-pedido__k {
+    font-size: 0.48rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+}
+
+.mob-pedido__v {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--mes-blue);
     line-height: 1.12;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.ref-body--mobile-op .ref-mini__v--qty {
-    font-size: 0.82rem !important;
+.mob-pedido__row--qty .mob-pedido__v {
+    font-size: 0.88rem;
     color: var(--mes-ink);
 }
 
-.ref-body--mobile-op .ref-mes {
-    padding: 2px 4px !important;
-}
-
-.ref-body--mobile-op .ref-mes-grid {
-    grid-template-columns: 1fr !important;
-    gap: 0 !important;
-}
-
-.ref-body--mobile-op .ref-mes-cell--mob-op {
-    padding: 3px 5px !important;
-    background: var(--mes-cell);
-    border: 1px solid var(--mes-cell-border);
+.mob-apont {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 0;
+    padding: 4px 6px;
+    background: var(--mes-panel);
+    border: 1px solid var(--mes-line);
     border-radius: var(--r-sm);
+    flex-shrink: 0;
 }
 
-.ref-body--mobile-op .ref-mes-cell--mob-op .ref-mes__k {
-    font-size: 0.48rem !important;
-    margin-bottom: 0;
+.mob-apont__ctrl {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: stretch;
 }
 
-.ref-body--mobile-op .ref-mes-cell--mob-op .ref-mes__v {
-    font-size: 0.72rem !important;
+.mob-apont__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 40px;
+    max-height: 44px;
+    padding: 6px 8px;
+    font-size: 1rem;
     font-weight: 800;
+    border-radius: var(--r-sm);
+    border: 2px solid var(--mes-line-strong);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--mes-ink);
 }
 
-.ref-body--mobile-op .ref-apont-terminal.ref-keypad {
-    padding: 3px 4px !important;
+.mob-apont__btn {
+    flex: 0 0 auto;
+    min-width: 72px;
+    min-height: 40px;
+    max-height: 44px;
+    padding: 0 10px;
+    border: none;
+    border-radius: var(--r-sm);
+    background: var(--mes-blue-mid);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    cursor: pointer;
 }
 
-.ref-body--mobile-op .ref-apont-block {
-    gap: 2px !important;
+.mob-apont__prog {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 6px;
 }
 
-.ref-body--mobile-op .ref-apont-actions,
-.ref-body--mobile-op .ref-apont-actions__ctrl {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 4px !important;
-    align-items: stretch !important;
+.mob-apont__pct {
+    font-size: 0.95rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-blue-mid);
+    min-width: 2.2em;
+    text-align: right;
 }
 
-.ref-body--mobile-op .ref-apont__input {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    min-height: 44px !important;
-    max-height: 48px !important;
-    padding: 5px 7px !important;
-    font-size: 0.9rem !important;
-}
-
-.ref-body--mobile-op .ref-apont__btn {
-    flex: 0 0 auto !important;
-    min-width: min(92px, 22vw) !important;
-    min-height: 44px !important;
-    max-height: 48px !important;
-    padding: 4px 5px !important;
-}
-
-.ref-body--mobile-op .ref-apont__btn-text {
-    font-size: 0.52rem !important;
-    line-height: 1.08;
-}
-
-.ref-body--mobile-op .ref-apont-progress {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    min-height: 32px !important;
-    padding: 2px 4px !important;
-    gap: 2px !important;
-}
-
-.ref-body--mobile-op .ref-apont-progress__htitle {
-    font-size: 0.48rem !important;
-}
-
-.ref-body--mobile-op .ref-apont-progress__hratio {
-    font-size: 0.52rem !important;
-}
-
-.ref-body--mobile-op .ref-apont-progress__widget {
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    gap: 3px !important;
-    align-items: center !important;
-}
-
-.ref-body--mobile-op .ref-apont-progress__pct-big {
-    font-size: 0.86rem !important;
-}
-
-.ref-body--mobile-op .ref-apont-progress__track {
-    height: 16px !important;
-}
-
-.ref-body--mobile-op .ref-apont-progress__ticks {
-    display: none;
-}
-
-.ref-body--mobile-op .ref-apont-progress__pct-in {
-    font-size: 0.6rem !important;
-}
-
-.ref-body--mobile-op .ref-apont__hint:not(:empty) {
-    font-size: 0.52rem;
-    padding: 2px 0 0;
-    line-height: 1.2;
-    -webkit-line-clamp: 1;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
+.mob-apont__track {
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--mes-line);
     overflow: hidden;
+    position: relative;
 }
 
-.ref-body--mobile-op .ref-actions.hmi-actions {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 4px !important;
-    flex: 0 0 auto !important;
-    margin-top: auto;
+.mob-apont__fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--mes-blue-mid), var(--mes-green));
+    border-radius: 999px;
+    transition: width 0.2s ease;
 }
 
-.ref-body--mobile-op .hmi-cmd.ref-cmd {
-    min-height: 48px !important;
-    max-height: 54px !important;
-    padding: 5px 3px !important;
-    gap: 2px !important;
+.mob-apont__ratio {
+    font-size: 0.58rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-muted);
+    white-space: nowrap;
 }
 
-.ref-body--mobile-op .hmi-cmd__ico svg {
-    width: 20px !important;
-    height: 20px !important;
+.mob-apont__hint {
+    display: none !important;
 }
 
-.ref-body--mobile-op .hmi-cmd__txt {
-    font-size: clamp(0.54rem, 1.5vmin, 0.66rem) !important;
-    line-height: 1.1 !important;
+.mob-cmds {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    align-self: stretch;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.mob-cmd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 44px;
+    max-height: 100%;
+    padding: 4px 3px;
+    border: none;
+    border-radius: var(--r-sm);
+    font-family: inherit;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+}
+
+.mob-cmd:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.mob-cmd--stop {
+    background: var(--mes-red);
+}
+
+.mob-cmd--start,
+.mob-cmd--resume {
+    background: var(--mes-green);
+}
+
+.mob-cmd--done {
+    background: var(--mes-blue-mid);
+}
+
+.mob-cmd__lbl {
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.mob-cmd__ico svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 460px) {
+    .ref-body--mobile-op .mob-bar {
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    .ref-body--mobile-op .mob-status {
+        padding: 3px 6px;
+    }
+
+    .ref-body--mobile-op .mob-status__title {
+        font-size: 0.82rem;
+    }
+
+    .ref-body--mobile-op .mob-pedido {
+        padding: 2px 5px;
+    }
+
+    .ref-body--mobile-op .mob-apont__input,
+    .ref-body--mobile-op .mob-apont__btn {
+        min-height: 38px;
+        max-height: 40px;
+    }
+
+    .ref-body--mobile-op .mob-cmd {
+        min-height: 40px;
+        padding: 2px;
+    }
+
+    .ref-body--mobile-op .mob-panel {
+        gap: 2px;
+        padding-bottom: 2px;
+    }
 }
 
 </style>
@@ -4179,6 +4381,104 @@ section.ref-actions.hmi-actions {
     <script>
         (function() {
             /* Altura útil + modo mobile (corrige 100vh no iOS/Android). */
+            var TABLET_SWAP_IDS = [
+                "list-pedidos",
+                "list-empty",
+                "op-hero",
+                "op-hero-icon",
+                "op-hero-title",
+                "op-hero-sub",
+                "apont-total",
+                "btn-aplicar-total",
+                "btn-stop",
+                "btn-stop-ico",
+                "btn-stop-txt",
+                "btn-start",
+                "btn-start-ico",
+                "btn-start-txt",
+                "btn-finish",
+                "apont-progress-label",
+                "apont-progress-pct-big",
+                "apont-progress-fill",
+                "apont-hint"
+            ];
+
+            function tabletAssignIds(useMobile) {
+                var desk = document.querySelector(".ref-shell--desktop");
+                var mob = document.getElementById("ref-shell-mob");
+                if (!desk || !mob) return;
+                TABLET_SWAP_IDS.forEach(function (id) {
+                    if (useMobile) {
+                        var dEl = desk.querySelector("#" + id);
+                        if (dEl) {
+                            dEl.setAttribute("data-tablet-id", id);
+                            dEl.removeAttribute("id");
+                        }
+                        var mStash = mob.querySelector('[data-tablet-id="' + id + '"]');
+                        if (mStash) {
+                            mStash.id = id;
+                            mStash.removeAttribute("data-tablet-id");
+                        }
+                    } else {
+                        var mEl = mob.querySelector("#" + id);
+                        if (mEl) {
+                            mEl.setAttribute("data-tablet-id", id);
+                            mEl.removeAttribute("id");
+                        }
+                        var dRestore = desk.querySelector('[data-tablet-id="' + id + '"]');
+                        if (dRestore) {
+                            dRestore.id = id;
+                            dRestore.removeAttribute("data-tablet-id");
+                        }
+                    }
+                });
+                mob.hidden = !useMobile;
+                mob.setAttribute("aria-hidden", useMobile ? "false" : "true");
+            }
+
+            function formatOpComboText(maq, compact) {
+                var op = disp(maq.operador_atual);
+                var tu = disp(maq.turno_atual);
+                if (compact) return op + " · " + tu;
+                return op + " / " + tu + " / " + (typeof tempoProducaoDisplay === "function" ? tempoProducaoDisplay() : "--:--:--");
+            }
+
+            function setOpComboDisplay(maq) {
+                var comboEl = document.getElementById("hmi-op-combo");
+                if (comboEl) comboEl.textContent = formatOpComboText(maq || {}, false);
+            }
+
+            function syncMobPanel() {
+                if (!document.body.classList.contains("ref-body--mobile-op")) return;
+                var p = typeof getAtual === "function" ? getAtual() : null;
+                var maq = (typeof estado !== "undefined" && estado) ? estado.maquina || {} : {};
+                var prodParts = p ? parseProduto(p.produto) : { codigo: "—", medida: "—" };
+                var codPed = p && String(p.cod || "").trim() ? String(p.cod).trim() : prodParts.codigo;
+                var el;
+                el = document.getElementById("mob-f-codigo");
+                if (el) el.textContent = p ? disp(codPed) : "—";
+                el = document.getElementById("mob-f-medida");
+                if (el) el.textContent = p ? disp(medidaComPeso(p.produto)) : "—";
+                el = document.getElementById("mob-f-quantidade");
+                if (el) el.textContent = p ? fmtInt(toInt(p.quantidade, 0)) : "0";
+                el = document.getElementById("mob-hmi-op-combo");
+                if (el) el.textContent = formatOpComboText(maq, true);
+            }
+
+            function syncMobConnFromFooter() {
+                var dot = document.getElementById("ft-conn-dot");
+                var link = document.getElementById("ft-link");
+                var dotM = document.getElementById("mob-ft-dot");
+                var linkM = document.getElementById("mob-ft-link");
+                if (dotM && dot) {
+                    dotM.className = "mob-bar__dot" + (dot.classList.contains("is-off") ? " is-off" : "");
+                }
+                if (linkM && link) {
+                    linkM.textContent = link.textContent;
+                    linkM.className = "mob-bar__conn-txt" + (link.classList.contains("hmi-foot__conn-txt--ok") ? " hmi-foot__conn-txt--ok" : "");
+                }
+            }
+
             function indupackTabletLayoutSync() {
                 var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
                 if (!h || h < 200) {
@@ -4195,15 +4495,19 @@ section.ref-actions.hmi-actions {
                 try {
                     var mq = window.matchMedia("(max-width: 932px) and (orientation: portrait)");
                     var gate = document.getElementById("hmi-orient-gate");
-                    var shell = document.querySelector(".ref-shell");
+                    var shellDesk = document.querySelector(".ref-shell--desktop");
+                    var shellMob = document.getElementById("ref-shell-mob");
                     function apply() {
                         var lock = mq.matches;
                         document.body.classList.toggle("ref-body--portrait-lock", lock);
                         if (gate) {
                             gate.setAttribute("aria-hidden", lock ? "false" : "true");
                         }
-                        if (shell) {
-                            shell.setAttribute("aria-hidden", lock ? "true" : "false");
+                        if (shellDesk) {
+                            shellDesk.setAttribute("aria-hidden", lock ? "true" : "false");
+                        }
+                        if (shellMob && lock) {
+                            shellMob.setAttribute("aria-hidden", "true");
                         }
                     }
                     apply();
@@ -4233,14 +4537,18 @@ section.ref-actions.hmi-actions {
                     var smallLongSide = Math.min(window.screen.width, window.screen.height) <= 480;
                     var on = landscapePhone && !portrait && (touch || smallLongSide);
                     document.body.classList.toggle("ref-body--mobile-op", on);
-                    var shell = document.querySelector(".ref-shell");
-                    if (shell) {
-                        shell.setAttribute("data-ui-mode", on ? "mobile-op" : "desktop");
+                    tabletAssignIds(on);
+                    var shellDesk = document.querySelector(".ref-shell--desktop");
+                    if (shellDesk) {
+                        shellDesk.setAttribute("data-ui-mode", on ? "mobile-hidden" : "desktop");
                     }
                     if (on !== _mobileOpWasOn) {
                         _mobileOpWasOn = on;
                         if (typeof window.__indupackRenderLista === "function") {
                             window.__indupackRenderLista();
+                        }
+                        if (typeof window.__indupackRender === "function") {
+                            window.__indupackRender();
                         }
                     }
                     return on;
@@ -4445,51 +4753,59 @@ section.ref-actions.hmi-actions {
                 var icon = document.getElementById("op-hero-icon");
                 var title = document.getElementById("op-hero-title");
                 var sub = document.getElementById("op-hero-sub");
+                if (!hero || !icon || !title || !sub) return;
                 var albl = document.getElementById("op-hero-aside-lbl");
                 var atime = document.getElementById("op-hero-aside-time");
                 var adate = document.getElementById("op-hero-aside-date");
                 var maq = estado.maquina || {};
                 var p = getAtual();
-                hero.className = "hmi-status hmi-panel op-hero op-hero--" + mode;
+                var mobileOp = document.body.classList.contains("ref-body--mobile-op");
+                hero.className = (mobileOp ? "mob-status " : "hmi-status hmi-panel ") + "op-hero op-hero--" + mode;
                 var now = new Date();
-                adate.textContent = now.toLocaleDateString("pt-BR");
+                if (adate) adate.textContent = now.toLocaleDateString("pt-BR");
 
                 if (mode === "run") {
                     icon.innerHTML = SVG_PLAY;
                     title.textContent = "RODANDO";
                     sub.textContent = "PRODUÇÃO ATIVA";
-                    albl.textContent = "Desde";
+                    if (albl) albl.textContent = "Desde";
                     var ep = parseInt(maq.producao_sessao_epoch, 10) || 0;
-                    if (ep > 0) {
-                        atime.textContent = new Date(ep).toLocaleTimeString("pt-BR", { hour12: false });
-                    } else {
-                        atime.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                    if (atime) {
+                        if (ep > 0) {
+                            atime.textContent = new Date(ep).toLocaleTimeString("pt-BR", { hour12: false });
+                        } else {
+                            atime.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                        }
                     }
                 } else if (mode === "maint") {
                     icon.innerHTML = SVG_WRENCH;
                     title.textContent = "MANUTENÇÃO";
                     sub.textContent = "Não produzir";
-                    albl.textContent = "Relógio";
-                    atime.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                    if (albl) albl.textContent = "Relógio";
+                    if (atime) atime.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
                 } else if (mode === "standby") {
                     icon.innerHTML = SVG_PAUSE;
                     title.textContent = "AGUARDANDO";
                     sub.textContent = "Aguardando material";
-                    albl.textContent = "Desde";
-                    if (stoppedAt) {
-                        atime.textContent = new Date(stoppedAt).toLocaleTimeString("pt-BR", { hour12: false });
-                    } else {
-                        atime.textContent = "--:--";
+                    if (albl) albl.textContent = "Desde";
+                    if (atime) {
+                        if (stoppedAt) {
+                            atime.textContent = new Date(stoppedAt).toLocaleTimeString("pt-BR", { hour12: false });
+                        } else {
+                            atime.textContent = "--:--";
+                        }
                     }
                 } else {
                     icon.innerHTML = SVG_ALERT;
                     title.textContent = "PARADA";
                     sub.textContent = disp(stopReason);
-                    albl.textContent = "Parou às";
-                    if (stoppedAt) {
-                        atime.textContent = new Date(stoppedAt).toLocaleTimeString("pt-BR", { hour12: false });
-                    } else {
-                        atime.textContent = "--:--";
+                    if (albl) albl.textContent = "Parou às";
+                    if (atime) {
+                        if (stoppedAt) {
+                            atime.textContent = new Date(stoppedAt).toLocaleTimeString("pt-BR", { hour12: false });
+                        } else {
+                            atime.textContent = "--:--";
+                        }
                     }
                 }
             }
@@ -4531,35 +4847,49 @@ section.ref-actions.hmi-actions {
                 var btnStopTxt = document.getElementById("btn-stop-txt");
                 var btnStopIco = document.getElementById("btn-stop-ico");
                 var btnFin = document.getElementById("btn-finish");
+                var mobileOp = document.body.classList.contains("ref-body--mobile-op");
+                var clsResume = mobileOp ? "mob-cmd--resume" : "hmi-cmd--resume";
+                var clsStart = mobileOp ? "mob-cmd--start" : "hmi-cmd--start";
+                var stopIcoMob =
+                    '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>';
 
                 if (btnStart && btnStartTxt) {
-                    btnStart.classList.remove("hmi-cmd--resume", "hmi-cmd--start");
+                    btnStart.classList.remove("hmi-cmd--resume", "hmi-cmd--start", "mob-cmd--resume", "mob-cmd--start");
                     if (run) {
                         btnStart.disabled = true;
-                        btnStartTxt.innerHTML = "INICIAR<br>PRODUÇÃO";
-                        btnStart.classList.add("hmi-cmd--start");
+                        if (mobileOp) btnStartTxt.textContent = "INICIAR";
+                        else btnStartTxt.innerHTML = "INICIAR<br>PRODUÇÃO";
+                        btnStart.classList.add(clsStart);
                     } else if (maint || noPedido || fin) {
                         btnStart.disabled = true;
-                        btnStartTxt.innerHTML = pe > 0 ? "RETOMAR<br>PRODUÇÃO" : "INICIAR<br>PRODUÇÃO";
-                        btnStart.classList.add(pe > 0 ? "hmi-cmd--resume" : "hmi-cmd--start");
+                        if (mobileOp) btnStartTxt.textContent = pe > 0 ? "RETOMAR" : "INICIAR";
+                        else btnStartTxt.innerHTML = pe > 0 ? "RETOMAR<br>PRODUÇÃO" : "INICIAR<br>PRODUÇÃO";
+                        btnStart.classList.add(pe > 0 ? clsResume : clsStart);
                     } else {
                         btnStart.disabled = false;
                         if (pe > 0) {
-                            btnStartTxt.innerHTML = "RETOMAR<br>PRODUÇÃO";
-                            btnStart.classList.add("hmi-cmd--resume");
+                            if (mobileOp) btnStartTxt.textContent = "RETOMAR";
+                            else btnStartTxt.innerHTML = "RETOMAR<br>PRODUÇÃO";
+                            btnStart.classList.add(clsResume);
                         } else {
-                            btnStartTxt.innerHTML = "INICIAR<br>PRODUÇÃO";
-                            btnStart.classList.add("hmi-cmd--start");
+                            if (mobileOp) btnStartTxt.textContent = "INICIAR";
+                            else btnStartTxt.innerHTML = "INICIAR<br>PRODUÇÃO";
+                            btnStart.classList.add(clsStart);
                         }
                     }
                 }
 
                 if (btnStop && btnStopTxt && btnStopIco) {
                     btnStop.disabled = !run || maint;
-                    btnStop.classList.remove("hmi-cmd--resume");
-                    btnStop.classList.add("hmi-cmd--stop");
-                    btnStopTxt.innerHTML = "PARAR<br>MÁQUINA";
-                    btnStopIco.innerHTML = SVG_STOP_ICO;
+                    btnStop.classList.remove("hmi-cmd--resume", "mob-cmd--resume");
+                    btnStop.classList.add(mobileOp ? "mob-cmd--stop" : "hmi-cmd--stop");
+                    if (mobileOp) {
+                        btnStopTxt.textContent = "PARAR";
+                        btnStopIco.innerHTML = stopIcoMob;
+                    } else {
+                        btnStopTxt.innerHTML = "PARAR<br>MÁQUINA";
+                        btnStopIco.innerHTML = SVG_STOP_ICO;
+                    }
                     btnStop.setAttribute("aria-pressed", run ? "true" : "false");
                 }
 
@@ -4881,6 +5211,7 @@ section.ref-actions.hmi-actions {
             function renderLista() {
                 var wrap = document.getElementById("list-pedidos");
                 var empty = document.getElementById("list-empty");
+                if (!wrap || !empty) return;
                 var list = getPedidos();
                 var maq = estado.maquina || {};
                 var stu = String(maq.status || "PARADA").toUpperCase();
@@ -4983,6 +5314,7 @@ section.ref-actions.hmi-actions {
                 });
             }
             window.__indupackRenderLista = renderLista;
+            window.__indupackRender = render;
 
             function updateHeaderStatus() {
                 var st = String((estado.maquina || {}).status || "PARADA");
@@ -5059,10 +5391,7 @@ section.ref-actions.hmi-actions {
                 var tuEl = document.getElementById("hmi-op-turno");
                 if (opEl) opEl.textContent = disp(maq.operador_atual);
                 if (tuEl) tuEl.textContent = disp(maq.turno_atual);
-                var comboEl = document.getElementById("hmi-op-combo");
-                if (comboEl) {
-                    comboEl.textContent = disp(maq.operador_atual) + " / " + disp(maq.turno_atual) + " / " + tempoProducaoDisplay();
-                }
+                setOpComboDisplay(maq);
                 document.getElementById("hmi-op-produzido").textContent = fmtInt(produzido);
                 document.getElementById("hmi-op-faltam").textContent = fmtInt(faltam);
                 document.getElementById("hmi-op-ef").textContent = eficiencia + "%";
@@ -5106,12 +5435,17 @@ section.ref-actions.hmi-actions {
                 if (apFill) apFill.style.width = p ? pct + "%" : "0%";
 
                 syncCommandButtons();
+                syncMobPanel();
+                syncMobConnFromFooter();
             }
 
             function renderClock() {
                 var now = new Date();
+                var ts = now.toLocaleTimeString("pt-BR", { hour12: false });
                 var tEl = document.getElementById("clock-time");
-                if (tEl) tEl.textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+                if (tEl) tEl.textContent = ts;
+                var mobClk = document.getElementById("mob-clock-time");
+                if (mobClk) mobClk.textContent = ts;
                 var wk = document.getElementById("clock-weekday");
                 if (wk) {
                     wk.textContent = now.toLocaleDateString("pt-BR", { weekday: "long" });
@@ -5124,6 +5458,7 @@ section.ref-actions.hmi-actions {
                 renderLista();
                 updateHeaderStatus();
                 updateFields();
+                syncMobPanel();
             }
 
             function refresh() {
@@ -5135,12 +5470,14 @@ section.ref-actions.hmi-actions {
                             if (lk) { lk.textContent = "Desconectado"; lk.classList.remove("hmi-foot__conn-txt--ok"); }
                             var dotOff = document.getElementById("ft-conn-dot");
                             if (dotOff) dotOff.classList.add("is-off");
+                            syncMobConnFromFooter();
                             return;
                         }
                         var lk2 = document.getElementById("ft-link");
                         if (lk2) { lk2.textContent = "Conectado"; lk2.classList.add("hmi-foot__conn-txt--ok"); }
                         var dotOn = document.getElementById("ft-conn-dot");
                         if (dotOn) dotOn.classList.remove("is-off");
+                        syncMobConnFromFooter();
                         estado = data;
                         var maq = estado.maquina || {};
                         var nfp = pedidoFingerprintFromEstado();
@@ -5196,30 +5533,44 @@ section.ref-actions.hmi-actions {
                 });
             }
 
-            document.getElementById("btn-start").addEventListener("click", function() {
-                var b = document.getElementById("btn-start");
-                if (b && b.disabled) return;
-                var maq = estado.maquina || {};
-                var pe = parseInt(maq.parada_inicio_epoch, 10) || 0;
-                var p = getAtual();
-                var jaRegistrouInicio = p && String(p.operador_inicio || "").trim();
-                if (pe > 0 && jaRegistrouInicio) {
-                    fetch("/tablet/iniciar/" + MAQ, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ retomar: true })
-                    })
-                        .then(function(r) { return r.json(); })
-                        .then(function(d) {
-                            if (d && d.ok) refresh();
-                        });
+            document.body.addEventListener("click", function(ev) {
+                var startBtn = ev.target.closest("#btn-start");
+                if (startBtn) {
+                    if (startBtn.disabled) return;
+                    var maq = estado.maquina || {};
+                    var pe = parseInt(maq.parada_inicio_epoch, 10) || 0;
+                    var p = getAtual();
+                    var jaRegistrouInicio = p && String(p.operador_inicio || "").trim();
+                    if (pe > 0 && jaRegistrouInicio) {
+                        fetch("/tablet/iniciar/" + MAQ, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ retomar: true })
+                        })
+                            .then(function(r) { return r.json(); })
+                            .then(function(d) {
+                                if (d && d.ok) refresh();
+                            });
+                        return;
+                    }
+                    openModalInicioOp();
                     return;
                 }
-                openModalInicioOp();
-            });
-            document.getElementById("btn-stop").addEventListener("click", function() {
-                var st = String((estado.maquina || {}).status || "PARADA").toUpperCase();
-                if (st === "RODANDO") openStopModal();
+                var stopBtn = ev.target.closest("#btn-stop");
+                if (stopBtn) {
+                    var st = String((estado.maquina || {}).status || "PARADA").toUpperCase();
+                    if (st === "RODANDO") openStopModal();
+                    return;
+                }
+                var finBtn = ev.target.closest("#btn-finish");
+                if (finBtn) {
+                    if (finBtn.disabled) return;
+                    openModalFimOp();
+                    return;
+                }
+                if (ev.target.closest("#btn-aplicar-total")) {
+                    aplicarTotalProducao();
+                }
             });
 
             document.querySelectorAll("#modal-parada-cards .hmi-modal-card").forEach(function(card) {
@@ -5265,15 +5616,8 @@ section.ref-actions.hmi-actions {
                 var mf = document.getElementById("modal-fim-op");
                 if (mf && !mf.hidden) closeModalFimOp();
             });
-            document.getElementById("btn-finish").addEventListener("click", function() {
-                var b = document.getElementById("btn-finish");
-                if (b && b.disabled) return;
-                openModalFimOp();
-            });
-
-            document.getElementById("btn-aplicar-total").addEventListener("click", aplicarTotalProducao);
-            document.getElementById("apont-total").addEventListener("keydown", function(ev) {
-                if (ev.key === "Enter") {
+            document.body.addEventListener("keydown", function(ev) {
+                if (ev.key === "Enter" && ev.target && ev.target.id === "apont-total") {
                     ev.preventDefault();
                     aplicarTotalProducao();
                 }
@@ -5289,10 +5633,8 @@ section.ref-actions.hmi-actions {
                 var bd = document.getElementById("banner-prod-duration");
                 if (bd) bd.textContent = tempoProducaoDisplay();
                 var maq = estado.maquina || {};
-                var comboEl = document.getElementById("hmi-op-combo");
-                if (comboEl) {
-                    comboEl.textContent = disp(maq.operador_atual) + " / " + disp(maq.turno_atual) + " / " + tempoProducaoDisplay();
-                }
+                setOpComboDisplay(maq);
+                syncMobPanel();
                 var st = String((estado.maquina || {}).status || "PARADA");
                 var stu = st.toUpperCase();
                 if (stu === "PARADA" && stoppedAt) {
