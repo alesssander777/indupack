@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from database.database import SessionLocal
 from database.models import Apontamento
 from storage.state import dados_maquinas
+from reportlab.platypus.flowables import Flowable
 
 _ROOT = Path(__file__).resolve().parent.parent
 
@@ -634,111 +635,464 @@ def _resolve_logo_path() -> Path | None:
     return None
 
 
+def _pdf_fmt_br_int(n: Any) -> str:
+    try:
+        v = int(n)
+        return f"{v:,}".replace(",", ".")
+    except (TypeError, ValueError):
+        return "—"
+
+
+class _PdfDrawingFlowable(Flowable):
+    """Flowable que desenha um reportlab.graphics.shapes.Drawing."""
+
+    __slots__ = ("drawing", "width", "height")
+
+    def __init__(self, drawing: Any) -> None:
+        super().__init__()
+        self.drawing = drawing
+        self.width = float(getattr(drawing, "width", 400))
+        self.height = float(getattr(drawing, "height", 160))
+
+    def draw(self) -> None:
+        from reportlab.graphics import renderPDF
+
+        renderPDF.draw(self.drawing, self.canv, 0, 0)
+
+    def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
+        return self.width, self.height
+
+    def split(self, availWidth: float, availHeight: float) -> list:
+        return []
+
+
+def _pdf_vertical_bars(labels: list[str], values: list[float], title: str, w_pt: float = 480, h_pt: float = 175) -> Any:
+    from reportlab.graphics.charts.barcharts import VerticalBarChart
+    from reportlab.graphics.shapes import Drawing, String
+    from reportlab.lib import colors as rl_colors
+
+    labels = [str(x)[:18] for x in labels]
+    vals = [float(v) if v is not None else 0.0 for v in values]
+    if not vals:
+        vals = [0.0]
+    d = Drawing(w_pt, h_pt + 22)
+    d.add(String(8, h_pt + 6, title, fontSize=9, fillColor=rl_colors.HexColor("#0f2744"), fontName="Helvetica-Bold"))
+    bc = VerticalBarChart()
+    bc.x = 40
+    bc.y = 28
+    bc.height = h_pt - 38
+    bc.width = w_pt - 52
+    bc.data = [vals]
+    bc.strokeColor = rl_colors.HexColor("#cbd5e1")
+    bc.bars[0].fillColor = rl_colors.HexColor("#2d7ab8")
+    n = max(len(vals), 1)
+    bw = (bc.width / max(n * 1.35, 1)) if n else 10
+    bc.barWidth = min(18, max(6, bw))
+    bc.categoryAxis.categoryNames = labels
+    bc.categoryAxis.strokeColor = rl_colors.HexColor("#94a3b8")
+    bc.categoryAxis.strokeWidth = 0.5
+    bc.categoryAxis.labels.fontName = "Helvetica"
+    bc.categoryAxis.labels.fontSize = 7
+    bc.categoryAxis.labels.angle = 30
+    bc.valueAxis.strokeColor = rl_colors.HexColor("#cbd5e1")
+    bc.valueAxis.labels.fontName = "Helvetica"
+    bc.valueAxis.labels.fontSize = 7
+    bc.valueAxis.valueMin = 0
+    bc.groupSpacing = 6
+    d.add(bc)
+    return d
+
+
+def _pdf_horizontal_bars(labels: list[str], values: list[float], title: str, w_pt: float = 480, row_h: float = 16) -> Any:
+    from reportlab.graphics.shapes import Drawing, Rect, String
+    from reportlab.lib import colors as rl_colors
+
+    navy = rl_colors.HexColor("#1e4976")
+    muted = rl_colors.HexColor("#475569")
+    labels = [str(x)[:32] for x in labels]
+    vals = [float(v) if v is not None else 0.0 for v in values]
+    if not vals:
+        vals = [0.0]
+        labels = ["—"]
+    mx = max(vals) or 1.0
+    head = 22
+    h_pt = head + len(labels) * row_h + 14
+    d = Drawing(w_pt, h_pt)
+    d.add(String(8, h_pt - 12, title, fontSize=9, fillColor=rl_colors.HexColor("#0f2744"), fontName="Helvetica-Bold"))
+    bar_max = w_pt - 150
+    x0 = 130
+    y_top = h_pt - head - 8
+    for i, (lb, v) in enumerate(zip(labels, vals)):
+        y = y_top - i * row_h
+        bw = bar_max * (v / mx)
+        d.add(String(4, y - 2, lb, fontSize=7.5, fillColor=muted, fontName="Helvetica"))
+        d.add(Rect(x0, y - 10, bw, 9, fillColor=navy, strokeColor=rl_colors.HexColor("#0c2744"), strokeWidth=0.3))
+        d.add(String(x0 + bar_max + 4, y - 2, _pdf_fmt_br_int(int(v)) if v == int(v) else f"{v:.1f}", fontSize=7, fillColor=muted))
+    return d
+
+
+def _pdf_make_header_table(
+    logo_p: Path | None,
+    titulo_pdf: str,
+    periodo_txt: str,
+    gerado_txt: str,
+    empresa: str,
+    status_txt: str,
+    styles: dict[str, Any],
+    tw: float,
+) -> Any:
+    from reportlab.lib import colors as rl_colors
+    from reportlab.platypus import Image, Paragraph, Table, TableStyle
+
+    navy = rl_colors.HexColor("#0c2744")
+
+    left_cells: list[Any] = []
+    if logo_p and logo_p.suffix.lower() in (".png", ".jpg", ".jpeg"):
+        try:
+            left_cells.append(Image(str(logo_p), width=3.4 * 28.346, height=1.25 * 28.346))
+        except Exception:
+            left_cells.append(Paragraph("", styles["hdr_white"]))
+    else:
+        left_cells.append(Paragraph("", styles["hdr_white"]))
+    left_cells.append(
+        Paragraph(
+            f"<font size=18><b>{empresa}</b></font><br/><font size=11>MES · Relatório executivo industrial</font>",
+            styles["hdr_white"],
+        )
+    )
+
+    meta_html = (
+        f"<font size=9><b>{titulo_pdf}</b></font><br/><br/>"
+        f"<font size=8>Período analisado<br/><b>{periodo_txt}</b></font><br/><br/>"
+        f"<font size=8>Emissão<br/><b>{gerado_txt}</b></font><br/><br/>"
+        f"<font size=8>Status<br/><b>{status_txt}</b></font>"
+    )
+    right_cell = Paragraph(meta_html, styles["hdr_white_right"])
+
+    inner = Table([[left_cells[0], left_cells[1]]], colWidths=[4 * 28.346 + 10, tw - (4 * 28.346 + 10) - 160])
+    inner.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    meta_tbl = Table([[inner, right_cell]], colWidths=[tw - 175, 165])
+    meta_tbl.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), navy),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                ("TOPPADDING", (0, 0), (-1, -1), 16),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
+                ("LINEBELOW", (0, 0), (-1, -1), 1.5, rl_colors.HexColor("#38bdf8")),
+            ]
+        )
+    )
+    return meta_tbl
+
+
+def _pdf_kpi_cards(payload: dict[str, Any], styles: dict[str, Any], tw: float) -> Any:
+    from reportlab.lib import colors as rl_colors
+    from reportlab.platypus import Paragraph, Table, TableStyle
+
+    kp = payload.get("kpis") or {}
+    sem = payload.get("semanal") or {}
+    dia = payload.get("diario") or {}
+    cmq = sem.get("comparacao_maquinas") or []
+    po = dia.get("por_operador") or []
+
+    best_m_name = str((cmq[0] or {}).get("nome") or "—") if cmq else "—"
+    best_m_val = _pdf_fmt_br_int((cmq[0] or {}).get("producao")) if cmq else "—"
+
+    best_o_name = str((po[0] or {}).get("nome") or "—") if po else "—"
+    best_o_val = _pdf_fmt_br_int((po[0] or {}).get("quantidade")) if po else "—"
+
+    prod = _pdf_fmt_br_int(kp.get("producao_total"))
+    oee = kp.get("oee_proxy_pct")
+    oee_s = f"{oee} %" if oee is not None else "—"
+    disp = kp.get("disponibilidade_proxy_pct")
+    disp_s = f"{disp} %" if disp is not None else "—"
+    par = str(kp.get("tempo_parado_fmt") or "—")
+
+    def card(label: str, value: str, sub: str = "") -> Any:
+        lab = Paragraph(f"<font size=7 color='#64748b'>{label}</font>", styles["card_lab"])
+        val = Paragraph(f"<font size=16><b>{value}</b></font>", styles["card_val"])
+        rows: list[list[Any]] = [[lab], [val]]
+        if sub:
+            rows.append([Paragraph(f"<font size=9 color='#475569'>{sub}</font>", styles["card_lab"])])
+        inner = Table(rows, colWidths=[tw / 3 - 18])
+        inner.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), rl_colors.HexColor("#f4f7fb")),
+                    ("BOX", (0, 0), (-1, -1), 0.9, rl_colors.HexColor("#cbd5e1")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ]
+            )
+        )
+        return inner
+
+    w3 = tw / 3 - 12
+    r1 = Table(
+        [
+            [
+                card("Produção total", prod, ""),
+                card("OEE (proxy)", oee_s, ""),
+                card("Disponibilidade", disp_s, ""),
+            ]
+        ],
+        colWidths=[w3, w3, w3],
+    )
+    r1.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 4), ("RIGHTPADDING", (0, 0), (-1, -1), 4)]))
+
+    r2 = Table(
+        [
+            [
+                card("Tempo parado (total)", par, ""),
+                card("Melhor máquina", best_m_name[:20], best_m_val + " un." if best_m_val != "—" else "—"),
+                card("Melhor operador", best_o_name[:20], best_o_val + " un." if best_o_val != "—" else "—"),
+            ]
+        ],
+        colWidths=[w3, w3, w3],
+    )
+    r2.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("TOPPADDING", (0, 0), (-1, -1), 8), ("LEFTPADDING", (0, 0), (-1, -1), 4), ("RIGHTPADDING", (0, 0), (-1, -1), 4)]))
+
+    outer = Table([[r1], [r2]], colWidths=[tw])
+    outer.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("TOPPADDING", (0, 0), (-1, -1), 0)]))
+    return outer
+
+
+def _pdf_ent_table(headers: list[str], rows: list[list[str]], col_widths: list[float]) -> Any:
+    from reportlab.lib import colors as rl_colors
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import Paragraph, Table, TableStyle
+
+    navy = rl_colors.HexColor("#0c2744")
+    hdr_style = ParagraphStyle(
+        name="pdf_ent_th",
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=11,
+        textColor=rl_colors.HexColor("#f8fafc"),
+        alignment=1,
+    )
+    cell_style = ParagraphStyle(
+        name="pdf_ent_td",
+        fontName="Helvetica",
+        fontSize=8,
+        leading=11,
+        textColor=rl_colors.HexColor("#334155"),
+    )
+    hdr_par = [Paragraph(str(h), hdr_style) for h in headers]
+    body = []
+    for r in rows:
+        body.append([Paragraph(str(cell), cell_style) for cell in r])
+    data = [hdr_par] + body
+    t = Table(data, colWidths=col_widths)
+    t.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), navy),
+                ("TEXTCOLOR", (0, 0), (-1, 0), rl_colors.HexColor("#f8fafc")),
+                ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+                ("TOPPADDING", (0, 0), (-1, 0), 8),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.HexColor("#ffffff"), rl_colors.HexColor("#f1f5f9")]),
+                ("GRID", (0, 0), (-1, -1), 0.35, rl_colors.HexColor("#e2e8f0")),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("TOPPADDING", (0, 1), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 1), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    return t
+
+
 def build_pdf_bytes(payload: dict[str, Any], titulo: str) -> bytes:
-    from reportlab.lib import colors
+    from reportlab.lib import colors as rl_colors
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import cm
     from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=1.5 * cm, leftMargin=1.5 * cm, topMargin=1.2 * cm, bottomMargin=1.2 * cm)
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        rightMargin=1.4 * cm,
+        leftMargin=1.4 * cm,
+        topMargin=1.1 * cm,
+        bottomMargin=1.35 * cm,
+    )
+    tw = A4[0] - doc.leftMargin - doc.rightMargin
     styles = getSampleStyleSheet()
-    story: list[Any] = []
-    logo_p = _resolve_logo_path()
-    if logo_p and logo_p.suffix.lower() in (".png", ".jpg", ".jpeg"):
-        try:
-            img = Image(str(logo_p), width=3.2 * cm, height=1.2 * cm)
-            story.append(img)
-        except Exception:
-            pass
-    from services.runtime_config import visual_branding
-
-    nome = visual_branding().get("nome_empresa") or "INDUPACK"
-    story.append(Paragraph(f"<b>{nome}</b> — Relatório analítico industrial", styles["Title"]))
-    story.append(Paragraph(f"<i>{titulo}</i>", styles["Normal"]))
-    story.append(Paragraph(f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles["Normal"]))
-    fl = payload.get("filtros") or {}
-    story.append(
-        Paragraph(
-            f"Período: {fl.get('inicio')} a {fl.get('fim')}",
-            styles["Normal"],
+    styles.add(ParagraphStyle(name="HdrWhite", parent=styles["Normal"], textColor=rl_colors.HexColor("#f8fafc"), fontName="Helvetica", leading=13))
+    styles.add(
+        ParagraphStyle(
+            name="HdrWhiteRight",
+            parent=styles["Normal"],
+            textColor=rl_colors.HexColor("#e2e8f0"),
+            fontName="Helvetica",
+            alignment=2,
+            leading=12,
         )
     )
-    story.append(Spacer(1, 0.4 * cm))
-    kp = payload.get("kpis") or {}
-    kdata = [[k, str(v)] for k, v in kp.items()]
-    if kdata:
-        t = Table([["Indicador", "Valor"]] + kdata, colWidths=[8 * cm, 8 * cm])
-        t.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a4a62")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
-                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.whitesmoke, colors.HexColor("#f1f5f9")]),
-                ]
-            )
+    styles.add(ParagraphStyle(name="SecTitle", parent=styles["Heading2"], textColor=rl_colors.HexColor("#0c2744"), fontSize=12, spaceAfter=8, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle(name="card_lab", parent=styles["Normal"], alignment=0, leading=10))
+    styles.add(ParagraphStyle(name="card_val", parent=styles["Normal"], alignment=0, leading=20))
+
+    hdr_map = {
+        "hdr_white": styles["HdrWhite"],
+        "hdr_white_right": styles["HdrWhiteRight"],
+        "sec": styles["SecTitle"],
+        "card_lab": styles["card_lab"],
+        "card_val": styles["card_val"],
+    }
+
+    logo_p = _resolve_logo_path()
+    from services.runtime_config import visual_branding
+
+    empresa = str(visual_branding().get("nome_empresa") or "INDUPACK")
+    fl = payload.get("filtros") or {}
+    ini = fl.get("inicio") or "—"
+    fim = fl.get("fim") or "—"
+    periodo_txt = f"{ini} — {fim}"
+    now = datetime.now()
+    gerado_txt = now.strftime("%d/%m/%Y   %H:%M")
+    ok = payload.get("ok", True)
+    aviso = str(payload.get("aviso") or "").strip()
+    status_txt = "Consolidado" if ok and not aviso else ("Atenção — " + aviso[:80] if aviso else "Consolidado")
+
+    story: list[Any] = []
+    story.append(
+        _pdf_make_header_table(
+            logo_p,
+            titulo,
+            periodo_txt,
+            gerado_txt,
+            empresa,
+            status_txt,
+            hdr_map,
+            tw,
         )
-        story.append(t)
-    story.append(Spacer(1, 0.5 * cm))
+    )
+    story.append(Spacer(1, 0.55 * cm))
+    story.append(Paragraph("<b>Indicadores executivos</b>", hdr_map["sec"]))
+    story.append(Spacer(1, 0.25 * cm))
+    story.append(_pdf_kpi_cards(payload, hdr_map, tw))
+    story.append(Spacer(1, 0.55 * cm))
+
     sem = payload.get("semanal") or {}
     cmq = sem.get("comparacao_maquinas") or []
     if cmq:
-        story.append(Paragraph("<b>Produção por máquina</b>", styles["Heading2"]))
-        rows = [["Máquina", "Setor", "Qtd", "Parada", "Ef. %"]]
-        for x in cmq[:20]:
-            rows.append(
+        labs = [str(x.get("nome") or "")[:16] for x in cmq[:10]]
+        vals = [float(x.get("producao") or 0) for x in cmq[:10]]
+        story.append(Paragraph("<b>Produção por máquina</b>", hdr_map["sec"]))
+        story.append(Spacer(1, 0.15 * cm))
+        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs, vals, "Volume produzido no período (unidades)", tw, 168)))
+        story.append(Spacer(1, 0.35 * cm))
+        rows_m = []
+        for x in cmq[:18]:
+            rows_m.append(
                 [
-                    str(x.get("nome") or ""),
-                    str(x.get("setor") or ""),
-                    str(x.get("producao") or ""),
-                    str(x.get("tempo_parado_fmt") or ""),
-                    str(x.get("eficiencia_est") or ""),
+                    str(x.get("nome") or "—")[:26],
+                    str(x.get("setor") or "—")[:18],
+                    _pdf_fmt_br_int(x.get("producao")),
+                    str(x.get("tempo_parado_fmt") or "—"),
+                    f"{x.get('eficiencia_est')}%",
                 ]
             )
-        t2 = Table(rows, colWidths=[4 * cm, 3 * cm, 2 * cm, 2.5 * cm, 2 * cm])
-        t2.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a4a62")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
-                ]
+        story.append(
+            _pdf_ent_table(
+                ["Máquina", "Setor", "Produção", "Tempo parado", "Eficiência est."],
+                rows_m,
+                [tw * 0.26, tw * 0.18, tw * 0.18, tw * 0.20, tw * 0.18],
             )
         )
-        story.append(t2)
-    story.append(Spacer(1, 0.4 * cm))
-    det = (payload.get("detalhado") or [])[:40]
+        story.append(Spacer(1, 0.45 * cm))
+
+    prod_top = sem.get("produtos_top") or []
+    if prod_top:
+        labs_p = [str(x.get("nome") or "")[:18] for x in prod_top[:8]]
+        vals_p = [float(x.get("quantidade") or 0) for x in prod_top[:8]]
+        story.append(Paragraph("<b>Distribuição — produtos em destaque</b>", hdr_map["sec"]))
+        story.append(Spacer(1, 0.15 * cm))
+        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs_p, vals_p, "Quantidade por produto (unidades)", tw, 168)))
+        story.append(Spacer(1, 0.35 * cm))
+
+    if cmq:
+        labs_e = [str(x.get("nome") or "")[:14] for x in cmq[:10]]
+        vals_e = [float(x.get("eficiencia_est") or 0) for x in cmq[:10]]
+        story.append(Paragraph("<b>Eficiência estimada por máquina</b>", hdr_map["sec"]))
+        story.append(Spacer(1, 0.15 * cm))
+        story.append(_PdfDrawingFlowable(_pdf_vertical_bars(labs_e, vals_e, "Eficiência vs meta referência (%)", tw, 155)))
+
+    dia = payload.get("diario") or {}
+    par_mot = dia.get("paradas_motivo") or []
+    if par_mot:
+        story.append(Spacer(1, 0.45 * cm))
+        story.append(Paragraph("<b>Paradas — tempo por motivo</b>", hdr_map["sec"]))
+        story.append(Spacer(1, 0.15 * cm))
+        labs_s = [str(x.get("motivo") or x.get("nome") or "") for x in par_mot[:12]]
+        vals_s = [float(x.get("duracao_s") or 0) for x in par_mot[:12]]
+        story.append(_PdfDrawingFlowable(_pdf_horizontal_bars(labs_s, vals_s, "Somatório de duração (segundos)", tw)))
+        story.append(Spacer(1, 0.25 * cm))
+        rows_p = [[str(x.get("motivo") or "—")[:36], str(x.get("duracao_fmt") or "—")] for x in par_mot[:14]]
+        story.append(_pdf_ent_table(["Motivo / tipo", "Tempo parado"], rows_p, [tw * 0.72, tw * 0.28]))
+
+    det = (payload.get("detalhado") or [])[:35]
     if det:
-        story.append(Paragraph("<b>Apontamentos (amostra)</b>", styles["Heading2"]))
-        r3 = [["Produto", "Op.", "Máq.", "Qtd", "Horário"]]
+        story.append(Spacer(1, 0.45 * cm))
+        story.append(Paragraph("<b>Apontamentos — amostra analítica</b>", hdr_map["sec"]))
+        story.append(Spacer(1, 0.15 * cm))
+        rows_d = []
         for d in det:
-            r3.append(
+            rows_d.append(
                 [
-                    str(d.get("produto") or "")[:28],
+                    str(d.get("produto") or "")[:22],
                     str(d.get("operador") or "")[:14],
                     str(d.get("maquina") or "")[:14],
-                    str(d.get("quantidade") or ""),
-                    str(d.get("horario") or "")[:19],
+                    _pdf_fmt_br_int(d.get("quantidade")),
+                    str(d.get("horario") or "")[:16],
                 ]
             )
-        t3 = Table(r3, colWidths=[5 * cm, 2.5 * cm, 2.5 * cm, 1.5 * cm, 3 * cm])
-        t3.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a4a62")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
-                    ("FONTSIZE", (0, 0), (-1, -1), 8),
-                ]
-            )
-        )
-        story.append(t3)
-    doc.build(story)
+        story.append(_pdf_ent_table(["Produto", "Operador", "Máquina", "Quantidade", "Horário"], rows_d, [tw * 0.30, tw * 0.18, tw * 0.18, tw * 0.14, tw * 0.20]))
+
+    notas = payload.get("notas_metodologia") or []
+    if notas:
+        story.append(Spacer(1, 0.45 * cm))
+        story.append(Paragraph("<b>Metodologia e observações</b>", hdr_map["sec"]))
+        for line in notas[:6]:
+            story.append(Paragraph(f"<font size=8 color='#64748b'>• {line}</font>", styles["Normal"]))
+
+    emit_iso = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    def _footer(canvas: Any, doc: Any) -> None:
+        canvas.saveState()
+        canvas.setStrokeColor(rl_colors.HexColor("#cbd5e1"))
+        canvas.setLineWidth(0.4)
+        yl = 0.95 * cm
+        canvas.line(doc.leftMargin, yl + 10, doc.pagesize[0] - doc.rightMargin, yl + 10)
+        canvas.setFont("Helvetica", 7.5)
+        canvas.setFillColor(rl_colors.HexColor("#64748b"))
+        left = f"INDUPACK MES · {empresa}"
+        right = f"Emitido em {emit_iso} · pág. {canvas.getPageNumber()}"
+        canvas.drawString(doc.leftMargin, yl, left)
+        canvas.drawRightString(doc.pagesize[0] - doc.rightMargin, yl, right)
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buf.getvalue()
 
 
