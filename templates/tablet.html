@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Operação — Máquina {{ id }} — {{ branding().nome_empresa }}</title>
@@ -294,11 +294,11 @@
                     </div>
                 </div>
                 <div class="mob-pedido" aria-label="Pedido atual">
-                    <div class="mob-pedido__row">
+                    <div class="mob-pedido__row mob-pedido__row--prod">
                         <span class="mob-pedido__k">Produto</span>
                         <span class="mob-pedido__v" id="mob-f-codigo">—</span>
                     </div>
-                    <div class="mob-pedido__row">
+                    <div class="mob-pedido__row mob-pedido__row--med" aria-hidden="true">
                         <span class="mob-pedido__k">Medida</span>
                         <span class="mob-pedido__v" id="mob-f-medida">—</span>
                     </div>
@@ -307,7 +307,7 @@
                         <span class="mob-pedido__v" id="mob-f-quantidade">0</span>
                     </div>
                     <div class="mob-pedido__row mob-pedido__row--op">
-                        <span class="mob-pedido__k">Operador</span>
+                        <span class="mob-pedido__k">Operador / turno</span>
                         <span class="mob-pedido__v" id="mob-hmi-op-combo">—</span>
                     </div>
                 </div>
@@ -3919,7 +3919,10 @@ section.ref-actions.hmi-actions {
     inset: 0;
     z-index: 40;
     box-sizing: border-box;
+    height: 100%;
+    height: 100dvh;
     height: calc(var(--vh-tab, 1dvh) * 100);
+    max-height: 100dvh;
     max-height: calc(var(--vh-tab, 1dvh) * 100);
     width: 100%;
     max-width: 100%;
@@ -3942,6 +3945,11 @@ section.ref-actions.hmi-actions {
 .ref-body--mobile-op {
     overflow: hidden;
     touch-action: manipulation;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
 }
 
 .ref-body--mobile-op .op-hero--maint .mob-status__title,
@@ -4017,8 +4025,10 @@ section.ref-actions.hmi-actions {
 
 .mob-body {
     display: grid;
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 52px minmax(0, 1fr);
     min-height: 0;
+    height: 100%;
+    max-height: 100%;
     overflow: hidden;
 }
 
@@ -4087,13 +4097,32 @@ section.ref-actions.hmi-actions {
 
 .mob-panel {
     display: grid;
-    grid-template-rows: auto auto minmax(0, auto) minmax(44px, 1fr);
+    grid-template-rows: auto auto auto minmax(44px, 1fr);
     gap: 3px;
     min-height: 0;
     max-height: 100%;
+    height: 100%;
     overflow: hidden;
     padding: 3px 5px max(3px, env(safe-area-inset-bottom)) 4px;
     box-sizing: border-box;
+}
+
+.ref-body--mobile-op .mob-pedido {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.65fr);
+}
+
+.ref-body--mobile-op .mob-pedido__row--prod {
+    grid-column: 1 / -1;
+}
+
+.ref-body--mobile-op .mob-pedido__row--op {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.ref-body--mobile-op .mob-pedido__row--qty {
+    grid-column: 1;
+    grid-row: 2;
 }
 
 .mob-status {
@@ -4348,36 +4377,290 @@ section.ref-actions.hmi-actions {
     height: 20px;
 }
 
-@media (max-width: 932px) and (orientation: landscape) and (max-height: 460px) {
-    .ref-body--mobile-op .mob-bar {
-        padding-top: 2px;
-        padding-bottom: 2px;
+/*
+ * iPhone 12 Pro Max — paisagem (~926×428 lógico, ~380–432px úteis no Safari).
+ * Layout operacional próprio: uma tela, sem rolagem do documento.
+ */
+html.ref-html--mobile-op {
+    overflow: hidden;
+    height: 100%;
+    height: 100dvh;
+}
+
+.ref-body--mobile-op .mob-pedido__row--med {
+    display: none !important;
+}
+
+.ref-body--iphone-12pm {
+    overflow: hidden !important;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+}
+
+.ref-body--iphone-12pm .ref-shell-mob {
+    display: grid !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    grid-template-rows: minmax(0, auto) minmax(0, 1fr);
+}
+
+.ref-body--iphone-12pm .mob-bar {
+    min-height: 26px;
+    max-height: 30px;
+    padding: max(2px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) 2px max(6px, env(safe-area-inset-left));
+    gap: 6px;
+}
+
+.ref-body--iphone-12pm .mob-bar__fila {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 0.58rem;
+}
+
+.ref-body--iphone-12pm .mob-bar__clock {
+    font-size: 0.82rem;
+}
+
+.ref-body--iphone-12pm .mob-bar__maq,
+.ref-body--iphone-12pm .mob-bar__conn {
+    font-size: 0.5rem;
+}
+
+.ref-body--iphone-12pm .mob-body {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.ref-body--iphone-12pm .mob-side {
+    padding: 2px 2px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.ref-body--iphone-12pm .mob-side__lbl {
+    font-size: 0.46rem;
+    padding-bottom: 2px;
+}
+
+.ref-body--iphone-12pm .mob-side__list {
+    overflow: hidden;
+    gap: 1px;
+    mask-image: linear-gradient(180deg, #000 85%, transparent);
+}
+
+.ref-body--iphone-12pm .mob-side__list .hmi-queue__card {
+    padding: 2px 3px !important;
+}
+
+.ref-body--iphone-12pm .mob-side__list .hmi-queue__summary {
+    font-size: 0.5rem !important;
+}
+
+.ref-body--iphone-12pm .mob-panel {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(44px, 1fr);
+    grid-template-areas:
+        "status"
+        "pedido"
+        "apont"
+        "cmds";
+    gap: 2px;
+    min-height: 0;
+    max-height: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 2px max(4px, env(safe-area-inset-right)) max(2px, env(safe-area-inset-bottom)) 3px;
+    box-sizing: border-box;
+}
+
+.ref-body--iphone-12pm .mob-status {
+    grid-area: status;
+    padding: 3px 6px;
+    min-height: 0;
+    max-height: 38px;
+}
+
+.ref-body--iphone-12pm .mob-status__ico {
+    width: 22px;
+    height: 22px;
+}
+
+.ref-body--iphone-12pm .mob-status__title {
+    font-size: 0.78rem;
+    line-height: 1.05;
+}
+
+.ref-body--iphone-12pm .mob-status__sub {
+    font-size: 0.56rem;
+}
+
+.ref-body--iphone-12pm .mob-pedido {
+    grid-area: pedido;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.55fr);
+    grid-template-rows: auto auto;
+    gap: 1px 6px;
+    padding: 3px 5px;
+    min-height: 0;
+}
+
+.ref-body--iphone-12pm .mob-pedido__row--prod {
+    grid-column: 1 / -1;
+}
+
+.ref-body--iphone-12pm .mob-pedido__row--qty {
+    grid-column: 1;
+}
+
+.ref-body--iphone-12pm .mob-pedido__row--op {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.ref-body--iphone-12pm .mob-pedido__k {
+    font-size: 0.44rem;
+}
+
+.ref-body--iphone-12pm .mob-pedido__v {
+    font-size: 0.66rem;
+}
+
+.ref-body--iphone-12pm .mob-pedido__row--prod .mob-pedido__v {
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ref-body--iphone-12pm .mob-pedido__row--qty .mob-pedido__v {
+    font-size: 0.82rem;
+}
+
+.ref-body--iphone-12pm .mob-apont {
+    grid-area: apont;
+    padding: 3px 5px;
+    gap: 2px;
+    min-height: 0;
+}
+
+.ref-body--iphone-12pm .mob-apont__input,
+.ref-body--iphone-12pm .mob-apont__btn {
+    min-height: 40px;
+    max-height: 42px;
+    font-size: 0.92rem;
+}
+
+.ref-body--iphone-12pm .mob-apont__btn {
+    min-width: 64px;
+    font-size: 0.58rem;
+}
+
+.ref-body--iphone-12pm .mob-apont__pct {
+    font-size: 0.82rem;
+}
+
+.ref-body--iphone-12pm .mob-apont__track {
+    height: 10px;
+}
+
+.ref-body--iphone-12pm .mob-apont__ratio {
+    font-size: 0.52rem;
+}
+
+.ref-body--iphone-12pm .mob-cmds {
+    grid-area: cmds;
+    gap: 3px;
+    min-height: 44px;
+    align-self: stretch;
+    max-height: 100%;
+}
+
+.ref-body--iphone-12pm .mob-cmd {
+    min-height: 44px;
+    max-height: none;
+    padding: 3px 2px;
+    gap: 2px;
+}
+
+.ref-body--iphone-12pm .mob-cmd__lbl {
+    font-size: 0.54rem;
+}
+
+.ref-body--iphone-12pm .mob-cmd__ico svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Safari com barra visível — altura útil menor */
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 400px) {
+    .ref-body--iphone-12pm .mob-bar {
+        min-height: 24px;
+        max-height: 26px;
     }
 
-    .ref-body--mobile-op .mob-status {
-        padding: 3px 6px;
-    }
-
-    .ref-body--mobile-op .mob-status__title {
-        font-size: 0.82rem;
-    }
-
-    .ref-body--mobile-op .mob-pedido {
+    .ref-body--iphone-12pm .mob-status {
+        max-height: 34px;
         padding: 2px 5px;
     }
 
-    .ref-body--mobile-op .mob-apont__input,
-    .ref-body--mobile-op .mob-apont__btn {
+    .ref-body--iphone-12pm .mob-pedido {
+        padding: 2px 4px;
+    }
+
+    .ref-body--iphone-12pm .mob-apont__input,
+    .ref-body--iphone-12pm .mob-apont__btn {
         min-height: 38px;
         max-height: 40px;
     }
 
-    .ref-body--mobile-op .mob-cmd {
+    .ref-body--iphone-12pm .mob-cmd {
+        min-height: 42px;
+    }
+}
+
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 460px) {
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-bar {
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-status {
+        padding: 3px 6px;
+    }
+
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-status__title {
+        font-size: 0.82rem;
+    }
+
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-pedido {
+        padding: 2px 5px;
+    }
+
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-apont__input,
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-apont__btn {
+        min-height: 38px;
+        max-height: 40px;
+    }
+
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-cmd {
         min-height: 40px;
         padding: 2px;
     }
 
-    .ref-body--mobile-op .mob-panel {
+    .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-panel {
         gap: 2px;
         padding-bottom: 2px;
     }
@@ -4499,10 +4782,19 @@ section.ref-actions.hmi-actions {
                 var prodParts = p ? parseProduto(p.produto) : { codigo: "—", medida: "—" };
                 var codPed = p && String(p.cod || "").trim() ? String(p.cod).trim() : prodParts.codigo;
                 var el;
+                var medTxt = p ? disp(medidaComPeso(p.produto)) : "—";
                 el = document.getElementById("mob-f-codigo");
-                if (el) el.textContent = p ? disp(codPed) : "—";
+                if (el) {
+                    if (p) {
+                        var prodLine = disp(codPed);
+                        if (medTxt && medTxt !== "—") prodLine += " · " + medTxt;
+                        el.textContent = prodLine;
+                    } else {
+                        el.textContent = "—";
+                    }
+                }
                 el = document.getElementById("mob-f-medida");
-                if (el) el.textContent = p ? disp(medidaComPeso(p.produto)) : "—";
+                if (el) el.textContent = medTxt;
                 el = document.getElementById("mob-f-quantidade");
                 if (el) el.textContent = p ? fmtInt(toInt(p.quantidade, 0)) : "0";
                 el = document.getElementById("mob-hmi-op-combo");
@@ -4581,6 +4873,18 @@ section.ref-actions.hmi-actions {
                     var smallLongSide = Math.min(window.screen.width, window.screen.height) <= 480;
                     var on = landscapePhone && !portrait && (touch || smallLongSide);
                     document.body.classList.toggle("ref-body--mobile-op", on);
+                    document.documentElement.classList.toggle("ref-html--mobile-op", on);
+                    var vv = window.visualViewport;
+                    var vw = (vv && vv.width) ? vv.width : window.innerWidth;
+                    var vh = (vv && vv.height) ? vv.height : window.innerHeight;
+                    var iphone12pm =
+                        on &&
+                        vh > 0 &&
+                        vh <= 450 &&
+                        vw >= 680 &&
+                        vw <= 980 &&
+                        (touch || smallLongSide);
+                    document.body.classList.toggle("ref-body--iphone-12pm", iphone12pm);
                     tabletAssignIds(on);
                     var shellDesk = document.querySelector(".ref-shell--desktop");
                     if (shellDesk) {
