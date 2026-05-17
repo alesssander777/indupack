@@ -320,42 +320,35 @@
                 <section class="mob-ops" id="mob-ops-grid" aria-label="Painel operacional" data-machine-st="stop">
                     <div class="mob-ops-grid">
                         <article class="mob-mini mob-mini--status">
-                            <span class="mob-mini__glyph mob-mini__glyph--pulse" aria-hidden="true"></span>
                             <span class="mob-mini__label">Status</span>
                             <span class="mob-mini__value mob-mini__value--status">
                                 <span class="hmi-dot" data-tablet-id="hmi-mid-dot"></span>
-                                <span data-tablet-id="hmi-mid-status-txt">PARADA</span>
+                                <span id="mob-kpi-status" data-tablet-id="hmi-mid-status-txt">PARADA</span>
                             </span>
                         </article>
                         <article class="mob-mini mob-mini--prod">
-                            <span class="mob-mini__glyph" aria-hidden="true">▣</span>
                             <span class="mob-mini__label">Produzido</span>
-                            <span class="mob-mini__value" data-tablet-id="hmi-op-produzido">0</span>
+                            <span id="mob-kpi-produzido" class="mob-mini__value" data-tablet-id="hmi-op-produzido">0</span>
                         </article>
                         <article class="mob-mini mob-mini--fardos">
-                            <span class="mob-mini__glyph" aria-hidden="true">≡</span>
                             <span class="mob-mini__label">Fardos</span>
                             <span id="mob-f-fardos-kpi" class="mob-mini__value" data-tablet-id="f-fardos">—</span>
                         </article>
                         <article class="mob-mini mob-mini--faltam">
-                            <span class="mob-mini__glyph" aria-hidden="true">⏳</span>
                             <span class="mob-mini__label">Faltam</span>
-                            <span class="mob-mini__value" data-tablet-id="hmi-op-faltam">0</span>
+                            <span id="mob-kpi-faltam" class="mob-mini__value" data-tablet-id="hmi-op-faltam">0</span>
                         </article>
                         <article class="mob-mini mob-mini--ef">
-                            <span class="mob-mini__glyph" aria-hidden="true">⚡</span>
                             <span class="mob-mini__label">Eficiência</span>
-                            <span class="mob-mini__value" data-tablet-id="hmi-op-ef">0%</span>
+                            <span id="mob-kpi-ef" class="mob-mini__value" data-tablet-id="hmi-op-ef">0%</span>
                         </article>
                         <article class="mob-mini mob-mini--parado">
-                            <span class="mob-mini__glyph" aria-hidden="true">⏱</span>
                             <span class="mob-mini__label">Tempo parado</span>
-                            <span class="mob-mini__value mob-mini__mono" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
+                            <span id="mob-kpi-tempo-parado" class="mob-mini__value mob-mini__mono" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
                         </article>
                         <article class="mob-mini mob-mini--motivo">
-                            <span class="mob-mini__glyph" aria-hidden="true">🛠</span>
-                            <span class="mob-mini__label">Motivo atual</span>
-                            <span class="mob-mini__value mob-mini__value--motivo" data-tablet-id="hmi-kpi-motivo">—</span>
+                            <span class="mob-mini__label">Motivo parada</span>
+                            <span id="mob-kpi-motivo" class="mob-mini__value mob-mini__value--motivo" data-tablet-id="hmi-kpi-motivo">—</span>
                         </article>
                     </div>
                     <div class="mob-ops-sub">
@@ -5058,18 +5051,18 @@ html.ref-html--mobile-op {
     min-height: 0;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(38px, auto);
+    grid-template-rows: auto auto auto minmax(36px, auto);
     gap: 5px;
 }
 
 .ref-body--mobile-op .mob-mini {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: stretch;
-    gap: 3px;
+    gap: 4px;
     min-width: 0;
-    min-height: 0;
+    min-height: 48px;
     padding: 6px 8px;
     box-sizing: border-box;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.28) 100%);
@@ -5106,50 +5099,29 @@ html.ref-html--mobile-op {
 .ref-body--mobile-op .mob-mini--motivo { grid-column: 3 / 5; grid-row: 3; }
 
 .ref-body--mobile-op .mob-mini__glyph {
-    font-size: 0.62rem;
-    line-height: 1;
-    opacity: 0.85;
-}
-
-.ref-body--mobile-op .mob-mini__glyph--pulse {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--mes-amber);
-    box-shadow: 0 0 8px var(--mes-amber);
-}
-
-.ref-body--mobile-op .mob-ops[data-machine-st="run"] .mob-mini__glyph--pulse {
-    background: var(--mes-green);
-    box-shadow: 0 0 10px var(--mes-green);
-    animation: mob-pulse 1.6s ease-in-out infinite;
+    display: none !important;
 }
 
 .ref-body--mobile-op .mob-mini__label {
     flex-shrink: 0;
-    font-size: 0.46rem;
+    font-size: clamp(0.5rem, 1.85vw, 0.58rem);
     font-weight: 800;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--mes-muted);
-    line-height: 1.15;
-    padding-right: 2px;
+    line-height: 1.2;
 }
 
 .ref-body--mobile-op .mob-mini__value {
-    flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 1.2em;
-    font-size: clamp(0.66rem, 2.5vw, 0.9rem);
+    flex: 0 0 auto;
+    display: block;
+    min-height: 1.25em;
+    font-size: clamp(0.78rem, 2.85vw, 1.05rem);
     font-weight: 900;
     font-variant-numeric: tabular-nums;
     color: var(--mes-ink);
-    line-height: 1.2;
-    padding: 1px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    overflow: visible;
     white-space: nowrap;
     width: 100%;
     box-sizing: border-box;
@@ -5168,11 +5140,11 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mob-mini--status .mob-mini__value {
-    font-size: clamp(0.8rem, 3.2vw, 1.08rem);
-    white-space: normal;
-    flex-wrap: wrap;
+    display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    font-size: clamp(0.82rem, 3vw, 1.1rem);
+    white-space: nowrap;
 }
 
 .ref-body--mobile-op .mob-mini--prod .mob-mini__value {
@@ -5247,7 +5219,7 @@ html.ref-html--mobile-op {
 
 .ref-body--iphone-12pm .mob-ops-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto minmax(36px, auto);
 }
 
 .ref-body--iphone-12pm .mob-mini--status {
@@ -5616,17 +5588,6 @@ html.ref-html--mobile-op {
                 "hmi-op-combo",
                 "hmi-op-operador",
                 "hmi-op-turno",
-                "hmi-op-ef",
-                "hmi-op-oee",
-                "hmi-op-produzido",
-                "hmi-op-faltam",
-                "hmi-op-tempo-parado",
-                "hmi-kpi-tempo-parado",
-                "hmi-motivo-parada",
-                "hmi-kpi-motivo",
-                "hmi-mid-status-txt",
-                "hmi-mid-dot",
-                "hmi-producao-dia",
                 "apont-progress-pct",
                 "ft-prod-time"
             ];
@@ -5678,6 +5639,19 @@ html.ref-html--mobile-op {
                     '[data-tablet-id="f-fardos"], .mob-mini--fardos .mob-mini__value, .mob-cell--fardos .mob-cell__v';
                 document.querySelectorAll(sel).forEach(function (node) {
                     node.textContent = val;
+                });
+            }
+
+            function syncHmiDots(stu) {
+                var cls =
+                    "hmi-dot " +
+                    (stu === "RODANDO"
+                        ? "is-run"
+                        : stu === "MANUTENÇÃO" || stu === "MANUTENCAO"
+                          ? "is-warn"
+                          : "is-stop");
+                document.querySelectorAll('[data-tablet-id="hmi-mid-dot"], #hmi-mid-dot').forEach(function (d) {
+                    d.className = cls;
                 });
             }
 
@@ -6738,34 +6712,23 @@ html.ref-html--mobile-op {
 
                 setTabletField("f-quantidade", p ? fmtInt(toInt(p.quantidade, 0)) : "0");
 
-                var opEl = document.getElementById("hmi-op-operador");
-                var tuEl = document.getElementById("hmi-op-turno");
-                if (opEl) opEl.textContent = disp(maq.operador_atual);
-                if (tuEl) tuEl.textContent = disp(maq.turno_atual);
+                setTabletField("hmi-op-operador", disp(maq.operador_atual));
+                setTabletField("hmi-op-turno", disp(maq.turno_atual));
                 setOpComboDisplay(maq);
-                document.getElementById("hmi-op-produzido").textContent = fmtInt(produzido);
-                document.getElementById("hmi-op-faltam").textContent = fmtInt(faltam);
-                document.getElementById("hmi-op-ef").textContent = eficiencia + "%";
-                document.getElementById("hmi-op-oee").textContent = oee + "%";
+                setTabletField("hmi-op-produzido", fmtInt(produzido));
+                setTabletField("hmi-op-faltam", fmtInt(faltam));
+                setTabletField("hmi-op-ef", eficiencia + "%");
+                setTabletField("hmi-op-oee", oee + "%");
 
                 var stu = String(maq.status || "PARADA").toUpperCase();
                 var durParada = (stu === "PARADA" && stoppedAt) ? hhmmss(Date.now() - stoppedAt) : "00:00:00";
-                var tpEl = document.getElementById("hmi-op-tempo-parado");
-                if (tpEl) tpEl.textContent = durParada;
-                var ktp = document.getElementById("hmi-kpi-tempo-parado");
-                if (ktp) ktp.textContent = durParada;
-                var mv = document.getElementById("hmi-motivo-parada");
+                setTabletField("hmi-op-tempo-parado", durParada);
+                setTabletField("hmi-kpi-tempo-parado", durParada);
                 var motTxt = stu === "RODANDO" ? "—" : disp(stopReason);
-                if (mv) mv.textContent = motTxt;
-                var km = document.getElementById("hmi-kpi-motivo");
-                if (km) km.textContent = motTxt;
-
-                var mst = document.getElementById("hmi-mid-status-txt");
-                var mdot = document.getElementById("hmi-mid-dot");
-                if (mst) mst.textContent = stu;
-                if (mdot) {
-                    mdot.className = "hmi-dot " + (stu === "RODANDO" ? "is-run" : (stu === "MANUTENÇÃO" || stu === "MANUTENCAO") ? "is-warn" : "is-stop");
-                }
+                setTabletField("hmi-motivo-parada", motTxt);
+                setTabletField("hmi-kpi-motivo", motTxt);
+                setTabletField("hmi-mid-status-txt", stu);
+                syncHmiDots(stu);
 
                 var opsPanel = document.getElementById("mob-ops-grid");
                 if (opsPanel) {
@@ -6773,12 +6736,10 @@ html.ref-html--mobile-op {
                     opsPanel.setAttribute("data-machine-st", opsSt);
                 }
 
-                document.getElementById("ft-prod-time").textContent = tempoProducaoDisplay();
+                setTabletField("ft-prod-time", tempoProducaoDisplay());
                 var bDur = document.getElementById("banner-prod-duration");
                 if (bDur) bDur.textContent = tempoProducaoDisplay();
-
-                var pdEl = document.getElementById("hmi-producao-dia");
-                if (pdEl) pdEl.textContent = fmtInt(estado.producao_dia_maquina || 0);
+                setTabletField("hmi-producao-dia", fmtInt(estado.producao_dia_maquina || 0));
 
                 var apl = document.getElementById("apont-progress-label");
                 var apBig = document.getElementById("apont-progress-pct-big");
@@ -6998,10 +6959,8 @@ html.ref-html--mobile-op {
                 var stu = st.toUpperCase();
                 if (stu === "PARADA" && stoppedAt) {
                     var d = hhmmss(Date.now() - stoppedAt);
-                    var tpEl = document.getElementById("hmi-op-tempo-parado");
-                    if (tpEl) tpEl.textContent = d;
-                    var ktp = document.getElementById("hmi-kpi-tempo-parado");
-                    if (ktp) ktp.textContent = d;
+                    setTabletField("hmi-op-tempo-parado", d);
+                    setTabletField("hmi-kpi-tempo-parado", d);
                 }
                 updateHeroBanner(st, bannerModeFrom(stu, stopReason));
             }, 1000);
