@@ -5170,7 +5170,10 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mob-mini--fardos .mob-mini__value {
-    font-size: clamp(0.68rem, 2.4vw, 0.88rem);
+    font-size: clamp(0.72rem, 2.6vw, 0.95rem);
+    font-weight: 900;
+    color: #e2e8f0;
+    letter-spacing: 0.02em;
 }
 
 .ref-body--mobile-op .mob-mini--faltam .mob-mini__value {
@@ -5618,6 +5621,41 @@ html.ref-html--mobile-op {
                 "ft-prod-time"
             ];
 
+            function mobSwapTarget(mob, id) {
+                if (!mob) return null;
+                var vis =
+                    mob.querySelector(".mob-mini__value[data-tablet-id=\"" + id + "\"]") ||
+                    mob.querySelector(".mob-cell__v[data-tablet-id=\"" + id + "\"]") ||
+                    mob.querySelector(".mob-ops-sub [data-tablet-id=\"" + id + "\"]") ||
+                    mob.querySelector(".mob-foot [data-tablet-id=\"" + id + "\"]");
+                return vis || mob.querySelector('[data-tablet-id="' + id + '"]');
+            }
+
+            function setTabletField(id, text) {
+                var val = text == null || text === "" ? "—" : String(text);
+                var seen = [];
+                var byId = document.getElementById(id);
+                if (byId) {
+                    byId.textContent = val;
+                    seen.push(byId);
+                }
+                document.querySelectorAll('[data-tablet-id="' + id + '"]').forEach(function (node) {
+                    if (seen.indexOf(node) < 0) {
+                        node.textContent = val;
+                        seen.push(node);
+                    }
+                });
+            }
+
+            function fardosDoPedido(p) {
+                if (!p) return "—";
+                var raw = p.fardos;
+                if (raw === null || raw === undefined || raw === "") return "—";
+                var n = toInt(raw, -1);
+                if (n < 0) return "—";
+                return fmtInt(n);
+            }
+
             function tabletAssignIds(useMobile) {
                 var desk = document.querySelector(".ref-shell--desktop");
                 var mob = document.getElementById("ref-shell-mob");
@@ -5629,10 +5667,10 @@ html.ref-html--mobile-op {
                             dEl.setAttribute("data-tablet-id", id);
                             dEl.removeAttribute("id");
                         }
-                        var mStash = mob.querySelector('[data-tablet-id="' + id + '"]');
-                        if (mStash) {
-                            mStash.id = id;
-                            mStash.removeAttribute("data-tablet-id");
+                        var mTarget = mobSwapTarget(mob, id);
+                        if (mTarget) {
+                            mTarget.id = id;
+                            mTarget.removeAttribute("data-tablet-id");
                         }
                     } else {
                         var mEl = mob.querySelector("#" + id);
@@ -6659,13 +6697,13 @@ html.ref-html--mobile-op {
                 var prodParts = p ? parseProduto(p.produto) : { codigo: "—", medida: "—" };
                 var codPed = p && String(p.cod || "").trim() ? String(p.cod).trim() : prodParts.codigo;
 
-                document.getElementById("f-cliente").textContent = p ? disp(p.cliente) : "—";
-                document.getElementById("f-codigo").textContent = p ? disp(codPed) : "—";
-                document.getElementById("f-fardos").textContent = p ? fmtInt(toInt(p.fardos, 0)) : "—";
-                document.getElementById("f-medida").textContent = p ? disp(medidaComPeso(p.produto)) : "—";
-                document.getElementById("f-obs").textContent = p ? disp(p.descricao) : "—";
+                setTabletField("f-cliente", p ? disp(p.cliente) : "—");
+                setTabletField("f-codigo", p ? disp(codPed) : "—");
+                setTabletField("f-fardos", fardosDoPedido(p));
+                setTabletField("f-medida", p ? disp(medidaComPeso(p.produto)) : "—");
+                setTabletField("f-obs", p ? disp(p.descricao) : "—");
 
-                document.getElementById("f-quantidade").textContent = p ? fmtInt(toInt(p.quantidade, 0)) : "0";
+                setTabletField("f-quantidade", p ? fmtInt(toInt(p.quantidade, 0)) : "0");
 
                 var opEl = document.getElementById("hmi-op-operador");
                 var tuEl = document.getElementById("hmi-op-turno");

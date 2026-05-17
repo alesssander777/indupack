@@ -7,13 +7,23 @@ from services.fabrica_dia import total_producao_pedidos_finalizados_maquina_no_d
 from storage.state import dados_maquinas, pedidos
 
 
+def _fardos_serial(raw) -> int | str:
+    if raw is None or raw == "":
+        return ""
+    try:
+        n = int(float(raw))
+        return n if n >= 0 else ""
+    except (TypeError, ValueError):
+        return ""
+
+
 def _pedido_serial(p: dict) -> dict:
     out = {
         "cliente": p.get("cliente") or "",
         "cod": p.get("cod") or "",
         "produto": p.get("produto") or "",
         "quantidade": p.get("quantidade", ""),
-        "fardos": p.get("fardos", ""),
+        "fardos": _fardos_serial(p.get("fardos")),
         "etiqueta": p.get("etiqueta") or "",
         "descricao": p.get("descricao") or "",
         "data": p.get("data") or "",
