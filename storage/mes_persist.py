@@ -23,7 +23,7 @@ from sqlalchemy import inspect, text
 from database.database import SessionLocal, engine
 from database.models import MesOperacionalChunk
 from storage import json_store
-from storage.paths import DADOS_JSON_PATH, DB_PATH, LEGACY_DADOS_JSON_PATH, LEGACY_DB_PATH
+from storage.paths import DADOS_JSON_PATH, DATA_DIR, DB_PATH, LEGACY_DADOS_JSON_PATH, LEGACY_DB_PATH, ROOT
 
 logger = logging.getLogger("indupack.mes_persist")
 
@@ -180,34 +180,222 @@ def _load_chunks_from_sqlite() -> dict[str, Any] | None:
         db.close()
 
 
-def _load_from_json_file() -> tuple[dict, list, dict, dict] | None:
-    path = DADOS_JSON_PATH if DADOS_JSON_PATH.is_file() else None
-    if path is None and LEGACY_DADOS_JSON_PATH.is_file():
-        path = LEGACY_DADOS_JSON_PATH
-    if path is None:
+def _read_json_state_file(path) -> tuple[dict, list, dict, dict] | None:
+    """Lê dados.json sem efeitos colaterais (não regrava defaults em disco)."""
+    if not path.is_file():
         return None
-    old_arquivo = json_store.ARQUIVO
     try:
-        json_store.ARQUIVO = str(path)
-        return json_store.carregar_dados()
-    finally:
-        json_store.ARQUIVO = old_arquivo
+        blob = path.read_bytes()
+    except OSError as e:
+        logger.warning("Não foi possível ler %s: %s", path, e)
+        return None
+    if not blob or not blob.strip():
+        return None
+    try:
+        text = blob.decode("utf-8-sig").strip()
+    except UnicodeDecodeError:
+        return None
+    if not text:
+        return None
+    try:
+        raw = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(raw, dict):
+        return None
+    if "pedidos" in raw:
+        pedidos = _deserialize_pedidos(raw.get("pedidos"))
+        produtos = raw.get("produtos_cadastrados", [])
+        if not isinstance(produtos, list):
+            produtos = []
+        maquinas = _deserialize_maquinas(raw.get("dados_maquinas", {}))
+        resumo = _deserialize_resumo(raw.get("resumo_fabrica", {}))
+        return pedidos, produtos, maquinas, resumo
+    pedidos = _deserialize_pedidos(raw)
+    return pedidos, [], json_store._default_dados_maquinas(), json_store._merge_resumo_fabrica({})
+
+
+def _load_from_json_file() -> tuple[dict, list, dict, dict] | None:
+    for path in (DADOS_JSON_PATH, LEGACY_DADOS_JSON_PATH):
+        st = _read_json_state_file(path)
+        if st is not None:
+            return st
+    return None
 
 
 def _defaults() -> tuple[dict, list, dict, dict]:
     return {}, [], json_store._default_dados_maquinas(), json_store._merge_resumo_fabrica({})
 
 
-def _score_state(pedidos: dict, maquinas: dict) -> int:
-    """Prioriza snapshot com mais programação operacional."""
-    return _pedidos_count(pedidos) * 1000 + _maquinas_count(maquinas)
+def _score_state(pedidos: dict, maquinas: dict) -> tuple[int, int]:
+    """Tupla (pedidos, máquinas): pedidos na fila sempre vencem quantidade de máquinas."""
+    return (_pedidos_count(pedidos), _maquinas_count(maquinas))
+
+
+def _pedido_identity(p: dict) -> str:
+    if not isinstance(p, dict):
+        return ""
+    parts = [
+        str(p.get("data") or "").strip(),
+        str(p.get("cod") or "").strip(),
+        str(p.get("cliente") or "").strip(),
+        str(p.get("quantidade") or "").strip(),
+        str(p.get("produto") or "").strip(),
+        "1" if p.get("finalizado") else "0",
+    ]
+    return "|".join(parts)
+
+
+def _merge_pedido_lists(*lists: list) -> list:
+    """União por identidade; ordem da lista mais longa (fila programada)."""
+    ordered: list = []
+    for lst in sorted(
+        (x for x in lists if isinstance(x, list)),
+        key=len,
+        reverse=True,
+    ):
+        for p in lst:
+            if not isinstance(p, dict):
+                continue
+            key = _pedido_identity(p)
+            if not key:
+                ordered.append(dict(p))
+                continue
+            if any(_pedido_identity(x) == key for x in ordered if isinstance(x, dict)):
+                continue
+            ordered.append(dict(p))
+    return ordered
+
+
+def _merge_pedidos_dict(*pedidos_maps: dict) -> dict:
+    keys: set[int] = set()
+    for pm in pedidos_maps:
+        if not isinstance(pm, dict):
+            continue
+        for k in pm:
+            try:
+                keys.add(int(k))
+            except (TypeError, ValueError):
+                pass
+    out: dict = {}
+    for mid in sorted(keys):
+        lists = []
+        for pm in pedidos_maps:
+            if isinstance(pm, dict):
+                lst = pm.get(mid) or pm.get(str(mid))
+                if isinstance(lst, list):
+                    lists.append(lst)
+        if lists:
+            out[mid] = _merge_pedido_lists(*lists)
+    return out
+
+
+def _merge_maquinas_dict(*maps: dict) -> dict:
+    merged: dict = {}
+    for m in maps:
+        if not isinstance(m, dict) or not m:
+            continue
+        step = json_store._merge_dados_maquinas(m)
+        if not merged:
+            merged = step
+            continue
+        for k, v in step.items():
+            if k not in merged:
+                merged[k] = v
+            elif isinstance(v, dict) and isinstance(merged.get(k), dict):
+                merged[k] = {**merged[k], **v}
+    return json_store._merge_dados_maquinas(merged) if merged else json_store._default_dados_maquinas()
+
+
+def _merge_produtos_lists(*lists: list) -> list:
+    best: list = []
+    for lst in lists:
+        if isinstance(lst, list) and len(lst) > len(best):
+            best = list(lst)
+    return best
+
+
+def _merge_operational_states(
+    *candidates: tuple[dict, list, dict, dict],
+    labels: list[str] | None = None,
+) -> tuple[dict, list, dict, dict, int, str]:
+    """
+    Funde candidatos: fila por máquina = união da maior programação disponível.
+    Retorna (estado, total_pedidos, descrição_fontes).
+    """
+    valid = [c for c in candidates if c is not None]
+    if not valid:
+        d = _defaults()
+        return d[0], d[1], d[2], d[3], 0, "defaults"
+
+    pedidos = _merge_pedidos_dict(*(c[0] for c in valid))
+    produtos = _merge_produtos_lists(*(c[1] for c in valid))
+    maquinas = _merge_maquinas_dict(*(c[2] for c in valid))
+    resumo = valid[0][3]
+    best_resumo_score = (-1, -1)
+    for c in valid:
+        sc = _score_state(c[0], c[2])
+        if sc > best_resumo_score:
+            best_resumo_score = sc
+            resumo = c[3]
+
+    n = _pedidos_count(pedidos)
+    if labels and len(labels) == len(valid):
+        parts = [f"{labels[i]}={_pedidos_count(valid[i][0])}" for i in range(len(valid))]
+        src = "merge(" + ", ".join(parts) + f") -> {n} pedidos"
+    else:
+        src = f"merge -> {n} pedidos"
+    return pedidos, produtos, maquinas, resumo, n, src
+
+
+def _discover_json_snapshots() -> list[tuple[str, tuple[dict, list, dict, dict]]]:
+    found: list[tuple[str, tuple[dict, list, dict, dict]]] = []
+    seen: set[str] = set()
+    patterns = (
+        DATA_DIR.glob("dados.json"),
+        DATA_DIR.glob("dados.json.*"),
+        ROOT.glob("dados.json"),
+        ROOT.glob("dados.json.*"),
+    )
+    for gen in patterns:
+        for path in gen:
+            key = str(path.resolve())
+            if key in seen or not path.is_file():
+                continue
+            seen.add(key)
+            st = _read_json_state_file(path)
+            if st is not None:
+                found.append((path.name, st))
+    return found
+
+
+def _discover_db_snapshots() -> list[tuple[str, tuple[dict, list, dict, dict]]]:
+    found: list[tuple[str, tuple[dict, list, dict, dict]]] = []
+    db_paths: list = [DB_PATH, LEGACY_DB_PATH]
+    backup_dir = ROOT / "backups" / "database"
+    if backup_dir.is_dir():
+        for p in sorted(backup_dir.glob("backup_db_*.db"), key=lambda x: x.stat().st_mtime, reverse=True)[:12]:
+            db_paths.append(p)
+    seen: set[str] = set()
+    for path in db_paths:
+        key = str(path.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        chunks = _load_chunks_from_db_path(path)
+        if chunks is None:
+            continue
+        st = _chunks_to_state(chunks)
+        found.append((path.name, st))
+    return found
 
 
 def _pick_best_state(
     *candidates: tuple[dict, list, dict, dict] | None,
 ) -> tuple[dict, list, dict, dict]:
+    """Legado: escolhe um candidato (usado só se merge não for aplicável)."""
     best: tuple[dict, list, dict, dict] | None = None
-    best_score = -1
+    best_score: tuple[int, int] = (-1, -1)
     for c in candidates:
         if c is None:
             continue
@@ -222,8 +410,9 @@ def _pick_best_state(
 
 def load_operational_state() -> tuple[dict, list, dict, dict]:
     """
-    Carrega estado operacional: melhor snapshot entre SQLite, DB legado, dados.json.
-    Nunca descarta programação existente em disco por snapshot vazio em memória.
+    Carrega estado operacional fundindo SQLite, dados.json, DB legado e backups.
+    Nunca descarta programação: filas são unidas por máquina; gravação na subida
+    só ocorre se não reduzir o total de pedidos já presentes em disco.
     """
     _migrate_legacy_files()
 
@@ -235,22 +424,42 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
     legacy_db_chunks = _load_chunks_from_db_path(LEGACY_DB_PATH)
     legacy_db_state = _chunks_to_state(legacy_db_chunks) if legacy_db_chunks else None
 
-    pedidos, produtos, maquinas, resumo = _pick_best_state(
-        sqlite_state,
-        json_state,
-        legacy_db_state,
-    )
+    candidates: list[tuple[dict, list, dict, dict]] = []
+    labels: list[str] = []
+    for label, st in (
+        ("SQLite", sqlite_state),
+        ("dados.json", json_state),
+        ("DB legado", legacy_db_state),
+    ):
+        if st is not None:
+            candidates.append(st)
+            labels.append(label)
 
-    n_ped = _pedidos_count(pedidos)
-    sc = _score_state(pedidos, maquinas)
-    if sqlite_state is not None and sc == _score_state(sqlite_state[0], sqlite_state[2]):
-        src = "SQLite"
-    elif json_state is not None and sc == _score_state(json_state[0], json_state[2]):
-        src = "dados.json"
-    elif legacy_db_state is not None and sc == _score_state(legacy_db_state[0], legacy_db_state[2]):
-        src = "indupack.db legado"
+    main_json_n = _pedidos_count(json_state[0]) if json_state else -1
+    for name, st in _discover_json_snapshots():
+        if name in ("dados.json",) and main_json_n == _pedidos_count(st[0]):
+            continue
+        candidates.append(st)
+        labels.append(f"JSON:{name}")
+
+    sqlite_n = _pedidos_count(sqlite_state[0]) if sqlite_state else -1
+    for name, st in _discover_db_snapshots():
+        if name == DB_PATH.name and sqlite_n == _pedidos_count(st[0]):
+            continue
+        candidates.append(st)
+        labels.append(f"backup:{name}")
+
+    max_on_disk = max((_pedidos_count(c[0]) for c in candidates), default=0)
+
+    if len(candidates) >= 2 or max_on_disk > 0:
+        pedidos, produtos, maquinas, resumo, n_ped, src = _merge_operational_states(
+            *candidates, labels=labels
+        )
     else:
-        src = "defaults"
+        picked = _pick_best_state(sqlite_state, json_state, legacy_db_state)
+        pedidos, produtos, maquinas, resumo = picked
+        n_ped = _pedidos_count(pedidos)
+        src = "único snapshot ou defaults"
 
     logger.info(
         "Estado MES carregado (%s): %s máquinas, %s pedidos na fila | DB=%s",
@@ -260,13 +469,25 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
         DB_PATH,
     )
 
-    if n_ped == 0 and sqlite_state is None and json_state is None and legacy_db_state is None:
+    if n_ped == 0 and not candidates:
         logger.warning(
             "Sem programação em disco — defaults iniciais (use INDUPACK_DATA_DIR em volume persistente no Render)"
         )
-
-    # Sincroniza snapshot vencedor → SQLite + dados.json no volume persistente
-    save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
+    elif n_ped < max_on_disk:
+        logger.error(
+            "Fusão resultou em menos pedidos (%s) que o máximo em disco (%s) — não regravando",
+            n_ped,
+            max_on_disk,
+        )
+    elif n_ped > max_on_disk:
+        logger.warning(
+            "Programação recuperada na fusão: %s → %s pedidos (persistindo)",
+            max_on_disk,
+            n_ped,
+        )
+        save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
+    else:
+        save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
 
     return pedidos, produtos, maquinas, resumo
 

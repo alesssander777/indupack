@@ -336,17 +336,19 @@
                             <span class="mes-kpi-card__value" id="mob-kpi-ef" data-tablet-id="hmi-op-ef">0%</span>
                         </div>
                         <div class="mes-kpi-card mes-kpi-card--parado">
-                            <span class="mes-kpi-card__label">Tempo parado</span>
+                            <span class="mes-kpi-card__label">Parado</span>
                             <span class="mes-kpi-card__value mes-kpi-card__value--mono" id="mob-kpi-tempo-parado" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
-                        </div>
-                        <div class="mes-kpi-card mes-kpi-card--motivo">
-                            <span class="mes-kpi-card__label">Motivo</span>
-                            <span class="mes-kpi-card__value mes-kpi-card__value--motivo" id="mob-kpi-motivo" data-tablet-id="hmi-kpi-motivo">—</span>
                         </div>
                     </div>
                     <footer class="mes-kpi-foot">
-                        <span class="mes-kpi-foot__op" data-tablet-id="hmi-op-combo">—</span>
-                        <span class="mes-kpi-foot__dia">Prod. dia <strong data-tablet-id="hmi-producao-dia">0</strong></span>
+                        <div class="mes-kpi-foot__motivo" aria-label="Motivo da parada">
+                            <span class="mes-kpi-foot__motivo-k">Motivo</span>
+                            <span class="mes-kpi-card__value mes-kpi-card__value--motivo" id="mob-kpi-motivo" data-tablet-id="hmi-kpi-motivo">—</span>
+                        </div>
+                        <div class="mes-kpi-foot__row">
+                            <span class="mes-kpi-foot__op" data-tablet-id="hmi-op-combo">—</span>
+                            <span class="mes-kpi-foot__dia">Prod. dia <strong data-tablet-id="hmi-producao-dia">0</strong></span>
+                        </div>
                     </footer>
                 </section>
 
@@ -4722,7 +4724,7 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--iphone-12pm .mob-apont__pct {
-    font-size: 0.82rem;
+    display: none;
 }
 
 .ref-body--iphone-12pm .mob-apont__track {
@@ -4735,19 +4737,20 @@ html.ref-html--mobile-op {
 
 .ref-body--iphone-12pm .mob-cmds {
     grid-area: unset;
-    gap: 5px;
-    min-height: clamp(50px, 14vh, 64px);
+    gap: 3px;
+    min-height: 0;
     align-self: stretch;
     flex-shrink: 0;
     max-height: none;
     height: auto;
+    padding: 2px 0;
 }
 
 .ref-body--iphone-12pm .mob-cmd {
-    min-height: clamp(46px, 12.5vh, 58px);
-    max-height: none;
-    padding: 5px 4px;
-    gap: 3px;
+    min-height: 40px;
+    max-height: 44px;
+    padding: 3px 3px;
+    gap: 2px;
 }
 
 .ref-body--iphone-12pm .mob-cmd__lbl {
@@ -4817,13 +4820,13 @@ html.ref-html--mobile-op {
     }
 
     .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-cmd {
-        min-height: 46px;
-        max-height: none;
-        padding: 5px 4px;
+        min-height: 40px;
+        max-height: 44px;
+        padding: 3px 3px;
     }
 
     .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-cmds {
-        min-height: 50px;
+        min-height: 0;
     }
 
     .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-panel {
@@ -4841,7 +4844,7 @@ html.ref-html--mobile-op {
 .ref-body--mobile-op .mob-panel--dense {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     min-height: 0;
     height: 100%;
     overflow: hidden;
@@ -4850,8 +4853,8 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mob-panel--dense > .mob-ops {
-    flex: 1 1 0;
-    min-height: 72px;
+    flex: 0 0 auto;
+    min-height: 0;
 }
 
 .ref-body--mobile-op .mob-card {
@@ -4860,18 +4863,31 @@ html.ref-html--mobile-op {
     border: 1px solid var(--mes-line-strong);
     border-radius: var(--r-sm);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 14px rgba(0, 0, 0, 0.22);
-    padding: 4px 6px;
+    padding: 2px 5px;
 }
 
 .ref-body--mobile-op .mob-hero-wrap {
-    padding: 3px 6px;
+    padding: 2px 5px;
 }
 
 .ref-body--mobile-op .mob-status {
-    padding: 4px 6px;
+    padding: 2px 5px;
     min-height: 0;
-    max-height: none;
+    max-height: 36px;
     border-radius: calc(var(--r-sm) - 2px);
+}
+
+.ref-body--mobile-op .mob-status__ico {
+    width: 22px;
+    height: 22px;
+}
+
+.ref-body--mobile-op .mob-status__title {
+    font-size: 0.76rem;
+}
+
+.ref-body--mobile-op .mob-status__sub {
+    font-size: 0.54rem;
 }
 
 .ref-body--mobile-op .mob-order-grid,
@@ -4946,8 +4962,9 @@ html.ref-html--mobile-op {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 6px;
-    margin-bottom: 3px;
+    gap: 4px;
+    margin-bottom: 1px;
+    flex-shrink: 0;
 }
 
 .ref-body--mobile-op .mob-apont__htitle {
@@ -4970,9 +4987,42 @@ html.ref-html--mobile-op {
     min-width: 0;
 }
 
+.ref-body--mobile-op .mob-apont {
+    padding: 2px 5px;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.ref-body--mobile-op .mob-apont__ctrl {
+    gap: 3px;
+}
+
+.ref-body--mobile-op .mob-apont__input,
+.ref-body--mobile-op .mob-apont__btn {
+    min-height: 36px;
+    max-height: 38px;
+    padding: 4px 7px;
+    font-size: 0.88rem;
+}
+
+.ref-body--mobile-op .mob-apont__btn {
+    min-width: 68px;
+    font-size: 0.58rem;
+    padding: 0 8px;
+}
+
+.ref-body--mobile-op .mob-apont__prog {
+    grid-template-columns: 1fr;
+    gap: 2px;
+}
+
+.ref-body--mobile-op .mob-apont__pct {
+    display: none;
+}
+
 .ref-body--mobile-op .mob-apont__track {
     position: relative;
-    height: 16px;
+    height: 11px;
 }
 
 .ref-body--mobile-op .mob-apont__pct-in {
@@ -4991,13 +5041,13 @@ html.ref-html--mobile-op {
 
 /* Painel operacional central — KPIs MES compactos */
 .ref-body--mobile-op .mob-ops.mes-kpi-panel {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     margin: 0;
-    padding: 5px 6px;
+    padding: 3px 5px;
     background: linear-gradient(165deg, rgba(12, 20, 32, 0.96) 0%, rgba(8, 14, 24, 0.99) 100%);
     border: 1px solid rgba(94, 176, 214, 0.22);
     border-radius: var(--r-sm);
@@ -5031,13 +5081,12 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mes-kpi-grid {
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-auto-rows: minmax(50px, auto);
-    gap: 5px;
-    align-content: start;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(34px, auto));
+    gap: 3px;
+    align-content: stretch;
 }
 
 .ref-body--mobile-op .mes-kpi-card {
@@ -5045,26 +5094,23 @@ html.ref-html--mobile-op {
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-    gap: 3px;
+    gap: 1px;
     min-width: 0;
-    min-height: 50px;
-    padding: 5px 7px;
+    min-height: 34px;
+    max-height: 40px;
+    padding: 2px 5px;
     box-sizing: border-box;
-    border-radius: 6px;
+    border-radius: 5px;
     border: 1px solid rgba(148, 163, 184, 0.2);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.32) 100%);
-    box-shadow: 0 0 14px rgba(94, 176, 214, 0.05) inset;
+    box-shadow: 0 0 10px rgba(94, 176, 214, 0.04) inset;
     pointer-events: none;
     user-select: none;
 }
 
-.ref-body--mobile-op .mes-kpi-card--motivo {
-    grid-column: span 2;
-}
-
 .ref-body--mobile-op .mes-kpi-card__label {
     flex-shrink: 0;
-    font-size: clamp(0.48rem, 1.65vw, 0.56rem);
+    font-size: clamp(0.42rem, 1.45vw, 0.5rem);
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -5074,11 +5120,11 @@ html.ref-html--mobile-op {
 
 .ref-body--mobile-op .mes-kpi-card__value {
     flex: 0 0 auto;
-    font-size: clamp(0.74rem, 2.65vw, 1rem);
+    font-size: clamp(0.62rem, 2.2vw, 0.82rem);
     font-weight: 900;
     font-variant-numeric: tabular-nums;
     color: #f1f5f9;
-    line-height: 1.2;
+    line-height: 1.12;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5086,7 +5132,7 @@ html.ref-html--mobile-op {
 
 .ref-body--mobile-op .mes-kpi-card--cliente .mes-kpi-card__value {
     color: #cbd5e1;
-    font-size: clamp(0.76rem, 2.7vw, 1.02rem);
+    font-size: clamp(0.62rem, 2.2vw, 0.82rem);
 }
 
 .ref-body--mobile-op .mes-kpi-card--prod .mes-kpi-card__value {
@@ -5113,7 +5159,7 @@ html.ref-html--mobile-op {
 .ref-body--mobile-op .mes-kpi-card__value--motivo {
     color: var(--mes-amber);
     font-weight: 800;
-    font-size: clamp(0.68rem, 2.4vw, 0.88rem);
+    font-size: clamp(0.56rem, 1.9vw, 0.72rem);
 }
 
 .ref-body--mobile-op .mes-kpi-card__value--mono {
@@ -5123,14 +5169,43 @@ html.ref-html--mobile-op {
 .ref-body--mobile-op .mes-kpi-foot {
     flex-shrink: 0;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 4px 6px 2px;
-    border-top: 1px solid rgba(148, 163, 184, 0.16);
-    font-size: clamp(0.48rem, 1.6vw, 0.54rem);
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 4px 1px;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    font-size: clamp(0.44rem, 1.45vw, 0.5rem);
     font-weight: 700;
     color: var(--mes-muted);
+}
+
+.ref-body--mobile-op .mes-kpi-foot__motivo {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+    line-height: 1.15;
+}
+
+.ref-body--mobile-op .mes-kpi-foot__motivo-k {
+    flex-shrink: 0;
+    font-size: 0.44rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.85);
+}
+
+.ref-body--mobile-op .mes-kpi-foot__motivo .mes-kpi-card__value {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ref-body--mobile-op .mes-kpi-foot__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
 }
 
 .ref-body--mobile-op .mes-kpi-foot__op {
@@ -5149,29 +5224,27 @@ html.ref-html--mobile-op {
 
 .ref-body--iphone-12pm .mes-kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-auto-rows: minmax(46px, auto);
-    gap: 4px;
+    grid-template-rows: repeat(2, minmax(32px, auto));
+    gap: 2px;
 }
 
 .ref-body--iphone-12pm .mes-kpi-card {
-    min-height: 46px;
-    padding: 4px 6px;
-}
-
-.ref-body--iphone-12pm .mes-kpi-card--cliente {
-    grid-column: 1 / -1;
-}
-
-.ref-body--iphone-12pm .mes-kpi-card--motivo {
-    grid-column: 2 / -1;
+    min-height: 32px;
+    max-height: 36px;
+    padding: 2px 4px;
 }
 
 .ref-body--iphone-12pm .mes-kpi-card__label {
-    font-size: 0.46rem;
+    font-size: 0.42rem;
 }
 
 .ref-body--iphone-12pm .mes-kpi-card__value {
-    font-size: clamp(0.66rem, 2.3vw, 0.86rem);
+    font-size: clamp(0.58rem, 2vw, 0.76rem);
+}
+
+.ref-body--iphone-12pm .mes-kpi-foot {
+    gap: 1px;
+    padding: 1px 3px 0;
 }
 
 .ref-body--mobile-op .mob-card.mob-mes,
@@ -5278,17 +5351,17 @@ html.ref-html--mobile-op {
     flex-shrink: 0;
     margin-top: auto;
     width: 100%;
-    gap: 6px;
-    padding: 4px 0 max(2px, env(safe-area-inset-bottom));
-    min-height: clamp(54px, 15vh, 72px);
+    gap: 4px;
+    padding: 2px 0 max(2px, env(safe-area-inset-bottom));
+    min-height: 0;
     align-self: stretch;
 }
 
 .ref-body--mobile-op .mob-cmd {
-    min-height: clamp(50px, 14vh, 66px);
-    max-height: none;
-    padding: 6px 5px;
-    gap: 4px;
+    min-height: 42px;
+    max-height: 46px;
+    padding: 4px 3px;
+    gap: 2px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow:
         0 2px 0 rgba(0, 0, 0, 0.4),
@@ -5321,13 +5394,13 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mob-cmd__lbl {
-    font-size: clamp(0.6rem, 2.2vw, 0.74rem);
-    letter-spacing: 0.07em;
+    font-size: clamp(0.54rem, 1.9vw, 0.66rem);
+    letter-spacing: 0.06em;
 }
 
 .ref-body--mobile-op .mob-cmd__ico svg {
-    width: clamp(22px, 5.5vw, 30px);
-    height: clamp(22px, 5.5vw, 30px);
+    width: 20px;
+    height: 20px;
 }
 
 .ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op {
@@ -5421,8 +5494,8 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--iphone-12pm .mob-panel--dense .mob-cmd__ico svg {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
 }
 
 .ref-body--iphone-12pm .mob-panel--dense .mob-cell__k,

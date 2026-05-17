@@ -111,12 +111,9 @@ def _arquivar_json_ilegivel() -> None:
             pass
 
 
-def _retorno_padrao_gravado() -> tuple:
-    """Estado inicial persistido (evita ficar sem `dados.json` após arquivo ilegível)."""
-    maq = _default_dados_maquinas()
-    rf = _default_resumo_fabrica()
-    salvar_dados({}, [], maq, rf)
-    return {}, [], maq, rf
+def _retorno_padrao_sem_gravar() -> tuple:
+    """Defaults em memória — não grava (evita apagar pedidos em SQLite ao ler JSON inválido)."""
+    return {}, [], _default_dados_maquinas(), _default_resumo_fabrica()
 
 
 def carregar_dados():
@@ -131,27 +128,27 @@ def carregar_dados():
 
     if not blob or not blob.strip():
         _arquivar_json_ilegivel()
-        return _retorno_padrao_gravado()
+        return _retorno_padrao_sem_gravar()
 
     try:
         text = blob.decode("utf-8-sig").strip()
     except UnicodeDecodeError:
         _arquivar_json_ilegivel()
-        return _retorno_padrao_gravado()
+        return _retorno_padrao_sem_gravar()
 
     if not text:
         _arquivar_json_ilegivel()
-        return _retorno_padrao_gravado()
+        return _retorno_padrao_sem_gravar()
 
     try:
         raw = json.loads(text)
     except json.JSONDecodeError:
         _arquivar_json_ilegivel()
-        return _retorno_padrao_gravado()
+        return _retorno_padrao_sem_gravar()
 
     if not isinstance(raw, dict):
         _arquivar_json_ilegivel()
-        return _retorno_padrao_gravado()
+        return _retorno_padrao_sem_gravar()
 
     if "pedidos" in raw:
         pedidos = _normalize_pedidos_keys(raw.get("pedidos", {}))
