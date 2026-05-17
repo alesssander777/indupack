@@ -44,6 +44,26 @@ class OperatorProfile(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
+class TabletSessao(Base):
+    """Sessão persistente do terminal tablet (sobrevive a restart/deploy do servidor)."""
+
+    __tablename__ = "tablet_sessoes"
+
+    maquina_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tablet_vinculado: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    manutencao: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    manutencao_msg: Mapped[str] = mapped_column(String(200), nullable=False, default="TERMINAL EM MANUTENÇÃO")
+    kiosk: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    ultimo_acesso_epoch: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    ultimo_ip: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    bateria_pct: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bateria_carregando: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    sessao_online: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    reiniciar_em: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reiniciar_ok_em: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
 class StopMotive(Base):
     """Catálogo administrativo de motivos de parada (para padronizar apontamentos)."""
 

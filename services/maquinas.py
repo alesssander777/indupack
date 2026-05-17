@@ -61,19 +61,30 @@ def criar_maquina(
     if meta < 1:
         meta = 1000
 
-    dados_maquinas[mid] = {
-        "produzido": 0,
-        "meta": meta,
-        "status": st,
-        "nome": str(nome or "").strip(),
-        "setor": str(setor or "").strip(),
-        "observacao": str(observacao or "").strip(),
-        "tablet_vinculado": str(tablet_vinculado or "").strip(),
-        "ativo": True,
-    }
+    from storage.json_store import _default_maquina_record
+
+    rec = {**_default_maquina_record()}
+    rec.update(
+        {
+            "produzido": 0,
+            "meta": meta,
+            "status": st,
+            "nome": str(nome or "").strip(),
+            "setor": str(setor or "").strip(),
+            "observacao": str(observacao or "").strip(),
+            "tablet_vinculado": str(tablet_vinculado or "").strip(),
+            "ativo": True,
+        }
+    )
+    dados_maquinas[mid] = rec
     if mid not in pedidos:
         pedidos[mid] = []
-    persist()
+    try:
+        from services.terminais_store import commit_terminal
+
+        commit_terminal(mid)
+    except Exception:
+        persist()
     return {"ok": True, "id": mid}
 
 

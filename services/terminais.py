@@ -6,7 +6,9 @@ import time
 from datetime import datetime
 from typing import Any
 
-from storage.state import dados_maquinas, persist
+from services.terminais_store import commit_terminal
+from storage.tablet_normalize import as_bool
+from storage.state import dados_maquinas
 
 OFFLINE_ACEITO_MS = 120_000
 LOG_MAX = 120
@@ -89,7 +91,7 @@ def append_log(
         }
     )
     del logs[: max(0, len(logs) - LOG_MAX)]
-    persist()
+    commit_terminal(maquina_id)
 
 
 def list_logs(maquina_id: int, limit: int = 80) -> list[dict]:
@@ -149,7 +151,7 @@ def registrar_heartbeat(
         append_log(maquina_id, "conexao", "Terminal conectado ao painel", origem="terminal")
 
     m["tablet_sessao_online"] = True
-    persist()
+    commit_terminal(maquina_id)
 
 
 def marcar_desconexao(maquina_id: int) -> None:
@@ -159,7 +161,7 @@ def marcar_desconexao(maquina_id: int) -> None:
     if m.get("tablet_sessao_online"):
         append_log(maquina_id, "desconexao", "Sem comunicação com o servidor", origem="terminal")
         m["tablet_sessao_online"] = False
-        persist()
+        commit_terminal(maquina_id)
 
 
 def serializar_terminal_tablet(maquina_id: int) -> dict:
@@ -170,7 +172,7 @@ def serializar_terminal_tablet(maquina_id: int) -> dict:
     rein_ok = int(m.get("tablet_reiniciar_ok_em", 0) or 0)
     reiniciar = rein > rein_ok and (now - rein) < _COMANDO_TTL_MS
     return {
-        "manutencao": bool(m.get("tablet_manutencao")),
+        "manutencao": as_bool(m.get("tablet_manutencao")),
         "manutencao_msg": str(m.get("tablet_manutencao_msg") or "TERMINAL EM MANUTENÇÃO").strip(),
         "kiosk": bool(m.get("tablet_kiosk")),
         "reiniciar": reiniciar,
@@ -186,7 +188,7 @@ def consumir_reinicio_tablet(maquina_id: int) -> None:
     rein = int(m.get("tablet_reiniciar_em", 0) or 0)
     if rein > 0:
         m["tablet_reiniciar_ok_em"] = _now_ms()
-        persist()
+        commit_terminal(maquina_id)
 
 
 def _bateria_label(m: dict) -> tuple[str, str]:
@@ -237,8 +239,8 @@ def listagem_terminais_admin(now_ms: int | None = None) -> list[dict]:
         st = str(dm.get("status", "PARADA") or "PARADA").strip().upper()
         op = str(dm.get("operador_atual") or "").strip()
         ip = str(dm.get("tablet_ultimo_ip") or "").strip()
-        manut = bool(dm.get("tablet_manutencao"))
-        kiosk = bool(dm.get("tablet_kiosk"))
+        manut = as_bool(dm.get("tablet_manutencao"))
+        kiosk = as_bool(dm.get("tablet_kiosk"))
         bat_txt, bat_tom = _bateria_label(dm)
         ago = (now_ms - last) // 1000 if last > 0 else -1
         rows.append(
@@ -276,7 +278,7 @@ def solicitar_reinicio(maquina_id: int, usuario: str = "") -> dict:
     m["tablet_reiniciar_em"] = _now_ms()
     quem = str(usuario or "Supervisão").strip()[:80]
     append_log(maquina_id, "reinicio_remoto", f"Solicitado por {quem}", origem="supervisao")
-    persist()
+    commit_terminal(maquina_id)
     return {"ok": True, "mensagem": "Comando enviado ao terminal. A página será recarregada no dispositivo."}
 
 
@@ -292,7 +294,7 @@ def set_kiosk(maquina_id: int, ativo: bool, usuario: str = "") -> dict:
         f"Modo kiosk {'ativado' if ativo else 'desativado'} — {quem}",
         origem="supervisao",
     )
-    persist()
+    commit_terminal(maquina_id)
     return {"ok": True, "kiosk": bool(ativo)}
 
 
@@ -310,13 +312,13 @@ def set_manutencao(maquina_id: int, ativo: bool, usuario: str = "") -> dict:
         f"Manutenção {'ativada' if ativo else 'encerrada'} — {quem}",
         origem="supervisao",
     )
-    persist()
+    commit_terminal(maquina_id)
     return {"ok": True, "manutencao": bool(ativo)}
 
 
 def tablet_em_manutencao(maquina_id: int) -> bool:
     m = _maquina(maquina_id)
-    return bool(m and m.get("tablet_manutencao"))
+    return bool(m and as_bool(m.get("tablet_manutencao")))
 
 
 def bloqueio_manutencao_resposta() -> dict:

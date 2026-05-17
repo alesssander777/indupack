@@ -61,8 +61,16 @@ def _merge_dados_maquinas(saved):
         except (TypeError, ValueError):
             continue
         if isinstance(v, dict):
-            out[ik] = {**_default_maquina_record(), **v}
+            merged = {**_default_maquina_record(), **v}
+            _normalize_tablet_fields_inplace(merged)
+            out[ik] = merged
     return out
+
+
+def _normalize_tablet_fields_inplace(m: dict) -> None:
+    from storage.tablet_normalize import normalize_tablet_fields
+
+    normalize_tablet_fields(m)
 
 
 def _default_resumo_fabrica():
