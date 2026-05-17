@@ -27,8 +27,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def init_db() -> None:
     """Cria tabelas se não existirem (import tardio evita ciclo com models)."""
     from database import models  # noqa: F401
+    from services.terminais_store import ensure_tablet_sessao_schema
 
     Base.metadata.create_all(bind=engine)
+    ensure_tablet_sessao_schema()
 
 
 def get_db() -> Generator:

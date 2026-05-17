@@ -3,6 +3,16 @@ import time
 from storage.state import dados_maquinas, pedidos, persist
 
 
+def _save_maq(maquina_id: int) -> None:
+    """JSON + snapshot SQLite da sessão/operacao do terminal."""
+    try:
+        from services.terminais_store import persist_maquina
+
+        persist_maquina(maquina_id)
+    except Exception:
+        persist()
+
+
 def _now_ms() -> int:
     return int(time.time() * 1000)
 
@@ -97,7 +107,7 @@ def add_producao(id: int, valor: int):
     if str(dados_maquinas[id].get("status", "")).upper() != "RODANDO":
         return {"ok": False, "erro": "maquina_parada"}
     dados_maquinas[id]["produzido"] += v
-    persist()
+    _save_maq(id)
     return {"ok": True}
 
 
@@ -152,7 +162,7 @@ def set_status(id: int, novo: str):
         if int(m.get("producao_sessao_epoch", 0) or 0) <= 0:
             m["producao_sessao_epoch"] = now
     m["status"] = novo
-    persist()
+    _save_maq(id)
     try:
         from services import terminais
 
@@ -206,7 +216,7 @@ def alinhar_contadores_ordem_atual(maq_id: int) -> bool:
 
         if not production_flags().get("reset_os_automatico", True):
             m["pedido_atual_fp"] = fp
-            persist()
+            _save_maq(maq_id)
             return False
     except Exception:
         pass
@@ -218,7 +228,7 @@ def alinhar_contadores_ordem_atual(maq_id: int) -> bool:
     m["operador_atual"] = ""
     m["turno_atual"] = ""
     m["hora_inicio"] = ""
-    persist()
+    _save_maq(maq_id)
     return True
 
 
@@ -248,7 +258,7 @@ def set_produzido_total(id: int, total: int, exige_rodando: bool = False):
         total = 0
     new = int(total)
     dados_maquinas[id]["produzido"] = new
-    persist()
+    _save_maq(id)
     try:
         from services import db_apontamento
 
@@ -284,7 +294,7 @@ def update_contexto(id: int, payload: dict):
         if k in allowed:
             dados_maquinas[id][k] = v
 
-    persist()
+    _save_maq(id)
     if "operador_atual" in payload:
         new_op = str(dados_maquinas[id].get("operador_atual") or "").strip()
         if new_op and new_op != prev_op:
@@ -340,5 +350,5 @@ def atualizar_maquina_config(
         m["meta"] = max(1, meta_i)
     if ativo is not None:
         m["ativo"] = bool(ativo)
-    persist()
+    _save_maq(mid)
     return {"ok": True}

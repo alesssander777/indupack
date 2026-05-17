@@ -61,6 +61,15 @@ class TabletSessao(Base):
     sessao_online: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     reiniciar_em: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     reiniciar_ok_em: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    operador_atual: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    turno_atual: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    status_maquina: Mapped[str] = mapped_column(String(80), nullable=False, default="PARADA")
+    produzido: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    meta: Mapped[int] = mapped_column(Integer, nullable=False, default=1000)
+    motivo_parada: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    parada_inicio_epoch: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tempo_producao_s: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    producao_sessao_epoch: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
