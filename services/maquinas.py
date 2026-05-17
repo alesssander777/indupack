@@ -183,6 +183,7 @@ def reset_tempo_producao(id: int):
     m = dados_maquinas[id]
     m["tempo_producao_s"] = 0
     m["producao_sessao_epoch"] = 0
+    _save_maq(id)
 
 
 def fingerprint_pedido_operacional(maq_id: int) -> str:
@@ -236,6 +237,7 @@ def invalidar_pedido_atual_fp(maq_id: int) -> None:
     """Força reavaliação na próxima leitura (ex.: após finalizar manualmente)."""
     if maq_id in dados_maquinas:
         dados_maquinas[maq_id]["pedido_atual_fp"] = ""
+        _save_maq(maq_id)
 
 
 def registrar_presenca_tablet(

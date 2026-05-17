@@ -16,6 +16,8 @@ except OSError:
 DB_PATH = DATA_DIR / "indupack.db"
 DADOS_JSON_PATH = DATA_DIR / "dados.json"
 
+# Em produção (Render): monte Persistent Disk em /var/data e defina INDUPACK_DATA_DIR=/var/data
+
 # Legado: ficheiros na raiz do projeto (migração automática na 1ª subida)
 LEGACY_DB_PATH = ROOT / "indupack.db"
 LEGACY_DADOS_JSON_PATH = ROOT / "dados.json"

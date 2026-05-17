@@ -1,0 +1,18 @@
+# Render — INDUPACK MES (persistência operacional)
+# Monte um Persistent Disk e aponte INDUPACK_DATA_DIR para o mount path.
+
+services:
+  - type: web
+    name: indupack
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: INDUPACK_DATA_DIR
+        value: /var/data
+      - key: INDUPACK_SESSION_SECRET
+        generateValue: true
+    disk:
+      name: indupack-data
+      mountPath: /var/data
+      sizeGB: 1

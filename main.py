@@ -47,6 +47,12 @@ async def lifespan(app: FastAPI):
     backup_indupack.start_auto_backup_scheduler()
     yield
     backup_indupack.stop_auto_backup_scheduler()
+    try:
+        from storage.state import persist
+
+        persist()
+    except Exception:
+        pass
 
 
 app = FastAPI(lifespan=lifespan)

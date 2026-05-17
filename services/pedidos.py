@@ -264,6 +264,7 @@ def iniciar_producao_tablet(
         {"operador_atual": op, "turno_atual": tu, "meta": qmeta},
     )
     maquinas.set_status(id, "RODANDO")
+    persist()
     try:
         from services import terminais
 
