@@ -310,51 +310,44 @@
                             <span class="mob-cell__k">Quantidade</span>
                             <span class="mob-cell__v" data-tablet-id="f-quantidade">0</span>
                         </div>
-                        <div class="mob-cell mob-cell--fardos">
-                            <span class="mob-cell__k">Fardos</span>
-                            <span id="mob-f-fardos" class="mob-cell__v mob-cell__v--fardos" data-tablet-id="f-fardos">—</span>
-                        </div>
                     </div>
                 </section>
 
-                <section class="mob-ops" id="mob-ops-grid" aria-label="Painel operacional" data-machine-st="stop">
-                    <div class="mob-ops-grid">
-                        <article class="mob-mini mob-mini--status">
-                            <span class="mob-mini__label">Status</span>
-                            <span class="mob-mini__value mob-mini__value--status">
-                                <span class="hmi-dot" data-tablet-id="hmi-mid-dot"></span>
-                                <span id="mob-kpi-status" data-tablet-id="hmi-mid-status-txt">PARADA</span>
-                            </span>
-                        </article>
-                        <article class="mob-mini mob-mini--prod">
-                            <span class="mob-mini__label">Produzido</span>
-                            <span id="mob-kpi-produzido" class="mob-mini__value" data-tablet-id="hmi-op-produzido">0</span>
-                        </article>
-                        <article class="mob-mini mob-mini--fardos">
-                            <span class="mob-mini__label">Fardos</span>
-                            <span id="mob-f-fardos-kpi" class="mob-mini__value" data-tablet-id="f-fardos">—</span>
-                        </article>
-                        <article class="mob-mini mob-mini--faltam">
-                            <span class="mob-mini__label">Faltam</span>
-                            <span id="mob-kpi-faltam" class="mob-mini__value" data-tablet-id="hmi-op-faltam">0</span>
-                        </article>
-                        <article class="mob-mini mob-mini--ef">
-                            <span class="mob-mini__label">Eficiência</span>
-                            <span id="mob-kpi-ef" class="mob-mini__value" data-tablet-id="hmi-op-ef">0%</span>
-                        </article>
-                        <article class="mob-mini mob-mini--parado">
-                            <span class="mob-mini__label">Tempo parado</span>
-                            <span id="mob-kpi-tempo-parado" class="mob-mini__value mob-mini__mono" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
-                        </article>
-                        <article class="mob-mini mob-mini--motivo">
-                            <span class="mob-mini__label">Motivo parada</span>
-                            <span id="mob-kpi-motivo" class="mob-mini__value mob-mini__value--motivo" data-tablet-id="hmi-kpi-motivo">—</span>
-                        </article>
+                <section class="mob-ops mes-kpi-panel" id="mob-ops-grid" aria-label="Indicadores operacionais" data-machine-st="stop">
+                    <div class="mes-kpi-grid" role="group" aria-label="KPIs de produção">
+                        <div class="mes-kpi-card mes-kpi-card--cliente">
+                            <span class="mes-kpi-card__label">Cliente</span>
+                            <span class="mes-kpi-card__value" id="mob-kpi-cliente" data-tablet-id="f-cliente">—</span>
+                        </div>
+                        <div class="mes-kpi-card mes-kpi-card--prod">
+                            <span class="mes-kpi-card__label">Produzido</span>
+                            <span class="mes-kpi-card__value" id="mob-kpi-produzido" data-tablet-id="hmi-op-produzido">0</span>
+                        </div>
+                        <div class="mes-kpi-card mes-kpi-card--fardos">
+                            <span class="mes-kpi-card__label">Fardos</span>
+                            <span class="mes-kpi-card__value" id="mob-f-fardos-kpi" data-tablet-id="f-fardos">—</span>
+                        </div>
+                        <div class="mes-kpi-card mes-kpi-card--faltam">
+                            <span class="mes-kpi-card__label">Faltam</span>
+                            <span class="mes-kpi-card__value" id="mob-kpi-faltam" data-tablet-id="hmi-op-faltam">0</span>
+                        </div>
+                        <div class="mes-kpi-card mes-kpi-card--ef">
+                            <span class="mes-kpi-card__label">Eficiência</span>
+                            <span class="mes-kpi-card__value" id="mob-kpi-ef" data-tablet-id="hmi-op-ef">0%</span>
+                        </div>
+                        <div class="mes-kpi-card mes-kpi-card--parado">
+                            <span class="mes-kpi-card__label">Tempo parado</span>
+                            <span class="mes-kpi-card__value mes-kpi-card__value--mono" id="mob-kpi-tempo-parado" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
+                        </div>
+                        <div class="mes-kpi-card mes-kpi-card--motivo">
+                            <span class="mes-kpi-card__label">Motivo</span>
+                            <span class="mes-kpi-card__value mes-kpi-card__value--motivo" id="mob-kpi-motivo" data-tablet-id="hmi-kpi-motivo">—</span>
+                        </div>
                     </div>
-                    <div class="mob-ops-sub">
-                        <span class="mob-ops-sub__op" data-tablet-id="hmi-op-combo">—</span>
-                        <span class="mob-ops-sub__dia">Prod. dia <strong data-tablet-id="hmi-producao-dia">0</strong></span>
-                    </div>
+                    <footer class="mes-kpi-foot">
+                        <span class="mes-kpi-foot__op" data-tablet-id="hmi-op-combo">—</span>
+                        <span class="mes-kpi-foot__dia">Prod. dia <strong data-tablet-id="hmi-producao-dia">0</strong></span>
+                    </footer>
                 </section>
 
                 <section class="mob-card mob-apont" aria-label="Apontamento">
@@ -4888,14 +4881,7 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mob-order-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.ref-body--mobile-op .mob-cell--fardos .mob-cell__v--fardos {
-    font-size: 0.82rem;
-    font-weight: 900;
-    color: #e2e8f0;
-    font-variant-numeric: tabular-nums;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .ref-body--mobile-op .mob-mes-grid {
@@ -5003,202 +4989,151 @@ html.ref-html--mobile-op {
 }
 
 
-/* Painel operacional central — mini KPIs */
-.ref-body--mobile-op .mob-ops {
+/* Painel operacional central — KPIs MES compactos */
+.ref-body--mobile-op .mob-ops.mes-kpi-panel {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     margin: 0;
-    padding: 4px;
-    background: linear-gradient(165deg, rgba(12, 20, 32, 0.95) 0%, rgba(8, 14, 24, 0.98) 100%);
-    border: 1px solid var(--mes-line-strong);
+    padding: 5px 6px;
+    background: linear-gradient(165deg, rgba(12, 20, 32, 0.96) 0%, rgba(8, 14, 24, 0.99) 100%);
+    border: 1px solid rgba(94, 176, 214, 0.22);
     border-radius: var(--r-sm);
     box-shadow:
-        0 0 0 1px rgba(94, 176, 214, 0.06) inset,
-        0 8px 28px rgba(0, 0, 0, 0.35),
-        0 0 24px rgba(34, 197, 94, 0.04);
+        0 0 0 1px rgba(94, 176, 214, 0.08) inset,
+        0 6px 22px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(34, 197, 94, 0.05);
 }
 
 .ref-body--mobile-op .mob-ops[data-machine-st="run"] {
+    border-color: rgba(34, 197, 94, 0.35);
     box-shadow:
-        0 0 0 1px rgba(34, 197, 94, 0.12) inset,
-        0 8px 28px rgba(0, 0, 0, 0.35),
-        0 0 32px rgba(34, 197, 94, 0.14);
+        0 0 0 1px rgba(34, 197, 94, 0.14) inset,
+        0 6px 22px rgba(0, 0, 0, 0.4),
+        0 0 28px rgba(34, 197, 94, 0.12);
 }
 
 .ref-body--mobile-op .mob-ops[data-machine-st="stop"] {
+    border-color: rgba(245, 158, 11, 0.28);
     box-shadow:
         0 0 0 1px rgba(245, 158, 11, 0.1) inset,
-        0 8px 28px rgba(0, 0, 0, 0.35),
-        0 0 28px rgba(245, 158, 11, 0.08);
+        0 6px 22px rgba(0, 0, 0, 0.4),
+        0 0 22px rgba(245, 158, 11, 0.08);
 }
 
 .ref-body--mobile-op .mob-ops[data-machine-st="maint"] {
+    border-color: rgba(148, 163, 184, 0.35);
     box-shadow:
-        0 0 0 1px rgba(148, 163, 184, 0.2) inset,
-        0 8px 28px rgba(0, 0, 0, 0.35),
-        0 0 24px rgba(148, 163, 184, 0.1);
+        0 0 0 1px rgba(148, 163, 184, 0.12) inset,
+        0 6px 22px rgba(0, 0, 0, 0.4);
 }
 
-.ref-body--mobile-op .mob-ops[data-machine-st="maint"] .mob-mini--status {
-    border-color: rgba(148, 163, 184, 0.45);
-}
-
-.ref-body--mobile-op .mob-ops-grid {
+.ref-body--mobile-op .mes-kpi-grid {
     flex: 1 1 auto;
     min-height: 0;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: auto auto auto minmax(36px, auto);
+    grid-auto-rows: minmax(50px, auto);
     gap: 5px;
+    align-content: start;
 }
 
-.ref-body--mobile-op .mob-mini {
+.ref-body--mobile-op .mes-kpi-card {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
-    min-height: 48px;
-    padding: 6px 8px;
+    min-height: 50px;
+    padding: 5px 7px;
     box-sizing: border-box;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.28) 100%);
-    border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 6px;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
-    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.32) 100%);
+    box-shadow: 0 0 14px rgba(94, 176, 214, 0.05) inset;
+    pointer-events: none;
+    user-select: none;
 }
 
-.ref-body--mobile-op .mob-mini--status {
-    grid-column: 1 / 3;
-    grid-row: 1 / 3;
-    padding: 8px 10px;
-    justify-content: center;
-    border-color: rgba(94, 176, 214, 0.35);
-    background: linear-gradient(145deg, rgba(94, 176, 214, 0.12) 0%, rgba(0, 0, 0, 0.35) 100%);
+.ref-body--mobile-op .mes-kpi-card--motivo {
+    grid-column: span 2;
 }
 
-.ref-body--mobile-op .mob-ops[data-machine-st="run"] .mob-mini--status {
-    border-color: rgba(34, 197, 94, 0.45);
-    box-shadow: 0 0 18px rgba(34, 197, 94, 0.2) inset;
-}
-
-.ref-body--mobile-op .mob-ops[data-machine-st="stop"] .mob-mini--status {
-    border-color: rgba(245, 158, 11, 0.4);
-    box-shadow: 0 0 16px rgba(245, 158, 11, 0.12) inset;
-}
-
-.ref-body--mobile-op .mob-mini--prod { grid-column: 3; grid-row: 1; }
-.ref-body--mobile-op .mob-mini--fardos { grid-column: 4; grid-row: 1; }
-.ref-body--mobile-op .mob-mini--faltam { grid-column: 3; grid-row: 2; }
-.ref-body--mobile-op .mob-mini--ef { grid-column: 4; grid-row: 2; }
-.ref-body--mobile-op .mob-mini--parado { grid-column: 1 / 3; grid-row: 3; }
-.ref-body--mobile-op .mob-mini--motivo { grid-column: 3 / 5; grid-row: 3; }
-
-.ref-body--mobile-op .mob-mini__glyph {
-    display: none !important;
-}
-
-.ref-body--mobile-op .mob-mini__label {
+.ref-body--mobile-op .mes-kpi-card__label {
     flex-shrink: 0;
-    font-size: clamp(0.5rem, 1.85vw, 0.58rem);
+    font-size: clamp(0.48rem, 1.65vw, 0.56rem);
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--mes-muted);
-    line-height: 1.2;
+    color: rgba(148, 163, 184, 0.9);
+    line-height: 1.1;
 }
 
-.ref-body--mobile-op .mob-mini__value {
+.ref-body--mobile-op .mes-kpi-card__value {
     flex: 0 0 auto;
-    display: block;
-    min-height: 1.25em;
-    font-size: clamp(0.78rem, 2.85vw, 1.05rem);
+    font-size: clamp(0.74rem, 2.65vw, 1rem);
     font-weight: 900;
     font-variant-numeric: tabular-nums;
-    color: var(--mes-ink);
-    line-height: 1.25;
-    overflow: visible;
-    white-space: nowrap;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.ref-body--mobile-op .mob-mini--prod,
-.ref-body--mobile-op .mob-mini--fardos,
-.ref-body--mobile-op .mob-mini--faltam,
-.ref-body--mobile-op .mob-mini--ef {
-    padding: 6px 7px;
-}
-
-.ref-body--mobile-op .mob-mini--parado,
-.ref-body--mobile-op .mob-mini--motivo {
-    padding: 6px 8px;
-}
-
-.ref-body--mobile-op .mob-mini--status .mob-mini__value {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: clamp(0.82rem, 3vw, 1.1rem);
+    color: #f1f5f9;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.ref-body--mobile-op .mob-mini--prod .mob-mini__value {
+.ref-body--mobile-op .mes-kpi-card--cliente .mes-kpi-card__value {
+    color: #cbd5e1;
+    font-size: clamp(0.76rem, 2.7vw, 1.02rem);
+}
+
+.ref-body--mobile-op .mes-kpi-card--prod .mes-kpi-card__value {
     color: var(--mes-blue-mid);
-    font-size: clamp(0.7rem, 2.6vw, 0.92rem);
 }
 
-.ref-body--mobile-op .mob-mini--fardos .mob-mini__value {
-    font-size: clamp(0.72rem, 2.6vw, 0.95rem);
-    font-weight: 900;
+.ref-body--mobile-op .mes-kpi-card--fardos .mes-kpi-card__value {
     color: #e2e8f0;
-    letter-spacing: 0.02em;
 }
 
-.ref-body--mobile-op .mob-mini--faltam .mob-mini__value {
+.ref-body--mobile-op .mes-kpi-card--faltam .mes-kpi-card__value {
     color: var(--mes-orange);
-    font-size: clamp(0.7rem, 2.6vw, 0.92rem);
 }
 
-.ref-body--mobile-op .mob-mini--ef .mob-mini__value {
+.ref-body--mobile-op .mes-kpi-card--ef .mes-kpi-card__value {
     color: #7dd3fc;
+}
+
+.ref-body--mobile-op .mes-kpi-card--parado .mes-kpi-card__value {
+    color: #94a3b8;
+    letter-spacing: 0.03em;
+}
+
+.ref-body--mobile-op .mes-kpi-card__value--motivo {
+    color: var(--mes-amber);
+    font-weight: 800;
     font-size: clamp(0.68rem, 2.4vw, 0.88rem);
 }
 
-.ref-body--mobile-op .mob-mini--parado .mob-mini__value {
-    font-size: clamp(0.64rem, 2.2vw, 0.82rem);
-    letter-spacing: 0.02em;
-}
-
-.ref-body--mobile-op .mob-mini__value--motivo {
-    font-size: clamp(0.6rem, 2vw, 0.76rem);
-    font-weight: 700;
-    color: var(--mes-amber);
-    white-space: nowrap;
-}
-
-.ref-body--mobile-op .mob-mini__mono {
+.ref-body--mobile-op .mes-kpi-card__value--mono {
     font-variant-numeric: tabular-nums;
 }
 
-.ref-body--mobile-op .mob-ops-sub {
+.ref-body--mobile-op .mes-kpi-foot {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 3px 5px;
-    border-top: 1px solid rgba(148, 163, 184, 0.15);
-    font-size: 0.5rem;
+    padding: 4px 6px 2px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    font-size: clamp(0.48rem, 1.6vw, 0.54rem);
     font-weight: 700;
     color: var(--mes-muted);
 }
 
-.ref-body--mobile-op .mob-ops-sub__op {
+.ref-body--mobile-op .mes-kpi-foot__op {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5206,33 +5141,38 @@ html.ref-html--mobile-op {
     flex: 1 1 auto;
 }
 
-.ref-body--mobile-op .mob-ops-sub__dia strong {
+.ref-body--mobile-op .mes-kpi-foot__dia strong {
     color: var(--mes-blue-mid);
     font-weight: 900;
     font-variant-numeric: tabular-nums;
 }
 
-@keyframes mob-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.55; transform: scale(0.92); }
-}
-
-.ref-body--iphone-12pm .mob-ops-grid {
+.ref-body--iphone-12pm .mes-kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: auto auto auto minmax(36px, auto);
+    grid-auto-rows: minmax(46px, auto);
+    gap: 4px;
 }
 
-.ref-body--iphone-12pm .mob-mini--status {
-    grid-column: 1 / 2;
-    grid-row: 1 / 3;
+.ref-body--iphone-12pm .mes-kpi-card {
+    min-height: 46px;
+    padding: 4px 6px;
 }
 
-.ref-body--iphone-12pm .mob-mini--prod { grid-column: 2; grid-row: 1; }
-.ref-body--iphone-12pm .mob-mini--fardos { grid-column: 3; grid-row: 1; }
-.ref-body--iphone-12pm .mob-mini--faltam { grid-column: 2; grid-row: 2; }
-.ref-body--iphone-12pm .mob-mini--ef { grid-column: 3; grid-row: 2; }
-.ref-body--iphone-12pm .mob-mini--parado { grid-column: 1 / 3; grid-row: 3; }
-.ref-body--iphone-12pm .mob-mini--motivo { grid-column: 3; grid-row: 3; }
+.ref-body--iphone-12pm .mes-kpi-card--cliente {
+    grid-column: 1 / -1;
+}
+
+.ref-body--iphone-12pm .mes-kpi-card--motivo {
+    grid-column: 2 / -1;
+}
+
+.ref-body--iphone-12pm .mes-kpi-card__label {
+    font-size: 0.46rem;
+}
+
+.ref-body--iphone-12pm .mes-kpi-card__value {
+    font-size: clamp(0.66rem, 2.3vw, 0.86rem);
+}
 
 .ref-body--mobile-op .mob-card.mob-mes,
 .ref-body--mobile-op .mob-card.mob-kpi {
@@ -5472,28 +5412,8 @@ html.ref-html--mobile-op {
     padding: 3px;
 }
 
-.ref-body--iphone-12pm .mob-ops-grid {
+.ref-body--iphone-12pm .mes-kpi-grid {
     gap: 4px;
-}
-
-.ref-body--iphone-12pm .mob-mini {
-    padding: 5px 7px;
-    gap: 2px;
-}
-
-.ref-body--iphone-12pm .mob-mini--status {
-    padding: 7px 8px;
-}
-
-.ref-body--iphone-12pm .mob-mini--prod .mob-mini__value,
-.ref-body--iphone-12pm .mob-mini--fardos .mob-mini__value,
-.ref-body--iphone-12pm .mob-mini--faltam .mob-mini__value,
-.ref-body--iphone-12pm .mob-mini--ef .mob-mini__value {
-    font-size: clamp(0.62rem, 2.2vw, 0.8rem);
-}
-
-.ref-body--iphone-12pm .mob-mini--status .mob-mini__value {
-    font-size: clamp(0.72rem, 2.8vw, 0.95rem);
 }
 
 .ref-body--iphone-12pm .mob-panel--dense .mob-foot {
@@ -5595,9 +5515,10 @@ html.ref-html--mobile-op {
             function mobSwapTarget(mob, id) {
                 if (!mob) return null;
                 var vis =
+                    mob.querySelector(".mes-kpi-card__value[data-tablet-id=\"" + id + "\"]") ||
                     mob.querySelector(".mob-mini__value[data-tablet-id=\"" + id + "\"]") ||
                     mob.querySelector(".mob-cell__v[data-tablet-id=\"" + id + "\"]") ||
-                    mob.querySelector(".mob-ops-sub [data-tablet-id=\"" + id + "\"]") ||
+                    mob.querySelector(".mes-kpi-foot [data-tablet-id=\"" + id + "\"]") ||
                     mob.querySelector(".mob-foot [data-tablet-id=\"" + id + "\"]");
                 return vis || mob.querySelector('[data-tablet-id="' + id + '"]');
             }
@@ -5635,8 +5556,8 @@ html.ref-html--mobile-op {
             function syncFardosKpi(text) {
                 var val = text == null || text === "" ? "—" : String(text);
                 var sel =
-                    "#f-fardos, #mob-f-fardos, #mob-f-fardos-kpi, " +
-                    '[data-tablet-id="f-fardos"], .mob-mini--fardos .mob-mini__value, .mob-cell--fardos .mob-cell__v';
+                    "#f-fardos, #mob-f-fardos-kpi, " +
+                    '[data-tablet-id="f-fardos"], .mes-kpi-card--fardos .mes-kpi-card__value';
                 document.querySelectorAll(sel).forEach(function (node) {
                     node.textContent = val;
                 });
