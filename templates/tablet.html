@@ -4025,7 +4025,7 @@ section.ref-actions.hmi-actions {
 
 .mob-body {
     display: grid;
-    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-columns: minmax(74px, 21vw) minmax(0, 1fr);
     min-height: 0;
     height: 100%;
     max-height: 100%;
@@ -4087,6 +4087,86 @@ section.ref-actions.hmi-actions {
     display: none !important;
 }
 
+/* Fila mobile — cards compactos (#OS · produto · qtd) */
+.ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 5px !important;
+    border-left-width: 3px;
+    border-left-style: solid;
+    border-left-color: rgba(148, 163, 184, 0.35);
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op[data-mob-st="run"] {
+    border-left-color: var(--mes-green);
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op[data-mob-st="stop"] {
+    border-left-color: var(--mes-amber);
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op[data-mob-st="done"] {
+    border-left-color: rgba(148, 163, 184, 0.5);
+    opacity: 0.72;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op[data-mob-st="wait"] {
+    border-left-color: rgba(94, 176, 214, 0.45);
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__mob-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    min-width: 0;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__top {
+    display: contents;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__badges,
+.ref-body--mobile-op .mob-side__list .hmi-queue__qty-inline,
+.ref-body--mobile-op .mob-side__list .hmi-queue__summary {
+    display: none !important;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__num {
+    font-size: 0.64rem !important;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: var(--mes-blue);
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__mob-prod {
+    font-size: 0.58rem;
+    font-weight: 700;
+    line-height: 1.22;
+    color: var(--mes-ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__mob-qty {
+    font-size: 0.6rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-blue-mid);
+    letter-spacing: 0.04em;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__mob-qty::before {
+    content: "Qtd ";
+    font-weight: 800;
+    color: var(--mes-muted);
+    font-size: 0.5rem;
+}
+
 .mob-side__empty {
     font-size: 0.58rem;
     color: var(--mes-muted);
@@ -4097,7 +4177,7 @@ section.ref-actions.hmi-actions {
 
 .mob-panel {
     display: grid;
-    grid-template-rows: auto auto auto minmax(44px, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     gap: 3px;
     min-height: 0;
     max-height: 100%;
@@ -4105,6 +4185,7 @@ section.ref-actions.hmi-actions {
     overflow: hidden;
     padding: 3px 5px max(3px, env(safe-area-inset-bottom)) 4px;
     box-sizing: border-box;
+    align-content: stretch;
 }
 
 .ref-body--mobile-op .mob-pedido {
@@ -4323,8 +4404,9 @@ section.ref-actions.hmi-actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
-    align-self: stretch;
+    align-self: end;
     min-height: 0;
+    flex-shrink: 0;
     align-items: stretch;
 }
 
@@ -4333,10 +4415,10 @@ section.ref-actions.hmi-actions {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    min-height: 44px;
-    max-height: 100%;
-    padding: 4px 3px;
+    gap: 2px;
+    min-height: 38px;
+    max-height: 40px;
+    padding: 3px 2px;
     border: none;
     border-radius: var(--r-sm);
     font-family: inherit;
@@ -4373,8 +4455,15 @@ section.ref-actions.hmi-actions {
 
 .mob-cmd__ico svg {
     display: block;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+}
+
+.ref-body--mobile-op .mob-apont {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 /*
@@ -4437,7 +4526,7 @@ html.ref-html--mobile-op {
 
 .ref-body--iphone-12pm .mob-body {
     display: grid;
-    grid-template-columns: 46px minmax(0, 1fr);
+    grid-template-columns: 84px minmax(0, 1fr);
     min-height: 0;
     height: 100%;
     max-height: 100%;
@@ -4445,7 +4534,7 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--iphone-12pm .mob-side {
-    padding: 2px 2px;
+    padding: 3px 4px;
     min-height: 0;
     overflow: hidden;
 }
@@ -4456,34 +4545,36 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--iphone-12pm .mob-side__list {
-    overflow: hidden;
-    gap: 1px;
-    mask-image: linear-gradient(180deg, #000 85%, transparent);
+    overflow-y: auto;
+    overflow-x: hidden;
+    gap: 2px;
+    -webkit-overflow-scrolling: touch;
 }
 
-.ref-body--iphone-12pm .mob-side__list .hmi-queue__card {
-    padding: 2px 3px !important;
+.ref-body--iphone-12pm .mob-side__list .hmi-queue__card--mob-op {
+    padding: 4px 5px !important;
 }
 
-.ref-body--iphone-12pm .mob-side__list .hmi-queue__summary {
-    font-size: 0.5rem !important;
+.ref-body--iphone-12pm .mob-side__list .hmi-queue__mob-prod {
+    font-size: 0.6rem;
 }
 
 .ref-body--iphone-12pm .mob-panel {
     display: grid;
-    grid-template-rows: auto auto auto minmax(44px, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     grid-template-areas:
         "status"
         "pedido"
         "apont"
         "cmds";
-    gap: 2px;
+    gap: 3px;
     min-height: 0;
     max-height: 100%;
     height: 100%;
     overflow: hidden;
-    padding: 2px max(4px, env(safe-area-inset-right)) max(2px, env(safe-area-inset-bottom)) 3px;
+    padding: 2px max(4px, env(safe-area-inset-right)) max(3px, env(safe-area-inset-bottom)) 3px;
     box-sizing: border-box;
+    align-content: stretch;
 }
 
 .ref-body--iphone-12pm .mob-status {
@@ -4551,9 +4642,10 @@ html.ref-html--mobile-op {
 
 .ref-body--iphone-12pm .mob-apont {
     grid-area: apont;
-    padding: 3px 5px;
-    gap: 2px;
+    padding: 4px 6px;
+    gap: 3px;
     min-height: 0;
+    justify-content: center;
 }
 
 .ref-body--iphone-12pm .mob-apont__input,
@@ -4583,25 +4675,28 @@ html.ref-html--mobile-op {
 .ref-body--iphone-12pm .mob-cmds {
     grid-area: cmds;
     gap: 3px;
-    min-height: 44px;
-    align-self: stretch;
-    max-height: 100%;
+    min-height: 0;
+    align-self: end;
+    flex-shrink: 0;
+    max-height: none;
+    height: auto;
 }
 
 .ref-body--iphone-12pm .mob-cmd {
-    min-height: 44px;
-    max-height: none;
-    padding: 3px 2px;
-    gap: 2px;
+    min-height: 36px;
+    max-height: 38px;
+    padding: 2px 2px;
+    gap: 1px;
 }
 
 .ref-body--iphone-12pm .mob-cmd__lbl {
-    font-size: 0.54rem;
+    font-size: 0.52rem;
+    line-height: 1.05;
 }
 
 .ref-body--iphone-12pm .mob-cmd__ico svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
 }
 
 /* Safari com barra visível — altura útil menor */
@@ -4627,7 +4722,8 @@ html.ref-html--mobile-op {
     }
 
     .ref-body--iphone-12pm .mob-cmd {
-        min-height: 42px;
+        min-height: 34px;
+        max-height: 36px;
     }
 }
 
@@ -4656,7 +4752,8 @@ html.ref-html--mobile-op {
     }
 
     .ref-body--mobile-op:not(.ref-body--iphone-12pm) .mob-cmd {
-        min-height: 40px;
+        min-height: 36px;
+        max-height: 38px;
         padding: 2px;
     }
 
@@ -5678,9 +5775,9 @@ html.ref-html--mobile-op {
                     if (summaryRaw.length > 54) summaryRaw = summaryRaw.slice(0, 53) + "…";
 
                     var mobileOp = document.body.classList.contains("ref-body--mobile-op");
-                    if (mobileOp && summaryRaw.length > 36) {
-                        summaryRaw = summaryRaw.slice(0, 35) + "…";
-                    }
+                    var osRef = String(p.cod || "").trim() || String(idx + 1);
+                    var mobProd = String(p.cod || prod.codigo || "").trim() || prodLine;
+                    if (mobProd.length > 26) mobProd = mobProd.slice(0, 25) + "…";
 
                     var row = document.createElement("div");
                     row.className = classes.join(" ");
@@ -5688,19 +5785,24 @@ html.ref-html--mobile-op {
                     if (isCurrent) row.setAttribute("aria-current", "true");
 
                     if (mobileOp) {
+                        var mobSt = "wait";
+                        if (p.finalizado) mobSt = "done";
+                        else if (isCurrent && isRun) mobSt = "run";
+                        else if (isCurrent) mobSt = "stop";
                         row.innerHTML =
-                            '<span class="hmi-queue__card hmi-queue__card--mob-op">' +
-                            '<span class="hmi-queue__top">' +
+                            '<span class="hmi-queue__card hmi-queue__card--mob-op" data-mob-st="' +
+                            mobSt +
+                            '">' +
+                            '<span class="hmi-queue__mob-head">' +
                             '<span class="hmi-queue__num">#' +
-                            String(idx + 1) +
-                            '</span><span class="hmi-queue__badges">' +
-                            badgeHtml +
-                            '</span><span class="hmi-queue__qty-inline">' +
-                            escHtml(qVal) +
+                            escHtml(osRef) +
                             "</span></span>" +
-                            '<p class="hmi-queue__summary">' +
-                            escHtml(summaryRaw) +
-                            "</p></span>";
+                            '<span class="hmi-queue__mob-prod">' +
+                            escHtml(mobProd) +
+                            "</span>" +
+                            '<span class="hmi-queue__mob-qty">' +
+                            escHtml(qVal) +
+                            "</span></span>";
                     } else {
                         row.innerHTML =
                             '<span class="hmi-queue__card">' +
