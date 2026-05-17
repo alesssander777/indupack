@@ -150,7 +150,7 @@ def deletar_pedido(id: int, index: int):
         return {"ok": False, "erro": "index_invalido"}
 
     pedidos[id].pop(index)
-    persist()
+    persist(allow_reduce=True)
     maquinas.invalidar_pedido_atual_fp(id)
     maquinas.alinhar_contadores_ordem_atual(id)
     return {"ok": True}

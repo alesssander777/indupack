@@ -53,19 +53,24 @@ def _maquinas_count(dados_maquinas: dict) -> int:
 
 
 def _migrate_legacy_files() -> None:
-    """Copia indupack.db / dados.json da raiz do repo para INDUPACK_DATA_DIR se necessário."""
+    """Copia legado só se o destino ainda não existir (nunca sobrescreve produção ativa)."""
     if LEGACY_DB_PATH.is_file() and not DB_PATH.is_file():
         try:
             shutil.copy2(LEGACY_DB_PATH, DB_PATH)
             logger.info("Migrado indupack.db legado → %s", DB_PATH)
         except OSError as e:
             logger.warning("Não foi possível migrar DB legado: %s", e)
+    elif LEGACY_DB_PATH.is_file() and DB_PATH.is_file():
+        logger.debug("DB ativo em %s — migração legado ignorada", DB_PATH)
+
     if LEGACY_DADOS_JSON_PATH.is_file() and not DADOS_JSON_PATH.is_file():
         try:
             shutil.copy2(LEGACY_DADOS_JSON_PATH, DADOS_JSON_PATH)
             logger.info("Migrado dados.json legado → %s", DADOS_JSON_PATH)
         except OSError as e:
             logger.warning("Não foi possível migrar dados.json legado: %s", e)
+    elif LEGACY_DADOS_JSON_PATH.is_file() and DADOS_JSON_PATH.is_file():
+        logger.debug("dados.json ativo em %s — migração legado ignorada", DADOS_JSON_PATH)
 
 
 def _sqlite_has_chunks() -> bool:
@@ -507,10 +512,11 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
         src = "único snapshot ou defaults"
 
     logger.info(
-        "Estado MES carregado (%s): %s máquinas, %s pedidos na fila | DB=%s",
+        "Estado MES carregado (%s): %s máquinas, %s pedidos na fila | volume=%s | DB=%s",
         src,
         len(maquinas),
         n_ped,
+        DATA_DIR,
         DB_PATH,
     )
 
@@ -557,6 +563,56 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
     return pedidos, produtos, maquinas, resumo
 
 
+def _load_disk_snapshot_minimal() -> tuple[dict, dict] | None:
+    """Lê pedidos + máquinas do SQLite sem alterar memória."""
+    chunks = _load_chunks_from_sqlite()
+    if chunks is None:
+        return None
+    return (
+        _deserialize_pedidos(chunks.get(CHUNK_PEDIDOS)),
+        _deserialize_maquinas(chunks.get(CHUNK_MAQUINAS)),
+    )
+
+
+def _coalesce_with_disk(
+    pedidos: dict,
+    dados_maquinas: dict,
+    *,
+    allow_reduce: bool,
+) -> tuple[dict, dict, bool]:
+    """
+    Funde com disco antes de gravar. Retorna (pedidos, máquinas, pode_gravar).
+    Se allow_reduce=False, nunca grava menos pedidos que o disco já tem.
+    """
+    disk = _load_disk_snapshot_minimal()
+    if disk is None:
+        return pedidos, dados_maquinas, True
+
+    disk_pedidos, disk_maquinas = disk
+    disk_n = _pedidos_count(disk_pedidos)
+    merged_pedidos = _merge_pedidos_dict(pedidos, disk_pedidos)
+    merged_maquinas = _merge_maquinas_dict(dados_maquinas, disk_maquinas)
+    new_n = _pedidos_count(merged_pedidos)
+
+    if not allow_reduce and disk_n > 0 and new_n < disk_n:
+        logger.error(
+            "Gravação bloqueada: %s pedidos na memória vs %s no disco (%s) — dados em disco preservados",
+            _pedidos_count(pedidos),
+            disk_n,
+            DB_PATH,
+        )
+        return merged_pedidos, merged_maquinas, False
+
+    if not allow_reduce and disk_n > 0 and new_n > _pedidos_count(pedidos):
+        logger.warning(
+            "Memória recuperou pedidos do disco antes de gravar (%s → %s)",
+            _pedidos_count(pedidos),
+            new_n,
+        )
+
+    return merged_pedidos, merged_maquinas, True
+
+
 def save_operational_state(
     pedidos: dict,
     produtos_cadastrados: list,
@@ -564,8 +620,18 @@ def save_operational_state(
     resumo_fabrica: dict | None = None,
     *,
     mirror_json: bool = True,
-) -> None:
-    """Grava estado operacional no SQLite (transação) e opcionalmente em dados.json."""
+    allow_reduce: bool = False,
+) -> bool:
+    """
+    Grava estado operacional no SQLite (transação) e opcionalmente em dados.json.
+    Retorna False se a gravação foi bloqueada para não apagar programação.
+    """
+    pedidos, dados_maquinas, ok = _coalesce_with_disk(
+        pedidos, dados_maquinas, allow_reduce=allow_reduce
+    )
+    if not ok:
+        return False
+
     rf = resumo_fabrica if isinstance(resumo_fabrica, dict) else json_store._merge_resumo_fabrica({})
     payloads = {
         CHUNK_PEDIDOS: _serialize_pedidos(pedidos),
@@ -597,6 +663,8 @@ def save_operational_state(
     if mirror_json:
         json_store.ARQUIVO = str(DADOS_JSON_PATH)
         json_store.salvar_dados(pedidos, produtos_cadastrados, dados_maquinas, rf)
+
+    return True
 
 
 def bootstrap_mes_operacional() -> None:

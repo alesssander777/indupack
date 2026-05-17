@@ -101,7 +101,9 @@ def main() -> int:
         return 2
 
     if args.apply:
-        save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
+        save_operational_state(
+            pedidos, produtos, maquinas, resumo, mirror_json=True, allow_reduce=True
+        )
         load_operational_state()
         print("\nEstado gravado e recarregado.")
     else:

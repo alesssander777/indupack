@@ -10,6 +10,8 @@ services:
     envVars:
       - key: INDUPACK_DATA_DIR
         value: /var/data
+      - key: INDUPACK_AUTOSAVE_SEC
+        value: "30"
       - key: INDUPACK_SESSION_SECRET
         generateValue: true
     disk:

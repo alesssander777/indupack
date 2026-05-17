@@ -28,6 +28,7 @@ from routes.relatorios_api import router as relatorios_router
 from routes.terminais_api import router as terminais_router
 from services import backup_indupack
 from services.config_params_db import seed_stop_motives_if_empty, session_max_age_seconds
+from storage.mes_autosave import start_mes_autosave, stop_mes_autosave
 from storage.mes_persist import bootstrap_mes_operacional
 from services.terminais_store import bootstrap_terminal_sessions
 
@@ -43,7 +44,9 @@ async def lifespan(app: FastAPI):
     bootstrap_mes_operacional()
     bootstrap_terminal_sessions()
     backup_indupack.start_auto_backup_scheduler()
+    start_mes_autosave()
     yield
+    stop_mes_autosave()
     backup_indupack.stop_auto_backup_scheduler()
     try:
         from storage.state import persist

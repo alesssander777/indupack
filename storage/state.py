@@ -24,13 +24,40 @@ def reload_from_store() -> None:
     resumo_fabrica.update(rf)
 
 
-def persist() -> None:
-    """Persiste estado operacional no SQLite + espelho dados.json."""
+def persist(*, allow_reduce: bool = False) -> bool:
+    """
+    Persiste estado operacional no SQLite + espelho dados.json.
+    allow_reduce=True só em exclusão explícita de pedido na programação.
+    """
     import logging
 
-    from storage.mes_persist import _pedidos_count, save_operational_state
+    from storage.mes_persist import _coalesce_with_disk, _pedidos_count, save_operational_state
 
     logger = logging.getLogger("indupack.mes_persist")
+
+    merged_p, merged_m, can_save = _coalesce_with_disk(
+        pedidos, dados_maquinas, allow_reduce=allow_reduce
+    )
+    pedidos.clear()
+    pedidos.update(merged_p)
+    dados_maquinas.clear()
+    dados_maquinas.update(merged_m)
+
+    if not can_save:
+        logger.warning("Recarregando estado do disco após gravação bloqueada")
+        reload_from_store()
+        return False
+
     n = _pedidos_count(pedidos)
-    save_operational_state(pedidos, produtos_cadastrados, dados_maquinas, resumo_fabrica)
-    logger.info("Gravado: %s pedidos na fila | volume OK", n)
+    ok = save_operational_state(
+        pedidos,
+        produtos_cadastrados,
+        dados_maquinas,
+        resumo_fabrica,
+        allow_reduce=allow_reduce,
+    )
+    if ok:
+        logger.info("Gravado: %s pedidos na fila", n)
+    else:
+        reload_from_store()
+    return ok
