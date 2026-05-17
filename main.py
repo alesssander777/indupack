@@ -25,6 +25,7 @@ from routes.backup_api import router as backup_router
 from routes.config_params import router as config_params_router
 from routes.pages import router as pages_router
 from routes.relatorios_api import router as relatorios_router
+from routes.terminais_api import router as terminais_router
 from services import backup_indupack
 from services.config_params_db import seed_stop_motives_if_empty, session_max_age_seconds
 
@@ -54,6 +55,7 @@ app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 # API antes das páginas: GET /tablet/operadores não pode cair em GET /tablet/{id} com id="operadores".
 app.include_router(api_router)
 app.include_router(relatorios_router)
+app.include_router(terminais_router)
 app.include_router(pages_router)
 app.include_router(backup_router)
 app.include_router(admin_painel_router)

@@ -19,6 +19,15 @@ def _default_maquina_record():
         "tablet_vinculado": "",
         "tablet_ultimo_acesso_epoch": 0,
         "tablet_ultimo_ip": "",
+        "tablet_bateria_pct": None,
+        "tablet_bateria_carregando": False,
+        "tablet_sessao_online": False,
+        "tablet_manutencao": False,
+        "tablet_manutencao_msg": "TERMINAL EM MANUTENÇÃO",
+        "tablet_kiosk": False,
+        "tablet_reiniciar_em": 0,
+        "tablet_reiniciar_ok_em": 0,
+        "tablet_logs": [],
         "ativo": True,
     }
 

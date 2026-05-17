@@ -142,6 +142,17 @@ def set_status(id: int, novo: str):
             m["producao_sessao_epoch"] = now
     m["status"] = novo
     persist()
+    try:
+        from services import terminais
+
+        if st == "PARADA" and cur == "RODANDO":
+            motivo = str(m.get("motivo_parada") or "").strip()
+            det = f"Motivo: {motivo}" if motivo else "Parada operacional"
+            terminais.append_log(id, "producao_parada", det, origem="terminal")
+        elif st == "RODANDO" and cur == "PARADA":
+            terminais.append_log(id, "producao_retomada", "Máquina em operação", origem="terminal")
+    except Exception:
+        pass
     return {"ok": True}
 
 
@@ -206,15 +217,15 @@ def invalidar_pedido_atual_fp(maq_id: int) -> None:
         dados_maquinas[maq_id]["pedido_atual_fp"] = ""
 
 
-def registrar_presenca_tablet(maquina_id: int, client_host: str | None) -> None:
-    """Atualiza último contato do terminal operacional (para painel /tablets)."""
-    if maquina_id not in dados_maquinas:
-        return
-    m = dados_maquinas[maquina_id]
-    m["tablet_ultimo_acesso_epoch"] = _now_ms()
-    if client_host:
-        m["tablet_ultimo_ip"] = str(client_host).strip()[:120]
-    persist()
+def registrar_presenca_tablet(
+    maquina_id: int,
+    client_host: str | None,
+    telemetry: dict | None = None,
+) -> None:
+    """Atualiza presença do terminal (painel /tablets)."""
+    from services import terminais
+
+    terminais.registrar_heartbeat(maquina_id, client_host, telemetry)
 
 
 def set_produzido_total(id: int, total: int, exige_rodando: bool = False):
@@ -257,11 +268,21 @@ def update_contexto(id: int, payload: dict):
         "tempo_producao_s",
         "producao_sessao_epoch",
     }
+    prev_op = str(dados_maquinas[id].get("operador_atual") or "").strip()
     for k, v in payload.items():
         if k in allowed:
             dados_maquinas[id][k] = v
 
     persist()
+    if "operador_atual" in payload:
+        new_op = str(dados_maquinas[id].get("operador_atual") or "").strip()
+        if new_op and new_op != prev_op:
+            try:
+                from services import terminais
+
+                terminais.append_log(id, "operador", f"Operador: {new_op}", origem="terminal")
+            except Exception:
+                pass
     return {"ok": True}
 
 

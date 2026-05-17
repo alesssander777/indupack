@@ -200,6 +200,8 @@ def api_allowed(role: str, route_name: str) -> bool:
         return role == ROLE_ADMIN
     if route_name in {"relatorios_data", "relatorios_export", "relatorios_email"}:
         return role in {ROLE_ADMIN, ROLE_SUPERVISOR}
+    if route_name == "terminais_admin":
+        return role in {ROLE_ADMIN, ROLE_SUPERVISOR, ROLE_MANUTENCAO}
     return role == ROLE_ADMIN
 
 

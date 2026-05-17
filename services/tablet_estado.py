@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from services import fabrica_dia, maquinas
+from services import fabrica_dia, maquinas, terminais
 from services.fabrica_dia import total_producao_pedidos_finalizados_maquina_no_dia
 from storage.state import dados_maquinas, pedidos
 
@@ -44,6 +44,7 @@ def estado_tablet(maquina_id: int) -> dict:
         "ok": True,
         "producao_dia_maquina": int(producao_dia_maq),
         "pedidos": [_pedido_serial(p) for p in lista],
+        "terminal": terminais.serializar_terminal_tablet(maquina_id),
         "maquina": {
             "id": int(maquina_id),
             "nome": str(dm.get("nome") or "").strip(),

@@ -18,13 +18,19 @@ def add(request: Request, id: int, valor: int):
 
 @router.get("/status/{id}/{novo}")
 def status(request: Request, id: int, novo: str):
-    # Sem autenticação — usado pelo tablet no chão de fábrica.
+    from services import terminais
+
+    if terminais.tablet_em_manutencao(id):
+        return terminais.bloqueio_manutencao_resposta()
     return maquinas.set_status(id, novo)
 
 
 @router.post("/maquina/contexto/{id}")
 async def maquina_contexto(id: int, request: Request):
-    # Sem autenticação — usado pelo tablet.
+    from services import terminais
+
+    if terminais.tablet_em_manutencao(id):
+        return terminais.bloqueio_manutencao_resposta()
     body = await request.json()
     return maquinas.update_contexto(id, body if isinstance(body, dict) else {})
 
@@ -46,6 +52,10 @@ async def produzido_total(id: int, request: Request):
 @router.post("/tablet/produzido_delta/{id}")
 async def tablet_produzido_delta(id: int, request: Request):
     """Apontamento no tablet = total ABSOLUTO produzido (recontagem do pallet), não incremento."""
+    from services import terminais
+
+    if terminais.tablet_em_manutencao(id):
+        return terminais.bloqueio_manutencao_resposta()
     try:
         body = await request.json()
     except Exception:
@@ -177,8 +187,36 @@ async def criar_maquina_endpoint(request: Request):
 @router.get("/tablet/estado/{id}")
 def tablet_estado_endpoint(request: Request, id: int):
     host = request.client.host if request.client else None
-    maquinas.registrar_presenca_tablet(id, host)
+    q = request.query_params
+    telemetry: dict = {}
+    if q.get("bateria") is not None:
+        telemetry["bateria_pct"] = q.get("bateria")
+    if q.get("carregando") is not None:
+        telemetry["bateria_carregando"] = q.get("carregando") in ("1", "true", "True", "yes")
+    maquinas.registrar_presenca_tablet(id, host, telemetry or None)
     return estado_tablet(id)
+
+
+@router.post("/tablet/reinicio-ack/{id}")
+def tablet_reinicio_ack(id: int):
+    from services import terminais
+
+    terminais.consumir_reinicio_tablet(id)
+    terminais.append_log(id, "reinicio", "Sessão do terminal recarregada", origem="terminal")
+    return {"ok": True}
+
+
+@router.post("/tablet/evento/{id}")
+async def tablet_evento_endpoint(id: int, request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    from services import terminais
+
+    return terminais.registrar_evento_tablet(id, str(body.get("tipo") or ""), str(body.get("detalhe") or ""))
 
 
 @router.get("/tablet/operadores")
@@ -191,6 +229,10 @@ def tablet_operadores_list():
 
 @router.post("/tablet/iniciar/{id}")
 async def tablet_iniciar_producao(id: int, request: Request):
+    from services import terminais
+
+    if terminais.tablet_em_manutencao(id):
+        return terminais.bloqueio_manutencao_resposta()
     try:
         body = await request.json()
     except Exception:
@@ -213,6 +255,10 @@ async def tablet_iniciar_producao(id: int, request: Request):
 
 @router.post("/tablet/finalizar/{id}/{index}")
 async def tablet_finalizar(id: int, index: int, request: Request):
+    from services import terminais
+
+    if terminais.tablet_em_manutencao(id):
+        return terminais.bloqueio_manutencao_resposta()
     try:
         body = await request.json()
     except Exception:

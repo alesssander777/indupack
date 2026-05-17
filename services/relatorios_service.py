@@ -778,6 +778,21 @@ def _pdf_horizontal_bars(
     return d
 
 
+def _pdf_logo_image(logo_p: Path) -> Any:
+    """Logo do cabeçalho: encaixa no box máximo sem distorcer (aspect ratio preservado)."""
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Image
+
+    return Image(
+        str(logo_p),
+        width=3.6 * cm,
+        height=1.45 * cm,
+        kind="bound",
+        hAlign="LEFT",
+        lazy=0,
+    )
+
+
 def _pdf_make_header_table(
     logo_p: Path | None,
     titulo_pdf: str,
@@ -789,23 +804,23 @@ def _pdf_make_header_table(
     tw: float,
 ) -> Any:
     from reportlab.lib import colors as rl_colors
-    from reportlab.platypus import Image, Paragraph, Table, TableStyle
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Paragraph, Table, TableStyle
 
     navy = rl_colors.HexColor("#0c2744")
 
-    left_cells: list[Any] = []
-    if logo_p and logo_p.suffix.lower() in (".png", ".jpg", ".jpeg"):
+    logo_flow: Any
+    if logo_p and logo_p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
         try:
-            left_cells.append(Image(str(logo_p), width=3.4 * 28.346, height=1.25 * 28.346))
+            logo_flow = _pdf_logo_image(logo_p)
         except Exception:
-            left_cells.append(Paragraph("", styles["hdr_white"]))
+            logo_flow = Paragraph("", styles["hdr_white"])
     else:
-        left_cells.append(Paragraph("", styles["hdr_white"]))
-    left_cells.append(
-        Paragraph(
-            f"<font size=18><b>{empresa}</b></font><br/><font size=11 color='#bae6fd'>Painel executivo · Produção industrial</font>",
-            styles["hdr_white"],
-        )
+        logo_flow = Paragraph("", styles["hdr_white"])
+
+    title_block = Paragraph(
+        f"<font size=18><b>{empresa}</b></font><br/><font size=11 color='#bae6fd'>Painel executivo · Produção industrial</font>",
+        styles["hdr_white"],
     )
 
     meta_html = (
@@ -816,17 +831,28 @@ def _pdf_make_header_table(
     )
     right_cell = Paragraph(meta_html, styles["hdr_white_right"])
 
-    inner = Table([[left_cells[0], left_cells[1]]], colWidths=[4 * 28.346 + 10, tw - (4 * 28.346 + 10) - 160])
+    meta_col_w = 165.0
+    left_block_w = tw - meta_col_w
+    logo_col_w = float(getattr(logo_flow, "drawWidth", 0) or 0) + 14
+    if logo_col_w < 1.1 * cm:
+        logo_col_w = 1.1 * cm
+    title_col_w = max(left_block_w - logo_col_w - 6, 80)
+
+    inner = Table([[logo_flow, title_block]], colWidths=[logo_col_w, title_col_w])
     inner.setStyle(
         TableStyle(
             [
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("LEFTPADDING", (0, 0), (0, 0), 0),
+                ("RIGHTPADDING", (0, 0), (0, 0), 10),
+                ("LEFTPADDING", (1, 0), (1, 0), 4),
+                ("RIGHTPADDING", (1, 0), (1, 0), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
             ]
         )
     )
-    meta_tbl = Table([[inner, right_cell]], colWidths=[tw - 175, 165])
+    meta_tbl = Table([[inner, right_cell]], colWidths=[left_block_w, meta_col_w])
     meta_tbl.setStyle(
         TableStyle(
             [

@@ -31,6 +31,13 @@
             </div>
         </div>
     </div>
+    <div id="tablet-remote-maint" class="tablet-remote-maint" hidden aria-hidden="true">
+        <div class="tablet-remote-maint__panel">
+            <p class="tablet-remote-maint__ico" aria-hidden="true">⚠</p>
+            <h2 id="tablet-remote-maint-title" class="tablet-remote-maint__title">TERMINAL EM MANUTENÇÃO</h2>
+            <p id="tablet-remote-maint-sub" class="tablet-remote-maint__sub">Aguarde liberação da supervisão.</p>
+        </div>
+    </div>
     <div class="ref-shell ref-shell--desktop">
         <header class="ref-top" aria-label="Barra superior">
             <div class="ref-top__left">
@@ -4376,6 +4383,43 @@ section.ref-actions.hmi-actions {
     }
 }
 
+    .tablet-remote-maint {
+        position: fixed;
+        inset: 0;
+        z-index: 99990;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(8px);
+    }
+    .tablet-remote-maint[hidden] { display: none !important; }
+    .tablet-remote-maint__panel {
+        text-align: center;
+        max-width: 420px;
+        padding: 32px 28px;
+        border-radius: 20px;
+        border: 2px solid rgba(250, 204, 21, 0.55);
+        background: linear-gradient(180deg, #1e293b, #0f172a);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+    .tablet-remote-maint__ico { font-size: 2.5rem; margin: 0 0 12px; }
+    .tablet-remote-maint__title {
+        margin: 0 0 10px;
+        font-size: 1.35rem;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        color: #fbbf24;
+    }
+    .tablet-remote-maint__sub { margin: 0; font-size: 0.95rem; color: #cbd5e1; font-weight: 600; }
+    body.tablet-maint-active .ref-shell,
+    body.tablet-maint-active .ref-shell--desktop,
+    body.tablet-maint-active #ref-shell-mob {
+        visibility: hidden;
+        pointer-events: none;
+    }
+    body.tablet-kiosk-mode { overscroll-behavior: none; }
 </style>
 
     <script>
@@ -4576,7 +4620,69 @@ section.ref-actions.hmi-actions {
 
             var MAQ = {{ id }};
             var bootEl = document.getElementById("tablet-boot");
-            var estado = bootEl ? JSON.parse(bootEl.textContent) : { pedidos: [], maquina: {}, producao_dia_maquina: 0 };
+            var estado = bootEl ? JSON.parse(bootEl.textContent) : { pedidos: [], maquina: {}, producao_dia_maquina: 0, terminal: {} };
+            var _batPct = null;
+            var _batChg = false;
+            var _terminalMaint = false;
+
+            function pollDeviceBattery() {
+                if (!navigator.getBattery) return;
+                navigator.getBattery().then(function (b) {
+                    _batPct = Math.round((b.level || 0) * 100);
+                    _batChg = !!b.charging;
+                }).catch(function () {});
+            }
+            pollDeviceBattery();
+            setInterval(pollDeviceBattery, 45000);
+
+            function tabletEstadoUrl() {
+                var u = "/tablet/estado/" + MAQ;
+                if (_batPct != null) {
+                    u += "?bateria=" + encodeURIComponent(String(_batPct)) + "&carregando=" + (_batChg ? "1" : "0");
+                }
+                return u;
+            }
+
+            function applyTabletRemote(term) {
+                term = term || {};
+                var maint = !!term.manutencao;
+                _terminalMaint = maint;
+                var ov = document.getElementById("tablet-remote-maint");
+                var tit = document.getElementById("tablet-remote-maint-title");
+                var sub = document.getElementById("tablet-remote-maint-sub");
+                if (tit) tit.textContent = String(term.manutencao_msg || "TERMINAL EM MANUTENÇÃO");
+                if (sub) sub.textContent = maint ? "Operação bloqueada pela supervisão." : "";
+                if (ov) {
+                    ov.hidden = !maint;
+                    ov.setAttribute("aria-hidden", maint ? "false" : "true");
+                }
+                document.body.classList.toggle("tablet-maint-active", maint);
+                if (term.kiosk) {
+                    document.body.classList.add("tablet-kiosk-mode");
+                    try {
+                        var el = document.documentElement;
+                        if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen();
+                    } catch (e) {}
+                } else {
+                    document.body.classList.remove("tablet-kiosk-mode");
+                    try {
+                        if (document.fullscreenElement) document.exitFullscreen();
+                    } catch (e2) {}
+                }
+                if (term.reiniciar) {
+                    fetch("/tablet/reinicio-ack/" + MAQ, { method: "POST" })
+                        .then(function () { window.location.reload(); })
+                        .catch(function () { window.location.reload(); });
+                }
+            }
+
+            function postTabletEvento(tipo, detalhe) {
+                fetch("/tablet/evento/" + MAQ, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ tipo: tipo, detalhe: detalhe || "" }),
+                }).catch(function () {});
+            }
             var stoppedAt = null;
             var stopReason = "Aguardando material";
             (function bootSync() {
@@ -4832,7 +4938,7 @@ section.ref-actions.hmi-actions {
                 var maq = estado.maquina || {};
                 var stRaw = String(maq.status || "PARADA").toUpperCase();
                 var run = stRaw === "RODANDO";
-                var maint = stRaw === "MANUTENÇÃO" || stRaw === "MANUTENCAO";
+                var maint = stRaw === "MANUTENÇÃO" || stRaw === "MANUTENCAO" || _terminalMaint;
                 var p = getAtual();
                 var fin = p && p.finalizado;
                 var noPedido = !p;
@@ -5345,8 +5451,8 @@ section.ref-actions.hmi-actions {
                 if (hint) {
                     if (run) {
                         hint.textContent = "Informe o total atual do pallet — cada lançamento substitui o valor (não soma).";
-                    } else if (stu === "MANUTENÇÃO" || stu === "MANUTENCAO") {
-                        hint.textContent = "Apontamento bloqueado durante manutenção.";
+                    } else if (stu === "MANUTENÇÃO" || stu === "MANUTENCAO" || _terminalMaint) {
+                        hint.textContent = "Apontamento bloqueado — terminal em manutenção.";
                     } else if (stu === "PARADA" && paradaEpoch > 0) {
                         hint.textContent = "Retome a produção para lançar.";
                     } else {
@@ -5357,7 +5463,7 @@ section.ref-actions.hmi-actions {
                 var btnApont = document.getElementById("btn-aplicar-total");
                 var curPed = getAtual();
                 var pedidoFim = curPed && curPed.finalizado;
-                var maint = stu === "MANUTENÇÃO" || stu === "MANUTENCAO";
+                var maint = stu === "MANUTENÇÃO" || stu === "MANUTENCAO" || _terminalMaint;
                 if (inpApont) inpApont.disabled = !run || !!pedidoFim || maint;
                 if (btnApont) btnApont.disabled = !run || !!pedidoFim || maint;
 
@@ -5462,7 +5568,7 @@ section.ref-actions.hmi-actions {
             }
 
             function refresh() {
-                return fetch("/tablet/estado/" + MAQ)
+                return fetch(tabletEstadoUrl())
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (!data || !data.ok) {
@@ -5479,6 +5585,7 @@ section.ref-actions.hmi-actions {
                         if (dotOn) dotOn.classList.remove("is-off");
                         syncMobConnFromFooter();
                         estado = data;
+                        applyTabletRemote(data.terminal || {});
                         var maq = estado.maquina || {};
                         var nfp = pedidoFingerprintFromEstado();
                         if (nfp !== _lastOrderFp) {
@@ -5625,6 +5732,7 @@ section.ref-actions.hmi-actions {
 
             renderClock();
             _lastOrderFp = pedidoFingerprintFromEstado();
+            applyTabletRemote((estado && estado.terminal) || {});
             render();
             setInterval(renderClock, 1000);
             setInterval(function() {

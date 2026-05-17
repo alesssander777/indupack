@@ -39,7 +39,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
             </span>
             <div class="tb-kpi__body">
-                <span class="tb-kpi__val">{{ st.on }}</span>
+                <span class="tb-kpi__val" id="tb-kpi-on">{{ st.on }}</span>
                 <span class="tb-kpi__lbl">Tablets online</span>
             </div>
         </article>
@@ -48,7 +48,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
             </span>
             <div class="tb-kpi__body">
-                <span class="tb-kpi__val">{{ st.off }}</span>
+                <span class="tb-kpi__val" id="tb-kpi-off">{{ st.off }}</span>
                 <span class="tb-kpi__lbl">Tablets offline</span>
             </div>
         </article>
@@ -66,7 +66,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
             </span>
             <div class="tb-kpi__body">
-                <span class="tb-kpi__val tb-kpi__val--time">{{ st.sync_txt }}</span>
+                <span class="tb-kpi__val tb-kpi__val--time" id="tb-kpi-sync">{{ st.sync_txt }}</span>
                 <span class="tb-kpi__lbl">Última sincronização</span>
             </div>
         </article>
@@ -74,7 +74,7 @@
 
     <section class="tb-term-section" aria-labelledby="tb-term-title">
         <h2 id="tb-term-title" class="tb-section-title">Terminais</h2>
-        <div class="tb-term-grid">
+        <div class="tb-term-grid" id="tb-term-grid">
             {% for t in terminais %}
             <article class="tb-term{% if t.online %} tb-term--online{% else %} tb-term--offline{% endif %}">
                 <div class="tb-term__topline" aria-hidden="true"></div>
@@ -160,8 +160,18 @@
         </div>
     </section>
 
+    <div id="tb-modal" class="tb-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="tb-modal-title">
+        <div class="tb-modal__panel">
+            <header class="tb-modal__head">
+                <h2 id="tb-modal-title" class="tb-modal__title">Histórico</h2>
+                <button type="button" id="tb-modal-close" class="tb-modal__close" aria-label="Fechar">×</button>
+            </header>
+            <div id="tb-modal-body" class="tb-modal__body"></div>
+        </div>
+    </div>
+
     <footer class="tb-foot">
-        <p>Políticas de terminal, kiosk e auditoria em evolução neste módulo — sem integração com fluxo de produção.</p>
+        <p>Supervisão de terminais em tempo real — heartbeat quando o tablet está em operação.</p>
     </footer>
 </main>
 
@@ -804,6 +814,102 @@
     }
     .tb-foot a:hover { text-decoration: underline; }
 
+    .tb-status-row {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0 0 12px;
+    }
+    @media (max-width: 520px) {
+        .tb-status-row { grid-template-columns: 1fr; }
+    }
+    .tb-status {
+        padding: 10px 10px;
+        border-radius: 12px;
+        background: rgba(248, 250, 252, 0.95);
+        border: 1px solid rgba(51, 65, 85, 0.12);
+    }
+    .tb-status__k {
+        display: block;
+        font-size: 0.58rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .tb-status__v {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.25;
+    }
+    .tb-status--ok { border-color: rgba(22, 163, 74, 0.35); background: rgba(240, 253, 244, 0.95); }
+    .tb-status--warn { border-color: rgba(202, 138, 4, 0.35); background: rgba(254, 252, 232, 0.95); }
+    .tb-status--off { border-color: rgba(220, 38, 38, 0.28); background: rgba(254, 242, 242, 0.9); }
+    .tb-term--maint { border-color: rgba(202, 138, 4, 0.45) !important; }
+    .tb-mini__v--bat-low { color: #b91c1c; font-weight: 800; }
+    .tb-mini__v--bat-chg { color: #15803d; font-weight: 800; }
+    .tb-act--on {
+        background: linear-gradient(180deg, #dbeafe, #bfdbfe) !important;
+        border-color: rgba(37, 99, 235, 0.45) !important;
+        color: #1e3a8a !important;
+    }
+    .tb-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+    }
+    .tb-modal[hidden] { display: none !important; }
+    .tb-modal__panel {
+        width: min(520px, 100%);
+        max-height: min(80vh, 640px);
+        display: flex;
+        flex-direction: column;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid rgba(51, 65, 85, 0.2);
+        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+    }
+    .tb-modal__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(51, 65, 85, 0.12);
+    }
+    .tb-modal__title { margin: 0; font-size: 1rem; font-weight: 800; color: #0f172a; }
+    .tb-modal__close {
+        border: none;
+        background: transparent;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #64748b;
+        padding: 4px 8px;
+    }
+    .tb-modal__body {
+        padding: 14px 18px 18px;
+        overflow-y: auto;
+    }
+    .tb-log-list { margin: 0; padding: 0; list-style: none; }
+    .tb-log-item {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    .tb-log-time { display: block; font-size: 0.68rem; font-weight: 700; color: #64748b; font-family: ui-monospace, monospace; }
+    .tb-log-title { display: block; font-size: 0.82rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
+    .tb-log-detail { display: block; font-size: 0.75rem; color: #475569; margin-top: 2px; }
+    .tb-modal-empty { margin: 0; color: #64748b; font-weight: 600; }
+
     @media (prefers-reduced-motion: reduce) {
         .tb-term--online .tb-term__topline,
         .tb-term--online .tb-term__sheen,
@@ -818,5 +924,6 @@
     }
 </style>
 <script src="/static/indupack-topbar.js"></script>
+<script src="/static/tablets-admin.js"></script>
 </body>
 </html>

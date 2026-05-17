@@ -234,6 +234,13 @@ def iniciar_producao_tablet(
         {"operador_atual": op, "turno_atual": tu, "meta": qmeta},
     )
     maquinas.set_status(id, "RODANDO")
+    try:
+        from services import terminais
+
+        acao = "Produção retomada" if retomar else "Início de produção"
+        terminais.append_log(id, "producao_inicio" if not retomar else "producao_retomada", f"{acao} — {op}", origem="terminal")
+    except Exception:
+        pass
     return {"ok": True}
 
 
@@ -308,4 +315,16 @@ def finalizar_pedido_tablet(
     maquinas.set_status(id, "PARADA")
     maquinas.invalidar_pedido_atual_fp(id)
     maquinas.alinhar_contadores_ordem_atual(id)
+    try:
+        from services import terminais
+
+        prod = str(p.get("produto") or p.get("cod") or "").strip()
+        terminais.append_log(
+            id,
+            "producao_fim",
+            f"Pedido finalizado — {of}" + (f" · {prod}" if prod else ""),
+            origem="terminal",
+        )
+    except Exception:
+        pass
     return {"ok": True}
