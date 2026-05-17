@@ -290,21 +290,50 @@ def _merge_pedidos_dict(*pedidos_maps: dict) -> dict:
     return out
 
 
+def _machine_operational_score(m: dict) -> tuple:
+    """Prioriza snapshot com mais produção/sessão ativa (evita reset na fusão)."""
+    if not isinstance(m, dict):
+        return (0, 0, 0, 0, 0)
+    produzido = int(m.get("produzido") or 0)
+    has_op = 1 if str(m.get("operador_atual") or "").strip() else 0
+    st = str(m.get("status") or "PARADA").strip().upper()
+    running = 1 if st == "RODANDO" else 0
+    fp = str(m.get("pedido_atual_fp") or "")
+    has_fp = 1 if fp and fp != "__vazio__" else 0
+    parada = int(m.get("parada_inicio_epoch") or 0)
+    hist = m.get("historico_paradas")
+    hist_n = len(hist) if isinstance(hist, list) else 0
+    return (produzido, has_op, running, has_fp, parada + hist_n)
+
+
 def _merge_maquinas_dict(*maps: dict) -> dict:
-    merged: dict = {}
+    """Por máquina, mantém o registro com mais operação em curso (não o mais vazio)."""
+    keys: set[int] = set()
     for m in maps:
-        if not isinstance(m, dict) or not m:
+        if not isinstance(m, dict):
             continue
-        step = json_store._merge_dados_maquinas(m)
-        if not merged:
-            merged = step
+        for k in m:
+            try:
+                keys.add(int(k))
+            except (TypeError, ValueError):
+                pass
+    if not keys:
+        return json_store._default_dados_maquinas()
+
+    base = json_store._default_maquina_record()
+    out: dict = {}
+    for mid in sorted(keys):
+        variants: list[dict] = []
+        for m in maps:
+            if not isinstance(m, dict):
+                continue
+            raw = m.get(mid) if mid in m else m.get(str(mid))
+            if isinstance(raw, dict):
+                variants.append({**base, **raw})
+        if not variants:
             continue
-        for k, v in step.items():
-            if k not in merged:
-                merged[k] = v
-            elif isinstance(v, dict) and isinstance(merged.get(k), dict):
-                merged[k] = {**merged[k], **v}
-    return json_store._merge_dados_maquinas(merged) if merged else json_store._default_dados_maquinas()
+        out[mid] = max(variants, key=_machine_operational_score)
+    return json_store._merge_dados_maquinas(out)
 
 
 def _merge_produtos_lists(*lists: list) -> list:
@@ -500,10 +529,11 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
             "Sem programação em disco — defaults iniciais (use INDUPACK_DATA_DIR em volume persistente no Render)"
         )
 
-    # Na subida: nunca gravar estado que apagaria programação existente em disco
+    # Na subida: só grava se RECUPEROU mais pedidos — nunca regrava por "sincronizar"
+    # (regravar no boot apagava filas após atualização/deploy).
     if n_ped < max_on_disk:
         logger.error(
-            "Abortando gravação na subida: %s pedidos em memória vs %s no disco (dados preservados no volume)",
+            "Abortando gravação na subida: %s pedidos em memória vs %s no disco (volume intacto)",
             n_ped,
             max_on_disk,
         )
@@ -514,10 +544,15 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
             n_ped,
         )
         save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
-    elif max_on_disk == 0:
-        save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
     else:
-        save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
+        logger.info(
+            "Subida: %s pedidos carregados — gravação adiada (persist() na operação)",
+            n_ped,
+        )
+
+    by_maq = {k: len(v) for k, v in pedidos.items() if isinstance(v, list)}
+    if by_maq:
+        logger.info("Fila por máquina: %s", by_maq)
 
     return pedidos, produtos, maquinas, resumo
 

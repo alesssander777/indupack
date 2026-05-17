@@ -26,6 +26,11 @@ def reload_from_store() -> None:
 
 def persist() -> None:
     """Persiste estado operacional no SQLite + espelho dados.json."""
-    from storage.mes_persist import save_operational_state
+    import logging
 
+    from storage.mes_persist import _pedidos_count, save_operational_state
+
+    logger = logging.getLogger("indupack.mes_persist")
+    n = _pedidos_count(pedidos)
     save_operational_state(pedidos, produtos_cadastrados, dados_maquinas, resumo_fabrica)
+    logger.info("Gravado: %s pedidos na fila | volume OK", n)

@@ -33,8 +33,6 @@ from services.terminais_store import bootstrap_terminal_sessions
 
 init_db()
 seed_stop_motives_if_empty()
-bootstrap_mes_operacional()
-bootstrap_terminal_sessions()
 _SESSION_MAX_AGE = session_max_age_seconds()
 
 

@@ -5,3 +5,10 @@ venv/
 backups/
 *.db.tmp
 *.zip.tmp
+
+# Estado operacional local (nunca versionar — evita deploy apagar produção)
+dados.json
+dados.json.*
+indupack.db
+indupack.db-wal
+indupack.db-shm
