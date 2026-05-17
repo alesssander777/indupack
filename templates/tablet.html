@@ -331,14 +331,6 @@
                             <span class="mes-kpi-card__label">Faltam</span>
                             <span class="mes-kpi-card__value" id="mob-kpi-faltam" data-tablet-id="hmi-op-faltam">0</span>
                         </div>
-                        <div class="mes-kpi-card mes-kpi-card--ef">
-                            <span class="mes-kpi-card__label">Eficiência</span>
-                            <span class="mes-kpi-card__value" id="mob-kpi-ef" data-tablet-id="hmi-op-ef">0%</span>
-                        </div>
-                        <div class="mes-kpi-card mes-kpi-card--parado">
-                            <span class="mes-kpi-card__label">Parado</span>
-                            <span class="mes-kpi-card__value mes-kpi-card__value--mono" id="mob-kpi-tempo-parado" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
-                        </div>
                     </div>
                     <footer class="mes-kpi-foot">
                         <div class="mes-kpi-foot__motivo" aria-label="Motivo da parada">
@@ -379,7 +371,9 @@
                     <span data-tablet-id="hmi-op-operador"></span>
                     <span data-tablet-id="hmi-op-turno"></span>
                     <span data-tablet-id="hmi-op-oee"></span>
+                    <span data-tablet-id="hmi-op-ef"></span>
                     <span data-tablet-id="hmi-op-tempo-parado"></span>
+                    <span data-tablet-id="hmi-kpi-tempo-parado"></span>
                     <span data-tablet-id="hmi-motivo-parada"></span>
                 </span>
 
@@ -4855,6 +4849,7 @@ html.ref-html--mobile-op {
 .ref-body--mobile-op .mob-panel--dense > .mob-ops {
     flex: 0 0 auto;
     min-height: 0;
+    max-height: none;
 }
 
 .ref-body--mobile-op .mob-card {
@@ -5083,10 +5078,11 @@ html.ref-html--mobile-op {
 .ref-body--mobile-op .mes-kpi-grid {
     flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(34px, auto));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(36px, 1fr));
     gap: 3px;
     align-content: stretch;
+    width: 100%;
 }
 
 .ref-body--mobile-op .mes-kpi-card {
@@ -5096,9 +5092,9 @@ html.ref-html--mobile-op {
     align-items: stretch;
     gap: 1px;
     min-width: 0;
-    min-height: 34px;
-    max-height: 40px;
-    padding: 2px 5px;
+    min-height: 36px;
+    max-height: none;
+    padding: 3px 6px;
     box-sizing: border-box;
     border-radius: 5px;
     border: 1px solid rgba(148, 163, 184, 0.2);
@@ -5147,13 +5143,24 @@ html.ref-html--mobile-op {
     color: var(--mes-orange);
 }
 
-.ref-body--mobile-op .mes-kpi-card--ef .mes-kpi-card__value {
-    color: #7dd3fc;
+.ref-body--mobile-op .mes-kpi-card--cliente {
+    grid-column: 1;
+    grid-row: 1;
 }
 
-.ref-body--mobile-op .mes-kpi-card--parado .mes-kpi-card__value {
-    color: #94a3b8;
-    letter-spacing: 0.03em;
+.ref-body--mobile-op .mes-kpi-card--prod {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.ref-body--mobile-op .mes-kpi-card--fardos {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.ref-body--mobile-op .mes-kpi-card--faltam {
+    grid-column: 2;
+    grid-row: 2;
 }
 
 .ref-body--mobile-op .mes-kpi-card__value--motivo {
@@ -5223,15 +5230,15 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--iphone-12pm .mes-kpi-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(32px, auto));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(34px, 1fr));
     gap: 2px;
 }
 
 .ref-body--iphone-12pm .mes-kpi-card {
-    min-height: 32px;
-    max-height: 36px;
-    padding: 2px 4px;
+    min-height: 34px;
+    max-height: none;
+    padding: 2px 5px;
 }
 
 .ref-body--iphone-12pm .mes-kpi-card__label {

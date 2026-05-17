@@ -393,7 +393,7 @@ def _discover_db_snapshots() -> list[tuple[str, tuple[dict, list, dict, dict]]]:
 def _pick_best_state(
     *candidates: tuple[dict, list, dict, dict] | None,
 ) -> tuple[dict, list, dict, dict]:
-    """Legado: escolhe um candidato (usado só se merge não for aplicável)."""
+    """Escolhe candidato com maior programação (pedidos na fila, depois máquinas)."""
     best: tuple[dict, list, dict, dict] | None = None
     best_score: tuple[int, int] = (-1, -1)
     for c in candidates:
@@ -402,6 +402,22 @@ def _pick_best_state(
         sc = _score_state(c[0], c[2])
         if sc > best_score:
             best_score = sc
+            best = c
+    if best is not None:
+        return best
+    return _defaults()
+
+
+def _pick_richest_pedidos_state(
+    candidates: list[tuple[dict, list, dict, dict]],
+) -> tuple[dict, list, dict, dict]:
+    """Snapshot com mais pedidos na fila (evita perda após fusão inferior)."""
+    best: tuple[dict, list, dict, dict] | None = None
+    best_n = -1
+    for c in candidates:
+        n = _pedidos_count(c[0])
+        if n > best_n:
+            best_n = n
             best = c
     if best is not None:
         return best
@@ -469,22 +485,36 @@ def load_operational_state() -> tuple[dict, list, dict, dict]:
         DB_PATH,
     )
 
+    if n_ped < max_on_disk and candidates:
+        logger.warning(
+            "Fusão com %s pedidos < máximo em disco (%s) — usando snapshot mais completo",
+            n_ped,
+            max_on_disk,
+        )
+        pedidos, produtos, maquinas, resumo = _pick_richest_pedidos_state(candidates)
+        n_ped = _pedidos_count(pedidos)
+        src = f"fallback-richest -> {n_ped} pedidos"
+
     if n_ped == 0 and not candidates:
         logger.warning(
             "Sem programação em disco — defaults iniciais (use INDUPACK_DATA_DIR em volume persistente no Render)"
         )
-    elif n_ped < max_on_disk:
+
+    # Na subida: nunca gravar estado que apagaria programação existente em disco
+    if n_ped < max_on_disk:
         logger.error(
-            "Fusão resultou em menos pedidos (%s) que o máximo em disco (%s) — não regravando",
+            "Abortando gravação na subida: %s pedidos em memória vs %s no disco (dados preservados no volume)",
             n_ped,
             max_on_disk,
         )
     elif n_ped > max_on_disk:
         logger.warning(
-            "Programação recuperada na fusão: %s → %s pedidos (persistindo)",
+            "Programação recuperada na fusão: %s -> %s pedidos (persistindo)",
             max_on_disk,
             n_ped,
         )
+        save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
+    elif max_on_disk == 0:
         save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
     else:
         save_operational_state(pedidos, produtos, maquinas, resumo, mirror_json=True)
