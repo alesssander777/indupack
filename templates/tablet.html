@@ -310,6 +310,10 @@
                             <span class="mob-cell__k">Quantidade</span>
                             <span class="mob-cell__v" data-tablet-id="f-quantidade">0</span>
                         </div>
+                        <div class="mob-cell mob-cell--fardos">
+                            <span class="mob-cell__k">Fardos</span>
+                            <span id="mob-f-fardos" class="mob-cell__v mob-cell__v--fardos" data-tablet-id="f-fardos">—</span>
+                        </div>
                     </div>
                 </section>
 
@@ -331,7 +335,7 @@
                         <article class="mob-mini mob-mini--fardos">
                             <span class="mob-mini__glyph" aria-hidden="true">≡</span>
                             <span class="mob-mini__label">Fardos</span>
-                            <span class="mob-mini__value" data-tablet-id="f-fardos">—</span>
+                            <span id="mob-f-fardos-kpi" class="mob-mini__value" data-tablet-id="f-fardos">—</span>
                         </article>
                         <article class="mob-mini mob-mini--faltam">
                             <span class="mob-mini__glyph" aria-hidden="true">⏳</span>
@@ -4891,7 +4895,14 @@ html.ref-html--mobile-op {
 }
 
 .ref-body--mobile-op .mob-order-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ref-body--mobile-op .mob-cell--fardos .mob-cell__v--fardos {
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: #e2e8f0;
+    font-variant-numeric: tabular-nums;
 }
 
 .ref-body--mobile-op .mob-mes-grid {
@@ -5601,7 +5612,6 @@ html.ref-html--mobile-op {
                 "f-medida",
                 "f-quantidade",
                 "f-cliente",
-                "f-fardos",
                 "f-obs",
                 "hmi-op-combo",
                 "hmi-op-operador",
@@ -5634,25 +5644,17 @@ html.ref-html--mobile-op {
             function setTabletField(id, text) {
                 var val = text == null || text === "" ? "—" : String(text);
                 var seen = [];
+                function paint(node) {
+                    if (!node || seen.indexOf(node) >= 0) return;
+                    node.textContent = val;
+                    seen.push(node);
+                }
+                paint(document.getElementById(id));
+                document.querySelectorAll('[data-tablet-id="' + id + '"]').forEach(paint);
                 var mob = document.getElementById("ref-shell-mob");
-                if (mob && document.body.classList.contains("ref-body--mobile-op") && !mob.hidden) {
-                    var vis = mobSwapTarget(mob, id);
-                    if (vis) {
-                        vis.textContent = val;
-                        seen.push(vis);
-                    }
-                }
-                var byId = document.getElementById(id);
-                if (byId && seen.indexOf(byId) < 0) {
-                    byId.textContent = val;
-                    seen.push(byId);
-                }
-                document.querySelectorAll('[data-tablet-id="' + id + '"]').forEach(function (node) {
-                    if (seen.indexOf(node) < 0) {
-                        node.textContent = val;
-                        seen.push(node);
-                    }
-                });
+                var desk = document.querySelector(".ref-shell--desktop");
+                if (mob) mob.querySelectorAll('[data-tablet-id="' + id + '"], #' + id).forEach(paint);
+                if (desk) desk.querySelectorAll('[data-tablet-id="' + id + '"], #' + id).forEach(paint);
             }
 
             /** Embalagem (programação) = KPI Fardos no tablet. */
@@ -5666,6 +5668,17 @@ html.ref-html--mobile-op {
                 var n = parseInt(String(raw).replace(",", ".").trim(), 10);
                 if (!isFinite(n) || n < 0) return "—";
                 return fmtInt(n);
+            }
+
+            /** Atualiza todos os espelhos do KPI Fardos (não participa do swap de id). */
+            function syncFardosKpi(text) {
+                var val = text == null || text === "" ? "—" : String(text);
+                var sel =
+                    "#f-fardos, #mob-f-fardos, #mob-f-fardos-kpi, " +
+                    '[data-tablet-id="f-fardos"], .mob-mini--fardos .mob-mini__value, .mob-cell--fardos .mob-cell__v';
+                document.querySelectorAll(sel).forEach(function (node) {
+                    node.textContent = val;
+                });
             }
 
             function tabletAssignIds(useMobile) {
@@ -6717,7 +6730,9 @@ html.ref-html--mobile-op {
 
                 setTabletField("f-cliente", p ? disp(p.cliente) : "—");
                 setTabletField("f-codigo", p ? disp(codPed) : "—");
-                setTabletField("f-fardos", fardosDoPedido(p));
+                var fardosTxt = fardosDoPedido(p);
+                setTabletField("f-fardos", fardosTxt);
+                syncFardosKpi(fardosTxt);
                 setTabletField("f-medida", p ? disp(medidaComPeso(p.produto)) : "—");
                 setTabletField("f-obs", p ? disp(p.descricao) : "—");
 
