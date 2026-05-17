@@ -15,7 +15,7 @@ from services.producao_snapshot import card_primeiro_pedido
 from services.runtime_config import visual_branding
 from services.tablet_estado import estado_tablet
 from services.tablets_admin import listagem_terminais_admin
-from storage.state import dados_maquinas, pedidos, produtos_cadastrados
+from storage.state import dados_maquinas, ensure_operational_state_synced, pedidos, produtos_cadastrados
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -404,6 +404,7 @@ def programacao_maquina(request: Request, id: int):
     g = indupack_auth.guard_page(request, f"/programacao/{id}")
     if g:
         return g
+    ensure_operational_state_synced()
     lista = pedidos.get(id, [])
     opcoes_produtos = build_options_html(produtos_cadastrados)
 

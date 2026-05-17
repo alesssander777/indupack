@@ -58,6 +58,33 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+_MES_SYNC_PREFIXES = (
+    "/programacao",
+    "/tablet",
+    "/producao",
+    "/salvar_pedido",
+    "/editar/",
+    "/deletar/",
+    "/novo_pedido",
+    "/reordenar",
+    "/tablet/",
+)
+
+
+@app.middleware("http")
+async def mes_sync_state_middleware(request, call_next):
+    """Após deploy/reload, garante que a memória reflita o volume antes de servir a tela."""
+    path = request.url.path or ""
+    if path == "/" or any(path.startswith(p) for p in _MES_SYNC_PREFIXES):
+        try:
+            from storage.state import ensure_operational_state_synced
+
+            ensure_operational_state_synced()
+        except Exception:
+            pass
+    return await call_next(request)
+
+
 _secret = os.environ.get("INDUPACK_SESSION_SECRET", "indupack-dev-secret-altere-em-producao")
 app.add_middleware(SessionMiddleware, secret_key=_secret, max_age=_SESSION_MAX_AGE, same_site="lax")
 

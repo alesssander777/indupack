@@ -9,6 +9,31 @@ dados_maquinas: dict = {}
 resumo_fabrica: dict = {}
 
 
+def ensure_operational_state_synced() -> bool:
+    """
+    Disco é fonte de verdade: se a memória ficou atrás (deploy, reload, F5),
+    recarrega antes de montar a página.
+    """
+    import logging
+
+    from storage.mes_persist import _load_disk_snapshot_minimal, _pedidos_count
+
+    disk = _load_disk_snapshot_minimal()
+    if disk is None:
+        return False
+    disk_n = _pedidos_count(disk[0])
+    mem_n = _pedidos_count(pedidos)
+    if disk_n > mem_n:
+        logging.getLogger("indupack.mes_persist").warning(
+            "Memória com %s pedidos, disco com %s — recarregando do volume",
+            mem_n,
+            disk_n,
+        )
+        reload_from_store()
+        return True
+    return False
+
+
 def reload_from_store() -> None:
     """Recarrega pedidos/máquinas do SQLite (ou migra JSON legado)."""
     from storage.mes_persist import load_operational_state
