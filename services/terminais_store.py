@@ -264,7 +264,9 @@ def bootstrap_terminal_sessions() -> None:
         preparar_pos_boot()
         for mid in dados_maquinas:
             save_sessao_sqlite(int(mid))
-        persist()
+        from storage import state as st
+
+        st.persist()
     except Exception:
         db.rollback()
         raise

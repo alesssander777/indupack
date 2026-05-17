@@ -1,13 +1,12 @@
 """SQLAlchemy + SQLite — conexão e sessão (Indupack)."""
 from collections.abc import Generator
-from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-_ROOT = Path(__file__).resolve().parent.parent
-_DB_PATH = _ROOT / "indupack.db"
-DATABASE_URL = f"sqlite:///{_DB_PATH.as_posix()}"
+from storage.paths import DB_PATH
+
+DATABASE_URL = f"sqlite:///{DB_PATH.as_posix()}"
 
 
 class Base(DeclarativeBase):
@@ -16,10 +15,19 @@ class Base(DeclarativeBase):
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False, "timeout": 30},
     pool_pre_ping=True,
     echo=False,
 )
+
+
+@event.listens_for(engine, "connect")
+def _sqlite_pragmas(dbapi_conn, _connection_record) -> None:
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

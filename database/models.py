@@ -44,6 +44,16 @@ class OperatorProfile(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
+class MesOperacionalChunk(Base):
+    """Snapshot JSON do estado operacional MES (pedidos, máquinas, fábrica)."""
+
+    __tablename__ = "mes_operacional_chunks"
+
+    chunk_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
 class TabletSessao(Base):
     """Sessão persistente do terminal tablet (sobrevive a restart/deploy do servidor)."""
 

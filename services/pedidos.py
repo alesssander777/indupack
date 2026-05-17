@@ -4,6 +4,31 @@ from services import fabrica_dia, maquinas
 from storage.state import dados_maquinas, pedidos, persist
 
 
+def coerce_fardos(raw) -> int:
+    """Normaliza embalagem/fardos da programação para inteiro >= 0."""
+    if raw is None or raw == "":
+        return 0
+    try:
+        return max(0, int(float(str(raw).strip().replace(",", "."))))
+    except (TypeError, ValueError):
+        return 0
+
+
+def normalizar_pedido_fardos(p: dict) -> None:
+    """Garante `fardos` no pedido (alias embalagem → fardos)."""
+    if not isinstance(p, dict):
+        return
+    n = _fardos_from_pedido_dict(p)
+    p["fardos"] = n
+
+
+def _fardos_from_pedido_dict(p: dict) -> int:
+    for key in ("fardos", "embalagem", "Fardos", "EMBALAGEM"):
+        if key in p and p.get(key) not in (None, ""):
+            return coerce_fardos(p.get(key))
+    return coerce_fardos(p.get("fardos"))
+
+
 def normalizar_turno_operacional(t: str) -> str:
     """Alinha turno do cadastro ao formato da programação (TURNO A/B/C ou COMERCIAL)."""
     raw = str(t or "").strip()
@@ -43,17 +68,17 @@ def salvar_pedido(
         cod = ""
         medida_final = ""
 
-    pedidos[id].append(
-        {
-            "data": data_hoje,
-            "cliente": cliente,
-            "cod": cod,
-            "produto": medida_final,
-            "quantidade": int(quantidade),
-            "fardos": int(fardos),
-            "descricao": descricao,
-        }
-    )
+    item = {
+        "data": data_hoje,
+        "cliente": cliente,
+        "cod": cod,
+        "produto": medida_final,
+        "quantidade": int(quantidade),
+        "fardos": coerce_fardos(fardos),
+        "descricao": descricao,
+    }
+    normalizar_pedido_fardos(item)
+    pedidos[id].append(item)
 
     persist()
     return {"ok": True}
@@ -69,9 +94,12 @@ def editar_pedido(id: int, index: int, campo, valor):
     if not campo:
         return {"ok": False, "erro": "campo_invalido"}
 
+    if campo == "embalagem":
+        campo = "fardos"
+
     if campo in ("quantidade", "fardos"):
         try:
-            valor = int(valor)
+            valor = int(valor) if campo == "quantidade" else coerce_fardos(valor)
         except (TypeError, ValueError):
             valor = 0
 
@@ -80,6 +108,8 @@ def editar_pedido(id: int, index: int, campo, valor):
         primeiro_aberto_antes = indice_primeiro_pedido_aberto(id)
 
     pedidos[id][index][campo] = valor
+    if campo == "fardos":
+        normalizar_pedido_fardos(pedidos[id][index])
 
     if campo == "finalizado":
         marcar_on = (

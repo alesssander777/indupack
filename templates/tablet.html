@@ -5634,8 +5634,16 @@ html.ref-html--mobile-op {
             function setTabletField(id, text) {
                 var val = text == null || text === "" ? "—" : String(text);
                 var seen = [];
+                var mob = document.getElementById("ref-shell-mob");
+                if (mob && document.body.classList.contains("ref-body--mobile-op") && !mob.hidden) {
+                    var vis = mobSwapTarget(mob, id);
+                    if (vis) {
+                        vis.textContent = val;
+                        seen.push(vis);
+                    }
+                }
                 var byId = document.getElementById(id);
-                if (byId) {
+                if (byId && seen.indexOf(byId) < 0) {
                     byId.textContent = val;
                     seen.push(byId);
                 }
@@ -5647,12 +5655,16 @@ html.ref-html--mobile-op {
                 });
             }
 
+            /** Embalagem (programação) = KPI Fardos no tablet. */
             function fardosDoPedido(p) {
                 if (!p) return "—";
                 var raw = p.fardos;
+                if (raw === null || raw === undefined || raw === "") {
+                    raw = p.embalagem;
+                }
                 if (raw === null || raw === undefined || raw === "") return "—";
-                var n = toInt(raw, -1);
-                if (n < 0) return "—";
+                var n = parseInt(String(raw).replace(",", ".").trim(), 10);
+                if (!isFinite(n) || n < 0) return "—";
                 return fmtInt(n);
             }
 
@@ -5687,6 +5699,9 @@ html.ref-html--mobile-op {
                 });
                 mob.hidden = !useMobile;
                 mob.setAttribute("aria-hidden", useMobile ? "false" : "true");
+                if (typeof window.__indupackSyncFields === "function") {
+                    window.__indupackSyncFields();
+                }
             }
 
             function formatOpComboText(maq, compact) {
@@ -6512,7 +6527,9 @@ html.ref-html--mobile-op {
                             "|" +
                             String(p.cliente || "").trim() +
                             "|" +
-                            String(p.quantidade != null ? p.quantidade : "")
+                            String(p.quantidade != null ? p.quantidade : "") +
+                            "|" +
+                            String(fardosDoPedido(p))
                         );
                     }
                 }
@@ -6633,6 +6650,7 @@ html.ref-html--mobile-op {
             }
             window.__indupackRenderLista = renderLista;
             window.__indupackRender = render;
+            window.__indupackSyncFields = updateFields;
 
             function updateHeaderStatus() {
                 var st = String((estado.maquina || {}).status || "PARADA");

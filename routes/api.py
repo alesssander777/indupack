@@ -90,17 +90,19 @@ def salvar_pedido(
     produto: str = "",
     quantidade: int = 0,
     fardos: int = 0,
+    embalagem: int | None = None,
     descricao: str = "",
 ):
     err = indupack_auth.require_api_role(request, "salvar_pedido")
     if err:
         return err
+    f = fardos if embalagem is None else embalagem
     return pedidos.salvar_pedido(
         id,
         cliente=cliente,
         produto=produto,
         quantidade=quantidade,
-        fardos=fardos,
+        fardos=f,
         descricao=descricao,
     )
 

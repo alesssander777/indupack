@@ -28,10 +28,12 @@ from routes.relatorios_api import router as relatorios_router
 from routes.terminais_api import router as terminais_router
 from services import backup_indupack
 from services.config_params_db import seed_stop_motives_if_empty, session_max_age_seconds
+from storage.mes_persist import bootstrap_mes_operacional
 from services.terminais_store import bootstrap_terminal_sessions
 
 init_db()
 seed_stop_motives_if_empty()
+bootstrap_mes_operacional()
 bootstrap_terminal_sessions()
 _SESSION_MAX_AGE = session_max_age_seconds()
 
@@ -40,6 +42,7 @@ _SESSION_MAX_AGE = session_max_age_seconds()
 async def lifespan(app: FastAPI):
     init_db()
     seed_stop_motives_if_empty()
+    bootstrap_mes_operacional()
     bootstrap_terminal_sessions()
     backup_indupack.start_auto_backup_scheduler()
     yield

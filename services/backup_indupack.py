@@ -18,7 +18,9 @@ from pathlib import Path
 logger = logging.getLogger("indupack.backup")
 
 _ROOT = Path(__file__).resolve().parent.parent
-_DB_SOURCE = _ROOT / "indupack.db"
+from storage.paths import DB_PATH, DADOS_JSON_PATH
+
+_DB_SOURCE = DB_PATH
 _BACKUPS_ROOT = _ROOT / "backups"
 _DIR_DB = _BACKUPS_ROOT / "database"
 _DIR_SYSTEM = _BACKUPS_ROOT / "system"
@@ -182,6 +184,9 @@ def backup_full_system_zip() -> dict:
                 p = _ROOT / fname
                 if p.is_file():
                     zf.write(p, arcname=fname.replace("\\", "/"))
+            for p in (DB_PATH, DADOS_JSON_PATH):
+                if p.is_file() and p.resolve() not in {_ROOT.joinpath(n).resolve() for n in ("indupack.db", "dados.json")}:
+                    zf.write(p, arcname=f"data/{p.name}")
             for dname in _FULL_ZIP_DIRS:
                 _add_tree_to_zip(zf, _ROOT / dname)
         os.replace(tmp, dest)

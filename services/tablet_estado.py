@@ -7,23 +7,40 @@ from services.fabrica_dia import total_producao_pedidos_finalizados_maquina_no_d
 from storage.state import dados_maquinas, pedidos
 
 
-def _fardos_serial(raw) -> int | str:
+def _fardos_from_pedido(p: dict) -> int | None:
+    """Embalagem da programação = campo operacional fardos (aceita alias legado)."""
+    for key in ("fardos", "embalagem", "Fardos", "EMBALAGEM"):
+        raw = p.get(key)
+        if raw is None or raw == "":
+            continue
+        try:
+            n = int(float(str(raw).strip().replace(",", ".")))
+            if n >= 0:
+                return n
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _fardos_serial(raw) -> int | None:
     if raw is None or raw == "":
-        return ""
+        return None
     try:
-        n = int(float(raw))
-        return n if n >= 0 else ""
+        n = int(float(str(raw).strip().replace(",", ".")))
+        return n if n >= 0 else None
     except (TypeError, ValueError):
-        return ""
+        return None
 
 
 def _pedido_serial(p: dict) -> dict:
+    fardos_n = _fardos_from_pedido(p)
     out = {
         "cliente": p.get("cliente") or "",
         "cod": p.get("cod") or "",
         "produto": p.get("produto") or "",
         "quantidade": p.get("quantidade", ""),
-        "fardos": _fardos_serial(p.get("fardos")),
+        "fardos": fardos_n,
+        "embalagem": fardos_n,
         "etiqueta": p.get("etiqueta") or "",
         "descricao": p.get("descricao") or "",
         "data": p.get("data") or "",

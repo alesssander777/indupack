@@ -4,7 +4,9 @@ import shutil
 import threading
 import time
 
-ARQUIVO = "dados.json"
+from storage.paths import DADOS_JSON_PATH
+
+ARQUIVO = str(DADOS_JSON_PATH)
 _arquivo_lock = threading.Lock()
 
 
