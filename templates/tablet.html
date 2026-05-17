@@ -285,46 +285,126 @@
                 <div class="mob-side__list hmi-queue" data-tablet-id="list-pedidos" role="list"></div>
                 <p class="mob-side__empty" data-tablet-id="list-empty" hidden>Sem pedidos</p>
             </aside>
-            <div class="mob-panel">
-                <div class="mob-status op-hero op-hero--stop" data-tablet-id="op-hero" aria-live="polite">
-                    <span class="mob-status__ico" data-tablet-id="op-hero-icon" aria-hidden="true"></span>
-                    <div class="mob-status__txt">
-                        <strong class="mob-status__title" data-tablet-id="op-hero-title">PARADA</strong>
-                        <span class="mob-status__sub" data-tablet-id="op-hero-sub"></span>
+            <div class="mob-panel mob-panel--dense">
+                <section class="mob-card mob-hero-wrap" aria-label="Status da máquina">
+                    <div class="mob-status op-hero op-hero--stop" data-tablet-id="op-hero" aria-live="polite">
+                        <span class="mob-status__ico" data-tablet-id="op-hero-icon" aria-hidden="true"></span>
+                        <div class="mob-status__txt">
+                            <strong class="mob-status__title" data-tablet-id="op-hero-title">PARADA</strong>
+                            <span class="mob-status__sub" data-tablet-id="op-hero-sub"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="mob-pedido" aria-label="Pedido atual">
-                    <div class="mob-pedido__row mob-pedido__row--prod">
-                        <span class="mob-pedido__k">Produto</span>
-                        <span class="mob-pedido__v" id="mob-f-codigo">—</span>
+                </section>
+
+                <section class="mob-card mob-order" aria-label="Pedido atual">
+                    <div class="mob-order-grid">
+                        <div class="mob-cell">
+                            <span class="mob-cell__k">Código</span>
+                            <span class="mob-cell__v" data-tablet-id="f-codigo">—</span>
+                        </div>
+                        <div class="mob-cell">
+                            <span class="mob-cell__k">Medida</span>
+                            <span class="mob-cell__v" data-tablet-id="f-medida">—</span>
+                        </div>
+                        <div class="mob-cell mob-cell--qty">
+                            <span class="mob-cell__k">Quantidade</span>
+                            <span class="mob-cell__v" data-tablet-id="f-quantidade">0</span>
+                        </div>
                     </div>
-                    <div class="mob-pedido__row mob-pedido__row--med" aria-hidden="true">
-                        <span class="mob-pedido__k">Medida</span>
-                        <span class="mob-pedido__v" id="mob-f-medida">—</span>
+                </section>
+
+                <section class="mob-card mob-mes" aria-label="Operação">
+                    <div class="mob-mes-grid">
+                        <div class="mob-cell mob-cell--status">
+                            <span class="mob-cell__k">Status</span>
+                            <span class="mob-cell__v mob-cell__v--status">
+                                <span class="hmi-dot" data-tablet-id="hmi-mid-dot"></span>
+                                <span data-tablet-id="hmi-mid-status-txt">PARADA</span>
+                            </span>
+                        </div>
+                        <div class="mob-cell">
+                            <span class="mob-cell__k">Operador / turno</span>
+                            <span class="mob-cell__v" data-tablet-id="hmi-op-combo">—</span>
+                        </div>
+                        <div class="mob-cell">
+                            <span class="mob-cell__k">Tempo parado</span>
+                            <span class="mob-cell__v mob-cell__mono" data-tablet-id="hmi-op-tempo-parado">00:00:00</span>
+                        </div>
+                        <div class="mob-cell mob-cell--motivo">
+                            <span class="mob-cell__k">Motivo</span>
+                            <span class="mob-cell__v mob-cell__v--motivo" data-tablet-id="hmi-motivo-parada">—</span>
+                        </div>
                     </div>
-                    <div class="mob-pedido__row mob-pedido__row--qty">
-                        <span class="mob-pedido__k">Qtd</span>
-                        <span class="mob-pedido__v" id="mob-f-quantidade">0</span>
+                </section>
+
+                <section class="mob-card mob-apont" aria-label="Apontamento">
+                    <div class="mob-apont__head">
+                        <span class="mob-apont__htitle">Progresso da produção</span>
+                        <span class="mob-apont__hratio" data-tablet-id="apont-progress-label">— / —</span>
                     </div>
-                    <div class="mob-pedido__row mob-pedido__row--op">
-                        <span class="mob-pedido__k">Operador / turno</span>
-                        <span class="mob-pedido__v" id="mob-hmi-op-combo">—</span>
-                    </div>
-                </div>
-                <div class="mob-apont" aria-label="Apontamento">
                     <div class="mob-apont__ctrl">
-                        <input type="number" data-tablet-id="apont-total" class="mob-apont__input" inputmode="numeric" min="0" step="1" placeholder="Produzido" autocomplete="off" aria-label="Total produzido">
+                        <input type="number" data-tablet-id="apont-total" class="mob-apont__input" inputmode="numeric" min="0" step="1" placeholder="Total produzido" autocomplete="off" aria-label="Total produzido">
                         <button type="button" data-tablet-id="btn-aplicar-total" class="mob-apont__btn">LANÇAR</button>
                     </div>
                     <div class="mob-apont__prog" aria-label="Progresso">
                         <span class="mob-apont__pct" data-tablet-id="apont-progress-pct-big">—</span>
-                        <div class="mob-apont__track">
-                            <div class="mob-apont__fill" data-tablet-id="apont-progress-fill"></div>
+                        <div class="mob-apont__track-wrap">
+                            <div class="mob-apont__track">
+                                <div class="mob-apont__fill" data-tablet-id="apont-progress-fill"></div>
+                                <span class="mob-apont__pct-in" data-tablet-id="apont-progress-pct">—</span>
+                            </div>
                         </div>
-                        <span class="mob-apont__ratio" data-tablet-id="apont-progress-label">— / —</span>
                     </div>
                     <p class="mob-apont__hint" data-tablet-id="apont-hint" role="status" hidden></p>
-                </div>
+                </section>
+
+                <section class="mob-card mob-kpi" aria-label="Indicadores">
+                    <div class="mob-kpi-grid">
+                        <div class="mob-kpi-item">
+                            <span class="mob-kpi-k">Eficiência</span>
+                            <span class="mob-kpi-v" data-tablet-id="hmi-op-ef">0%</span>
+                        </div>
+                        <div class="mob-kpi-item">
+                            <span class="mob-kpi-k">OEE</span>
+                            <span class="mob-kpi-v" data-tablet-id="hmi-op-oee">0%</span>
+                        </div>
+                        <div class="mob-kpi-item">
+                            <span class="mob-kpi-k">Produzido</span>
+                            <span class="mob-kpi-v" data-tablet-id="hmi-op-produzido">0</span>
+                        </div>
+                        <div class="mob-kpi-item mob-kpi-item--warn">
+                            <span class="mob-kpi-k">Faltam</span>
+                            <span class="mob-kpi-v" data-tablet-id="hmi-op-faltam">0</span>
+                        </div>
+                        <div class="mob-kpi-item">
+                            <span class="mob-kpi-k">T. parado</span>
+                            <span class="mob-kpi-v mob-cell__mono" data-tablet-id="hmi-kpi-tempo-parado">00:00:00</span>
+                        </div>
+                        <div class="mob-kpi-item">
+                            <span class="mob-kpi-k">Motivo</span>
+                            <span class="mob-kpi-v mob-kpi-v--sm" data-tablet-id="hmi-kpi-motivo">—</span>
+                        </div>
+                    </div>
+                    <div class="mob-kpi-dia">
+                        <span class="mob-kpi-dia__k">Produção do dia (máquina)</span>
+                        <span class="mob-kpi-dia__v" data-tablet-id="hmi-producao-dia">0</span>
+                    </div>
+                </section>
+
+                <span class="mob-stash" hidden aria-hidden="true">
+                    <span data-tablet-id="f-cliente"></span>
+                    <span data-tablet-id="f-fardos"></span>
+                    <span data-tablet-id="f-obs"></span>
+                    <span data-tablet-id="hmi-op-operador"></span>
+                    <span data-tablet-id="hmi-op-turno"></span>
+                </span>
+
+                <footer class="mob-foot" aria-label="Rodapé operacional">
+                    <span class="mob-foot__tag">MES · Operação</span>
+                    <span class="mob-foot__meta">Tempo útil <strong data-tablet-id="ft-prod-time">00:00:00</strong></span>
+                </footer>
+
+                <div class="mob-cmds" aria-label="Comandos">
                 <div class="mob-cmds" aria-label="Comandos">
                     <button type="button" data-tablet-id="btn-stop" class="mob-cmd mob-cmd--stop" aria-pressed="false">
                         <span data-tablet-id="btn-stop-ico" class="mob-cmd__ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></span>
@@ -4763,6 +4843,346 @@ html.ref-html--mobile-op {
     }
 }
 
+
+/* ========== Mobile operacional denso (herda linguagem do desktop) ========== */
+.ref-body--mobile-op .mob-body {
+    grid-template-columns: minmax(108px, 24vw) minmax(0, 1fr);
+}
+
+.ref-body--mobile-op .mob-panel--dense {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    padding: 3px 5px max(3px, env(safe-area-inset-bottom)) 4px;
+    justify-content: flex-start;
+}
+
+.ref-body--mobile-op .mob-card {
+    flex-shrink: 0;
+    background: linear-gradient(180deg, var(--mes-panel-raised) 0%, var(--mes-panel) 100%);
+    border: 1px solid var(--mes-line-strong);
+    border-radius: var(--r-sm);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 14px rgba(0, 0, 0, 0.22);
+    padding: 4px 6px;
+}
+
+.ref-body--mobile-op .mob-hero-wrap {
+    padding: 3px 6px;
+}
+
+.ref-body--mobile-op .mob-status {
+    padding: 4px 6px;
+    min-height: 0;
+    max-height: none;
+    border-radius: calc(var(--r-sm) - 2px);
+}
+
+.ref-body--mobile-op .mob-order-grid,
+.ref-body--mobile-op .mob-mes-grid {
+    display: grid;
+    gap: 3px 5px;
+}
+
+.ref-body--mobile-op .mob-order-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ref-body--mobile-op .mob-mes-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ref-body--mobile-op .mob-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    padding: 2px 4px;
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid var(--mes-cell-border);
+    border-radius: 4px;
+}
+
+.ref-body--mobile-op .mob-cell__k {
+    font-size: 0.46rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+    line-height: 1.1;
+}
+
+.ref-body--mobile-op .mob-cell__v {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--mes-ink);
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ref-body--mobile-op .mob-cell--qty .mob-cell__v {
+    font-size: 0.78rem;
+    font-weight: 900;
+    color: var(--mes-blue);
+}
+
+.ref-body--mobile-op .mob-cell__v--status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.62rem;
+    font-weight: 900;
+}
+
+.ref-body--mobile-op .mob-cell__v--motivo {
+    font-size: 0.6rem;
+    color: var(--mes-amber);
+    white-space: nowrap;
+}
+
+.ref-body--mobile-op .mob-cell__mono {
+    font-variant-numeric: tabular-nums;
+}
+
+.ref-body--mobile-op .mob-apont__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 3px;
+}
+
+.ref-body--mobile-op .mob-apont__htitle {
+    font-size: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+}
+
+.ref-body--mobile-op .mob-apont__hratio {
+    font-size: 0.58rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-blue-mid);
+}
+
+.ref-body--mobile-op .mob-apont__track-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ref-body--mobile-op .mob-apont__track {
+    position: relative;
+    height: 16px;
+}
+
+.ref-body--mobile-op .mob-apont__pct-in {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.58rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+    pointer-events: none;
+}
+
+.ref-body--mobile-op .mob-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 3px;
+}
+
+.ref-body--mobile-op .mob-kpi-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 3px 4px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--mes-cell-border);
+    border-radius: 4px;
+    min-width: 0;
+}
+
+.ref-body--mobile-op .mob-kpi-k {
+    font-size: 0.44rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+}
+
+.ref-body--mobile-op .mob-kpi-v {
+    font-size: 0.68rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--mes-ink);
+    line-height: 1.1;
+}
+
+.ref-body--mobile-op .mob-kpi-item--warn .mob-kpi-v {
+    color: var(--mes-orange);
+}
+
+.ref-body--mobile-op .mob-kpi-v--sm {
+    font-size: 0.55rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ref-body--mobile-op .mob-kpi-dia {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 3px;
+    padding: 3px 5px;
+    background: rgba(94, 176, 214, 0.1);
+    border: 1px solid rgba(94, 176, 214, 0.25);
+    border-radius: 4px;
+}
+
+.ref-body--mobile-op .mob-kpi-dia__k {
+    font-size: 0.48rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mes-muted);
+}
+
+.ref-body--mobile-op .mob-kpi-dia__v {
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: var(--mes-blue-mid);
+    font-variant-numeric: tabular-nums;
+}
+
+.ref-body--mobile-op .mob-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 4px;
+    border-top: 1px solid var(--mes-line);
+    flex-shrink: 0;
+}
+
+.ref-body--mobile-op .mob-foot__tag,
+.ref-body--mobile-op .mob-foot__meta {
+    font-size: 0.48rem;
+    font-weight: 700;
+    color: var(--mes-muted);
+}
+
+.ref-body--mobile-op .mob-foot__meta strong {
+    color: var(--mes-blue-mid);
+    font-weight: 900;
+}
+
+.ref-body--mobile-op .mob-cmds {
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__card--mob-op {
+    padding: 4px 5px !important;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__mob-prod {
+    font-size: 0.58rem;
+    -webkit-line-clamp: 2;
+}
+
+.ref-body--mobile-op .mob-side__list .hmi-queue__mob-badge {
+    font-size: 0.44rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--mes-blue);
+}
+
+.ref-body--mobile-op .hmi-queue__card--mob-op[data-mob-st="run"] .hmi-queue__mob-badge {
+    color: var(--mes-green);
+}
+
+.ref-body--mobile-op .hmi-queue__card--mob-op[data-mob-st="stop"] .hmi-queue__mob-badge {
+    color: var(--mes-amber);
+}
+
+.ref-body--mobile-op .mob-pedido__row--med,
+.ref-body--mobile-op .mob-pedido {
+    display: none !important;
+}
+
+.ref-body--iphone-12pm .mob-body {
+    grid-template-columns: 112px minmax(0, 1fr);
+}
+
+.ref-body--iphone-12pm .mob-mes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ref-body--iphone-12pm .mob-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ref-body--iphone-12pm .mob-panel--dense {
+    display: flex;
+    flex-direction: column;
+    grid-template-rows: unset;
+    grid-template-areas: unset;
+    gap: 2px;
+    padding: 2px max(4px, env(safe-area-inset-right)) max(2px, env(safe-area-inset-bottom)) 3px;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-card {
+    padding: 2px 4px;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-status {
+    max-height: 34px;
+    padding: 2px 5px;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-apont__input,
+.ref-body--iphone-12pm .mob-panel--dense .mob-apont__btn {
+    min-height: 32px;
+    max-height: 34px;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-apont__track {
+    height: 12px;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-cmds {
+    grid-area: unset;
+    margin-top: auto;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-cell__k,
+.ref-body--iphone-12pm .mob-panel--dense .mob-kpi-k {
+    font-size: 0.42rem;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-cell__v {
+    font-size: 0.62rem;
+}
+
+.ref-body--iphone-12pm .mob-panel--dense .mob-kpi-v {
+    font-size: 0.62rem;
+}
+
     .tablet-remote-maint {
         position: fixed;
         inset: 0;
@@ -4824,7 +5244,29 @@ html.ref-html--mobile-op {
                 "apont-progress-label",
                 "apont-progress-pct-big",
                 "apont-progress-fill",
-                "apont-hint"
+                "apont-hint",
+                "f-codigo",
+                "f-medida",
+                "f-quantidade",
+                "f-cliente",
+                "f-fardos",
+                "f-obs",
+                "hmi-op-combo",
+                "hmi-op-operador",
+                "hmi-op-turno",
+                "hmi-op-ef",
+                "hmi-op-oee",
+                "hmi-op-produzido",
+                "hmi-op-faltam",
+                "hmi-op-tempo-parado",
+                "hmi-kpi-tempo-parado",
+                "hmi-motivo-parada",
+                "hmi-kpi-motivo",
+                "hmi-mid-status-txt",
+                "hmi-mid-dot",
+                "hmi-producao-dia",
+                "apont-progress-pct",
+                "ft-prod-time"
             ];
 
             function tabletAssignIds(useMobile) {
@@ -4874,28 +5316,9 @@ html.ref-html--mobile-op {
 
             function syncMobPanel() {
                 if (!document.body.classList.contains("ref-body--mobile-op")) return;
-                var p = typeof getAtual === "function" ? getAtual() : null;
                 var maq = (typeof estado !== "undefined" && estado) ? estado.maquina || {} : {};
-                var prodParts = p ? parseProduto(p.produto) : { codigo: "—", medida: "—" };
-                var codPed = p && String(p.cod || "").trim() ? String(p.cod).trim() : prodParts.codigo;
-                var el;
-                var medTxt = p ? disp(medidaComPeso(p.produto)) : "—";
-                el = document.getElementById("mob-f-codigo");
-                if (el) {
-                    if (p) {
-                        var prodLine = disp(codPed);
-                        if (medTxt && medTxt !== "—") prodLine += " · " + medTxt;
-                        el.textContent = prodLine;
-                    } else {
-                        el.textContent = "—";
-                    }
-                }
-                el = document.getElementById("mob-f-medida");
-                if (el) el.textContent = medTxt;
-                el = document.getElementById("mob-f-quantidade");
-                if (el) el.textContent = p ? fmtInt(toInt(p.quantidade, 0)) : "0";
-                el = document.getElementById("mob-hmi-op-combo");
-                if (el) el.textContent = formatOpComboText(maq, true);
+                var comboEl = document.getElementById("hmi-op-combo");
+                if (comboEl) comboEl.textContent = formatOpComboText(maq || {}, true);
             }
 
             function syncMobConnFromFooter() {
@@ -5789,20 +6212,16 @@ html.ref-html--mobile-op {
                         if (p.finalizado) mobSt = "done";
                         else if (isCurrent && isRun) mobSt = "run";
                         else if (isCurrent) mobSt = "stop";
+                        var badgeShort = p.finalizado ? "OK" : (isCurrent && isRun ? "RUN" : (isCurrent ? "STOP" : "···"));
                         row.innerHTML =
                             '<span class="hmi-queue__card hmi-queue__card--mob-op" data-mob-st="' +
                             mobSt +
                             '">' +
                             '<span class="hmi-queue__mob-head">' +
-                            '<span class="hmi-queue__num">#' +
-                            escHtml(osRef) +
-                            "</span></span>" +
-                            '<span class="hmi-queue__mob-prod">' +
-                            escHtml(mobProd) +
-                            "</span>" +
-                            '<span class="hmi-queue__mob-qty">' +
-                            escHtml(qVal) +
-                            "</span></span>";
+                            '<span class="hmi-queue__num">#' + escHtml(osRef) + "</span>" +
+                            '<span class="hmi-queue__mob-badge">' + escHtml(badgeShort) + "</span></span>" +
+                            '<span class="hmi-queue__mob-prod">' + escHtml(mobProd) + "</span>" +
+                            '<span class="hmi-queue__mob-qty">' + escHtml(qVal) + "</span></span>";
                     } else {
                         row.innerHTML =
                             '<span class="hmi-queue__card">' +
